@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>SIDE-lib Basic Usage</title>
+        <script src="../SIDE-lib/index.js"></script>
+    </head>
+    <body>
+        <h1>SIDE-lib Basic Usage</h1>
+        <h2><code>parse(python_str)</code></h2>
+        <p>...where <code>python_str</code> is a string of Python code. E.g.:</p>
+        <pre id="code">
+            <script></script>
+        </pre>
+        <p><code>parse()</code> returns a JSON object containing information about detected symptoms and misconceptions, the "blocks" in the Python code, and any variables or functions defined in the Python code. E.g.:</p>
+        <pre id="output"></pre>
+        <h2><code>symptomInfo()</code></h2>
+        <p>Returns a JSON object detailing the symptoms currently detected by the library:</p>
+        <pre id="symptoms"></pre>
+        <h2><code>misconceptionInfo()</code></h2>
+        <p>Returns a JSON object detailing the misconceptions currently detected by the library:</p>
+        <pre id="misconceptions"></pre>
+    </body>
+    <script>
+        const code = 'def get_direction(start, end):\n    if start < end:\n        print("Southbound")\n    elif start > end:\n        print("Northbound")\n    else:\n        start == end\n        print("Invalid")\n\ndirection = get_direction(8, 7)';
+        document.getElementById("code").innerHTML = code;
+        const output = parse(code);
+        document.getElementById("output").innerHTML = JSON.stringify(output, null, 4);
+        document.getElementById("symptoms").innerHTML = JSON.stringify(symptomInfo(), null, 4);
+        document.getElementById("misconceptions").innerHTML = JSON.stringify(misconceptionInfo(), null, 4);
+        console.log(output);
+    </script>
+</html>
