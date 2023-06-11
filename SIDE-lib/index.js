@@ -259,7 +259,7 @@ var ExpressionNode = /*#__PURE__*/function (_TypeChangeObserverNo) {
     var _this;
 
     var dataType = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : _enums.DataType.NotParsed;
-    var documentEndIndex = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : documentStartIndex + textValue.length;
+    var documentEndIndex = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : documentStartIndex + textValue.length - 1;
     var endLineNumber = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : startLineNumber;
 
     _classCallCheck(this, ExpressionNode);
@@ -6322,6 +6322,7 @@ function _computeAssignments4() {
     var elements = _rawtextprocessing.StatementProcessor.split(tupleExpressions, _enums.ExpressionEntity.Comma);
 
     var tuple = new CompoundTypeExpression((0, _utils.getTextOfExpressions)(tupleExpressions), tupleExpressions, _enums.ExpressionEntity.TupleDefinition, elements);
+    tuple.setParent(this);
 
     while (children.length > 2) {
       children.pop();
@@ -8753,7 +8754,7 @@ var KeywordStatement = /*#__PURE__*/function (_MultiPartExpressionN25) {
 
 
 exports.KeywordStatement = KeywordStatement;
-},{"../problem-finder/symptom.js":11,"../utils/constants.js":12,"../utils/utils.js":13,"./enums.js":4,"./interfaces.js":6,"./rawtextprocessing.js":7}],2:[function(require,module,exports){
+},{"../problem-finder/symptom.js":12,"../utils/constants.js":13,"../utils/utils.js":14,"./enums.js":4,"./interfaces.js":7,"./rawtextprocessing.js":8}],2:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -8780,6 +8781,8 @@ var _interfaces = require("./interfaces.js");
 var _symptom2 = require("../problem-finder/symptom.js");
 
 var _constants = require("../utils/constants.js");
+
+var _indent = require("./indent.js");
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
@@ -9999,6 +10002,10 @@ var _userDefinedFunctionMap = /*#__PURE__*/new WeakMap();
 
 var _unconnectedFunctionCalls = /*#__PURE__*/new WeakMap();
 
+var _indentCharacter = /*#__PURE__*/new WeakMap();
+
+var _indentLevelCount = /*#__PURE__*/new WeakMap();
+
 var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
   _inherits(ScopeBlock, _StatementBlock);
 
@@ -10013,6 +10020,11 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
   /** @type {Map<String, UserDefinedFunctionExpression>} */
 
   /** @type {Map<String, UserDefinedFunctionCall[]>} */
+
+  /** @type {String} */
+
+  /** @type {Number} */
+  // The number of the indentCharacter that make up one level of indentation
 
   /**
    * Creates a new StatementBlock representing a block of Python code
@@ -10055,6 +10067,16 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
     _classPrivateFieldInitSpec(_assertThisInitialized(_this2), _unconnectedFunctionCalls, {
       writable: true,
       value: new Map()
+    });
+
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this2), _indentCharacter, {
+      writable: true,
+      value: void 0
+    });
+
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this2), _indentLevelCount, {
+      writable: true,
+      value: void 0
     });
 
     return _this2;
@@ -10530,7 +10552,7 @@ var ListComprehensionBlock = /*#__PURE__*/function (_ScopeBlock2) {
     _classCallCheck(this, ListComprehensionBlock);
 
     _this4 = _super4.call(this, _enums.ExpressionEntity.ListComprehension, parentBlock);
-    var statement = new _statement.Statement(listComprehensionExpression.getTextValue(), listComprehensionExpression.getStartLineNumber(), 0, [listComprehensionExpression]);
+    var statement = new _statement.Statement(listComprehensionExpression.getTextValue(), listComprehensionExpression.getStartLineNumber(), new _indent.Indent(""), [listComprehensionExpression]);
 
     _this4.addStatement(statement);
 
@@ -11329,7 +11351,7 @@ function _findBlocksOfVarMod2(variables) {
 
   return blocks;
 }
-},{"../problem-finder/symptom.js":11,"../utils/constants.js":12,"../utils/utils.js":13,"./ast.js":1,"./enums.js":4,"./identifiers.js":5,"./interfaces.js":6,"./rawtextprocessing.js":7,"./statement.js":8}],3:[function(require,module,exports){
+},{"../problem-finder/symptom.js":12,"../utils/constants.js":13,"../utils/utils.js":14,"./ast.js":1,"./enums.js":4,"./identifiers.js":5,"./indent.js":6,"./interfaces.js":7,"./rawtextprocessing.js":8,"./statement.js":9}],3:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -11589,9 +11611,7 @@ var DocInfo = /*#__PURE__*/function () {
   }, {
     key: "getMisconceptions",
     value: function getMisconceptions() {
-      return (0, _misconception.identifyMisconceptions)(_symptom.SymptomFinder.symptoms, _classPrivateFieldGet(this, _variables)
-      /*, this.#userDefinedFunctionsOLD*/
-      );
+      return (0, _misconception.identifyMisconceptions)(_symptom.SymptomFinder.symptoms, _classPrivateFieldGet(this, _variables));
     }
     /**
      * Gets the raw text in the document.
@@ -12335,7 +12355,7 @@ function _shiftCurrentBlock2(statementIndent, currentBlock, statementStartLine) 
 
   return currentBlock;
 }
-},{"../problem-finder/misconception.js":10,"../problem-finder/symptom.js":11,"../utils/constants.js":12,"../utils/utils.js":13,"./ast.js":1,"./block.js":2,"./enums.js":4,"./identifiers.js":5,"./rawtextprocessing.js":7,"./statement.js":8}],4:[function(require,module,exports){
+},{"../problem-finder/misconception.js":11,"../problem-finder/symptom.js":12,"../utils/constants.js":13,"../utils/utils.js":14,"./ast.js":1,"./block.js":2,"./enums.js":4,"./identifiers.js":5,"./rawtextprocessing.js":8,"./statement.js":9}],4:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -13949,6 +13969,8 @@ var SymptomType = /*#__PURE__*/function (_Enum6) {
   // ??? 
   // RiskFactor
   // ???
+  // RiskFactor TO IMPLEMENT
+  //static MixesSpacesAndTabs = new SymptomType("MixesSpacesAndTabs", "Indentation is created using a mix of tabs and spaces.");
   // ???
   // RiskFactor
   // Error
@@ -14015,7 +14037,7 @@ _defineProperty(SymptomType, "InfiniteLoop", new SymptomType("InfiniteLoop", "A 
 
 _defineProperty(SymptomType, "LoopReturn", new SymptomType("LoopEarlyExit", "A return or break statement causes a loop to always exit on the first iteration."));
 
-_defineProperty(SymptomType, "LoopVarModifiedInChildLoop", new SymptomType("WhileLoopVarModifiedInChildLoop", "A while loops variable is modified in a nested for or while loop."));
+_defineProperty(SymptomType, "LoopVarModifiedInChildLoop", new SymptomType("WhileLoopVarModifiedInChildLoop", "A while loop variable is modified in a nested for or while loop."));
 
 _defineProperty(SymptomType, "LoopVarNotModified", new SymptomType("WhileLoopVarNotModified", "None of the variables used in a while loop definition are modified in the body of the while loop. If the while loop contains a nested loop, only usages of the variable in the outer loop are checked."));
 
@@ -14023,7 +14045,7 @@ _defineProperty(SymptomType, "NaturalLanguageBoolean", new SymptomType("BooleanS
 
 _defineProperty(SymptomType, "OneLineConditional", new SymptomType("OneLineConditional", "A conditional that could be re-written as one line. Although this is not an error, it may indicate a misconception about Boolean values."));
 
-_defineProperty(SymptomType, "OutOfPlaceBooleanOperator", new SymptomType("BooleanSyntax.outOfPlace", "A comparison or logical operator is used in an expected place in a conditional expression."));
+_defineProperty(SymptomType, "OutOfPlaceBooleanOperator", new SymptomType("BooleanSyntax.outOfPlace", "A comparison or logical operator is used in an unexpected place in a conditional expression."));
 
 _defineProperty(SymptomType, "OverwrittenVariable", new SymptomType("VariableOverwrite", "A variable's value is initialised or changed then overwritten without being used."));
 
@@ -15105,7 +15127,150 @@ var directImport = function directImport(entity, category) {
 };
 
 exports.directImport = directImport;
-},{"../problem-finder/symptom.js":11,"../utils/constants.js":12,"../utils/utils.js":13,"./ast.js":1,"./block.js":2,"./enums.js":4,"./interfaces.js":6}],6:[function(require,module,exports){
+},{"../problem-finder/symptom.js":12,"../utils/constants.js":13,"../utils/utils.js":14,"./ast.js":1,"./block.js":2,"./enums.js":4,"./interfaces.js":7}],6:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Indent = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+
+function _classPrivateFieldInitSpec(obj, privateMap, value) { _checkPrivateRedeclaration(obj, privateMap); privateMap.set(obj, value); }
+
+function _checkPrivateRedeclaration(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
+
+function _classPrivateFieldGet(receiver, privateMap) { var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "get"); return _classApplyDescriptorGet(receiver, descriptor); }
+
+function _classApplyDescriptorGet(receiver, descriptor) { if (descriptor.get) { return descriptor.get.call(receiver); } return descriptor.value; }
+
+function _classPrivateFieldSet(receiver, privateMap, value) { var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "set"); _classApplyDescriptorSet(receiver, descriptor, value); return value; }
+
+function _classExtractFieldDescriptor(receiver, privateMap, action) { if (!privateMap.has(receiver)) { throw new TypeError("attempted to " + action + " private field on non-instance"); } return privateMap.get(receiver); }
+
+function _classApplyDescriptorSet(receiver, descriptor, value) { if (descriptor.set) { descriptor.set.call(receiver, value); } else { if (!descriptor.writable) { throw new TypeError("attempted to set read only private field"); } descriptor.value = value; } }
+
+var _rawText = /*#__PURE__*/new WeakMap();
+
+var _spaceCount = /*#__PURE__*/new WeakMap();
+
+var _tabCount = /*#__PURE__*/new WeakMap();
+
+var Indent = /*#__PURE__*/function () {
+  /** @type {String} */
+
+  /** @type {Number} */
+
+  /** @type {Number} */
+  function Indent(rawText) {
+    _classCallCheck(this, Indent);
+
+    _classPrivateFieldInitSpec(this, _rawText, {
+      writable: true,
+      value: void 0
+    });
+
+    _classPrivateFieldInitSpec(this, _spaceCount, {
+      writable: true,
+      value: 0
+    });
+
+    _classPrivateFieldInitSpec(this, _tabCount, {
+      writable: true,
+      value: 0
+    });
+
+    _classPrivateFieldSet(this, _rawText, rawText);
+
+    for (var i = 0; i < rawText.length; i++) {
+      var _this$tabCount, _this$tabCount2, _this$spaceCount, _this$spaceCount2;
+
+      if (rawText.charAt(i) === "\t") _classPrivateFieldSet(this, _tabCount, (_this$tabCount = _classPrivateFieldGet(this, _tabCount), _this$tabCount2 = _this$tabCount++, _this$tabCount)), _this$tabCount2;else _classPrivateFieldSet(this, _spaceCount, (_this$spaceCount = _classPrivateFieldGet(this, _spaceCount), _this$spaceCount2 = _this$spaceCount++, _this$spaceCount)), _this$spaceCount2;
+    }
+  }
+  /**
+   * Gets the raw text of the indentation
+   * @returns {String}
+   */
+
+
+  _createClass(Indent, [{
+    key: "getText",
+    value: function getText() {
+      return _classPrivateFieldGet(this, _rawText);
+    }
+    /**
+     * Gets the number of spaces in the indentation
+     * @returns {Number}
+     */
+
+  }, {
+    key: "getSpaceCount",
+    value: function getSpaceCount() {
+      return _classPrivateFieldGet(this, _spaceCount);
+    }
+    /**
+     * Gets the number of tabs in the indentation
+     * @returns {Number}
+     */
+
+  }, {
+    key: "getTabCount",
+    value: function getTabCount() {
+      return _classPrivateFieldGet(this, _tabCount);
+    }
+    /**
+     * Checks whether this indentation is empty (length of 0)
+     * @returns {Boolean}
+     */
+
+  }, {
+    key: "noIndentation",
+    value: function noIndentation() {
+      return _classPrivateFieldGet(this, _rawText).length === 0;
+    }
+    /**
+     * Checks whether this indentation is made up of only spaces.
+     * @returns {Boolean}
+     */
+
+  }, {
+    key: "isAllSpaces",
+    value: function isAllSpaces() {
+      return _classPrivateFieldGet(this, _spaceCount) > 0 && _classPrivateFieldGet(this, _tabCount) === 0;
+    }
+    /**
+     * Checks whether this indentation is made up of only tabs.
+     * @returns {Boolean}
+     */
+
+  }, {
+    key: "isAllTabs",
+    value: function isAllTabs() {
+      return _classPrivateFieldGet(this, _tabCount) > 0 && _classPrivateFieldGet(this, _spaceCount) === 0;
+    }
+    /**
+     * Checks whether this indentation mixes tabs and spaces
+     * @returns {Boolean}
+     */
+
+  }, {
+    key: "isMixed",
+    value: function isMixed() {
+      return _classPrivateFieldGet(this, _tabCount) > 0 && _classPrivateFieldGet(this, _spaceCount) > 0;
+    }
+  }]);
+
+  return Indent;
+}();
+
+exports.Indent = Indent;
+},{}],7:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -15337,7 +15502,7 @@ var TypeChangeObserverNotifier = /*#__PURE__*/function (_SymptomMonitor) {
 }(SymptomMonitor);
 
 exports.TypeChangeObserverNotifier = TypeChangeObserverNotifier;
-},{"../problem-finder/symptom.js":11}],7:[function(require,module,exports){
+},{"../problem-finder/symptom.js":12}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -15356,6 +15521,8 @@ var _ast = require("./ast.js");
 var _block = require("./block.js");
 
 var _identifiers = require("./identifiers.js");
+
+var _indent2 = require("./indent.js");
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
@@ -15422,6 +15589,8 @@ var _stringLiteralDelimiter = /*#__PURE__*/new WeakMap();
 var _text = /*#__PURE__*/new WeakMap();
 
 var _indentSize = /*#__PURE__*/new WeakMap();
+
+var _indent = /*#__PURE__*/new WeakMap();
 
 var _currentLineNumber = /*#__PURE__*/new WeakMap();
 
@@ -15521,6 +15690,8 @@ var SourceProcessor = /*#__PURE__*/function () {
   /** @type {String} */
 
   /** @type {Number} */
+
+  /** @type {Indent} */
 
   /** @type {Number} */
 
@@ -15665,6 +15836,11 @@ var SourceProcessor = /*#__PURE__*/function () {
       value: void 0
     });
 
+    _classPrivateFieldInitSpec(this, _indent, {
+      writable: true,
+      value: void 0
+    });
+
     _classPrivateFieldInitSpec(this, _currentLineNumber, {
       writable: true,
       value: void 0
@@ -15705,6 +15881,8 @@ var SourceProcessor = /*#__PURE__*/function () {
     _classPrivateFieldSet(this, _groupCharCounts, groupCharCounts);
 
     _classPrivateFieldSet(this, _indentSize, _classPrivateMethodGet(this, _countSpacesAtStartOfLine, _countSpacesAtStartOfLine2).call(this, _text2));
+
+    _classPrivateFieldSet(this, _indent, new _indent2.Indent(_text2.substring(0, _classPrivateFieldGet(this, _indentSize))));
 
     _classPrivateFieldSet(this, _lastLineExpressions, lastLineExpressions);
 
@@ -15776,6 +15954,16 @@ var SourceProcessor = /*#__PURE__*/function () {
     key: "getIndentation",
     value: function getIndentation() {
       return _classPrivateFieldGet(this, _indentSize);
+    }
+    /**
+     * Gets the indent object that describes the indentation
+     * @returns {Indent}
+     */
+
+  }, {
+    key: "getIndent",
+    value: function getIndent() {
+      return _classPrivateFieldGet(this, _indent);
     }
     /**
      * Whether or not the statement continues on the next line of source code.
@@ -15930,15 +16118,16 @@ function _parseLine2(startFrom, varsWithTypeNames, moduleNames) {
 }
 
 function _countSpacesAtStartOfLine2(rawContent) {
-  var spaces = 0;
-  var charAt = rawContent.charCodeAt(spaces);
-
-  while (rawContent.length > 0 && _enums.Character.getCategory(charAt) === _enums.Character.Space || _enums.Character.getCategory(charAt) === _enums.Character.Tab) {
-    spaces++;
-    charAt = rawContent.charCodeAt(spaces);
+  /*let spaces = 0;
+  let charAt = rawContent.charCodeAt(spaces);
+  while (rawContent.length > 0 && 
+          Character.getCategory(charAt) === Character.Space || 
+          Character.getCategory(charAt) === Character.Tab) {
+      spaces++;
+      charAt = rawContent.charCodeAt(spaces);
   }
-
-  return spaces;
+  return spaces;*/
+  return Math.max(rawContent.search(/\S/), 0);
 }
 
 function _checkIfContinues2() {
@@ -17166,6 +17355,9 @@ function _processComparisons(expressions) {
     if (expressions[nextIndex].is(_enums.ExpressionEntity.InKeyword) && start > 1 && expressions[start - 1].is(_enums.ExpressionEntity.Comma)) {
       start = start - 2;
       exp = _classStaticPrivateMethodGet(this, StatementProcessor, _multipartExpressionFactory).call(this, expressions.slice(start, nextIndex + 2), _enums.ExpressionEntity.IteratorExpression);
+    } else if (expressions[nextIndex].is(_enums.ExpressionEntity.InKeyword) && nextIndex === 1 && nextIndex + 1 < expressions.length && expressions[nextIndex + 1].is(_enums.ExpressionEntity.BuiltInFunctionCall) && expressions[nextIndex + 1].getFunctionExpression().isOneOf([_enums.ExpressionEntity.EnumerateFunction])) {
+      start = 0;
+      exp = _classStaticPrivateMethodGet(this, StatementProcessor, _multipartExpressionFactory).call(this, expressions.slice(start, nextIndex + 2), _enums.ExpressionEntity.IteratorExpression);
     } else {
       exp = _classStaticPrivateMethodGet(this, StatementProcessor, _multipartExpressionFactory).call(this, expressions.slice(start, nextIndex + 2), _enums.ExpressionEntity.ComparisonExpression);
     }
@@ -17315,7 +17507,7 @@ function _processKeywordStatements(expressions) {
 
   return expressions;
 }
-},{"../problem-finder/symptom.js":11,"../utils/utils.js":13,"./ast.js":1,"./block.js":2,"./enums.js":4,"./identifiers.js":5}],8:[function(require,module,exports){
+},{"../problem-finder/symptom.js":12,"../utils/utils.js":14,"./ast.js":1,"./block.js":2,"./enums.js":4,"./identifiers.js":5,"./indent.js":6}],9:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -17340,6 +17532,8 @@ var _block = require("./block.js");
 var _rawtextprocessing = require("./rawtextprocessing.js");
 
 var _constants = require("../utils/constants.js");
+
+var _indent2 = require("./indent.js");
 
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
@@ -17413,6 +17607,8 @@ var _expressions = /*#__PURE__*/new WeakMap();
 
 var _indentation = /*#__PURE__*/new WeakMap();
 
+var _indent = /*#__PURE__*/new WeakMap();
+
 var _expressionTree = /*#__PURE__*/new WeakMap();
 
 var _completeProcessing = /*#__PURE__*/new WeakSet();
@@ -17450,6 +17646,8 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
 
   /** @type {Number} */
 
+  /** @type {Indent} */
+
   /** @type {ExpressionNode[]} */
   // The expressions summarised in tree form, with multipart expressions where needed e.g. function calls
 
@@ -17457,10 +17655,10 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
    * Creates a new Statement. 
    * @param {String} rawText The raw text of the statement. 
    * @param {Number} firstLineNumber The document line number that the statement begins on.
-   * @param {Number} indentation The number of spaces at the start of the statement.
+   * @param {Indent} indent The indent object representing the number of spaces.
    * @param {ExpressionNode[]} expressions. Optional. The expression nodes that make up the statment.
    */
-  function Statement(rawText, firstLineNumber, indentation) {
+  function Statement(rawText, firstLineNumber, indent) {
     var _this;
 
     var _expressions2 = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : [];
@@ -17501,6 +17699,11 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
       value: void 0
     });
 
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _indent, {
+      writable: true,
+      value: void 0
+    });
+
     _classPrivateFieldInitSpec(_assertThisInitialized(_this), _expressionTree, {
       writable: true,
       value: void 0
@@ -17510,7 +17713,9 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
 
     _classPrivateFieldGet(_assertThisInitialized(_this), _lineNumbers).add(firstLineNumber);
 
-    _classPrivateFieldSet(_assertThisInitialized(_this), _indentation, indentation);
+    _classPrivateFieldSet(_assertThisInitialized(_this), _indent, indent);
+
+    _classPrivateFieldSet(_assertThisInitialized(_this), _indentation, indent.getSpaceCount() + indent.getTabCount());
 
     if (_expressions2.length > 0) {
       if (_expressions2[_expressions2.length - 1].is(_enums.ExpressionEntity.ContinuationLine)) {
@@ -17602,6 +17807,16 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
     key: "getIndentation",
     value: function getIndentation() {
       return _classPrivateFieldGet(this, _indentation);
+    }
+    /**
+     * Gets the indent object describing the indentation
+     * @returns {Indent}
+     */
+
+  }, {
+    key: "getIndent",
+    value: function getIndent() {
+      return _classPrivateFieldGet(this, _indent);
     }
     /**
      * Gets the parsed expressions in the statement (the AST version)
@@ -17773,7 +17988,7 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
   }], [{
     key: "createFromSource",
     value: function createFromSource(processedSource) {
-      return new Statement(processedSource.getText(), processedSource.getLineNumber(), processedSource.getIndentation(), processedSource.getExpressions(), !processedSource.continuesOnNextLine());
+      return new Statement(processedSource.getText(), processedSource.getLineNumber(), processedSource.getIndent(), processedSource.getExpressions(), !processedSource.continuesOnNextLine());
     }
   }]);
 
@@ -17928,7 +18143,7 @@ var BlockStatement = /*#__PURE__*/function (_Statement) {
     _classCallCheck(this, BlockStatement);
 
     // expressions will be handled differently
-    _this2 = _super2.call(this, definitionStatement.getRawText(), definitionStatement.getFirstLineNumber(), definitionStatement.getIndentation());
+    _this2 = _super2.call(this, definitionStatement.getRawText(), definitionStatement.getFirstLineNumber(), definitionStatement.getIndent());
 
     _classPrivateMethodInitSpec(_assertThisInitialized(_this2), _checkForLoopIteratorModified);
 
@@ -18465,7 +18680,7 @@ function _checkForLoopIteratorModified2(statement, definition) {
 
   return symptoms;
 }
-},{"../problem-finder/symptom.js":11,"../utils/constants.js":12,"../utils/utils.js":13,"./ast.js":1,"./block.js":2,"./enums.js":4,"./interfaces.js":6,"./rawtextprocessing.js":7}],9:[function(require,module,exports){
+},{"../problem-finder/symptom.js":12,"../utils/constants.js":13,"../utils/utils.js":14,"./ast.js":1,"./block.js":2,"./enums.js":4,"./indent.js":6,"./interfaces.js":7,"./rawtextprocessing.js":8}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -18568,7 +18783,7 @@ var misconceptionInfo = function misconceptionInfo() {
 };
 
 exports.misconceptionInfo = misconceptionInfo;
-},{"./doc-model/docinfo.js":3,"./doc-model/enums.js":4}],10:[function(require,module,exports){
+},{"./doc-model/docinfo.js":3,"./doc-model/enums.js":4}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -20029,7 +20244,7 @@ var Reason = /*#__PURE__*/function () {
 exports.Reason = Reason;
 var misconceptionDetector = new Map([[_enums.MisconceptionType.PrintSameAsReturn, printSameAsReturn], [_enums.MisconceptionType.MapToBooleanWithIf, mapToBooleanWithIf], [_enums.MisconceptionType.ComparisonWithBoolLiteral, comparisonWithBoolLiteral], [_enums.MisconceptionType.DeferredReturn, deferredReturn], [_enums.MisconceptionType.TypeMustBeSpecified, typeMustBeSpecified], [_enums.MisconceptionType.CompareMultipleValuesWithOr, compareMultipleValuesWithOr], [_enums.MisconceptionType.ParenthesesOnlyIfArgument, parenthesesOnlyIfArgument], [_enums.MisconceptionType.FunctionCallsUseSquareBrackets, functionCallsUseSquareBrackets], [_enums.MisconceptionType.FunctionCallsNoParentheses, functionCallsNoParentheses], [_enums.MisconceptionType.AssignCompares, assignCompares], [_enums.MisconceptionType.ReturnCall, returnCall], [_enums.MisconceptionType.SequentialIfsAreExclusive, sequentialIfsAreExclusive], [_enums.MisconceptionType.WhileSameAsIf, whileSameAsIf], [_enums.MisconceptionType.IterationRequiresTwoLoops, iterationRequiresTwoLoops], [_enums.MisconceptionType.StringMethodsModifyTheString, stringMethodsModifyTheString], [_enums.MisconceptionType.TypeConversionModifiesArgument, typeConversionModifiesArgument], [_enums.MisconceptionType.MapToBooleanWithTernaryOperator, mapToBooleanWithTernary], [_enums.MisconceptionType.NoReservedWords, noReservedWords], [_enums.MisconceptionType.ParameterMustBeAssignedInFunction, parameterMustBeAssignedInFunction], [_enums.MisconceptionType.LocalVariablesAreGlobal, localVariablesAreGlobal], [_enums.MisconceptionType.IteratorInitialisedOutsideLoop, iteratorInitialisedOutsideLoop], [_enums.MisconceptionType.ForLoopVarIsLocal, forLoopVarIsLocal], [_enums.MisconceptionType.LoopCounter, loopCounter], [_enums.MisconceptionType.NoKeyword, noKeyword], [_enums.MisconceptionType.ColonAssigns, colonAssigns] //25
 ]);
-},{"../doc-model/enums.js":4,"../utils/constants.js":12,"../utils/utils.js":13,"./symptom.js":11}],11:[function(require,module,exports){
+},{"../doc-model/enums.js":4,"../utils/constants.js":13,"../utils/utils.js":14,"./symptom.js":12}],12:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -21640,7 +21855,9 @@ var SymptomFinder = /*#__PURE__*/function () {
 exports.SymptomFinder = SymptomFinder;
 
 _defineProperty(SymptomFinder, "symptoms", []);
-},{"../doc-model/enums.js":4,"../utils/constants.js":12,"../utils/utils.js":13}],12:[function(require,module,exports){
+
+_defineProperty(SymptomFinder, "text", "");
+},{"../doc-model/enums.js":4,"../utils/constants.js":13,"../utils/utils.js":14}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -21713,7 +21930,7 @@ var UNKNOWN = "unknown";
 exports.UNKNOWN = UNKNOWN;
 var EMPTY = "empty";
 exports.EMPTY = EMPTY;
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -21941,7 +22158,7 @@ function getTextOfExpressions(expressions) {
   var text = expressions[0].getTextValue();
 
   for (var i = 1; i < expressions.length; i++) {
-    var numSpaces = expressions[i].getDocumentStartIndex() - expressions[i - 1].getDocumentEndIndex();
+    var numSpaces = expressions[i].getDocumentStartIndex() - expressions[i - 1].getDocumentEndIndex() - 1;
 
     for (var l = expressions[i - 1].getEndLineNumber(); l < expressions[i].getStartLineNumber(); l++) {
       text += "\n";
@@ -24156,9 +24373,9 @@ exports.specialCaseLookup = specialCaseLookup;
 var validMethodLookup = new Map([[_enums.DataType.String, new Set([_enums.ExpressionEntity.Capitalize, _enums.ExpressionEntity.Casefold, _enums.ExpressionEntity.Center, _enums.ExpressionEntity.Count, _enums.ExpressionEntity.Encode, _enums.ExpressionEntity.ExpandTabs, _enums.ExpressionEntity.Find, _enums.ExpressionEntity.Format, _enums.ExpressionEntity.Index, _enums.ExpressionEntity.IsAlnum, _enums.ExpressionEntity.IsAlpha, _enums.ExpressionEntity.IsAscii, _enums.ExpressionEntity.IsDecimal, _enums.ExpressionEntity.IsDigit, _enums.ExpressionEntity.IsIdentifier, _enums.ExpressionEntity.IsLower, _enums.ExpressionEntity.IsNumeric, _enums.ExpressionEntity.IsPrintable, _enums.ExpressionEntity.IsSpace, _enums.ExpressionEntity.IsTitle, _enums.ExpressionEntity.IsUpper, _enums.ExpressionEntity.Join, _enums.ExpressionEntity.LJust, _enums.ExpressionEntity.Lower, _enums.ExpressionEntity.LStrip, _enums.ExpressionEntity.MakeTrans, _enums.ExpressionEntity.Partition, _enums.ExpressionEntity.Replace, _enums.ExpressionEntity.RFind, _enums.ExpressionEntity.RIndex, _enums.ExpressionEntity.RJust, _enums.ExpressionEntity.RPartition, _enums.ExpressionEntity.RSplit, _enums.ExpressionEntity.RStrip, _enums.ExpressionEntity.Split, _enums.ExpressionEntity.SplitLines, _enums.ExpressionEntity.StartsWith, _enums.ExpressionEntity.Strip, _enums.ExpressionEntity.SwapCase, _enums.ExpressionEntity.Title, _enums.ExpressionEntity.Translate, _enums.ExpressionEntity.Upper, _enums.ExpressionEntity.ZFill])], [_enums.DataType.List, new Set([_enums.ExpressionEntity.Append, _enums.ExpressionEntity.Clear, _enums.ExpressionEntity.Copy, _enums.ExpressionEntity.Count, _enums.ExpressionEntity.Extend, _enums.ExpressionEntity.Index, _enums.ExpressionEntity.Insert, _enums.ExpressionEntity.Pop, _enums.ExpressionEntity.Remove, _enums.ExpressionEntity.Reverse, _enums.ExpressionEntity.Sort, _enums.ExpressionCategory.MagicMethods])], [_enums.DataType.Tuple, new Set([_enums.ExpressionEntity.Count, _enums.ExpressionEntity.Index])], [_enums.DataType.Set, new Set([_enums.ExpressionEntity.Add, _enums.ExpressionEntity.Clear, _enums.ExpressionEntity.Copy, _enums.ExpressionEntity.Difference, _enums.ExpressionEntity.DifferenceUpdate, _enums.ExpressionEntity.Discard, _enums.ExpressionEntity.Intersection, _enums.ExpressionEntity.IntersectionUpdate, _enums.ExpressionEntity.IsDisjoint, _enums.ExpressionEntity.IsSubset, _enums.ExpressionEntity.IsSuperset, _enums.ExpressionEntity.Pop, _enums.ExpressionEntity.Remove, _enums.ExpressionEntity.SymmetricDifference, _enums.ExpressionEntity.SymmetricDifferenceUpdate, _enums.ExpressionEntity.Union, _enums.ExpressionEntity.Update])], [_enums.DataType.Dict, new Set([_enums.ExpressionEntity.Clear, _enums.ExpressionEntity.Copy, _enums.ExpressionEntity.FromKeys, _enums.ExpressionEntity.Get, _enums.ExpressionEntity.Items, _enums.ExpressionEntity.Keys, _enums.ExpressionEntity.Pop, _enums.ExpressionEntity.PopItem, _enums.ExpressionEntity.SetDefault, _enums.ExpressionEntity.Update, _enums.ExpressionEntity.Values])], [_enums.DataType.File, new Set([_enums.ExpressionEntity.Close, _enums.ExpressionEntity.FileNo, _enums.ExpressionEntity.Flush, _enums.ExpressionEntity.IsAtty, _enums.ExpressionEntity.Read, _enums.ExpressionEntity.Readable, _enums.ExpressionEntity.ReadLine, _enums.ExpressionEntity.ReadLines, _enums.ExpressionEntity.Seek, _enums.ExpressionEntity.Seekable, _enums.ExpressionEntity.Tell, _enums.ExpressionEntity.Truncate, _enums.ExpressionEntity.Writable, _enums.ExpressionEntity.Write, _enums.ExpressionEntity.WriteLines])], [_enums.DataType.Random, new Set([_enums.ExpressionEntity.Seed, _enums.ExpressionEntity.GetState, _enums.ExpressionEntity.SetState, _enums.ExpressionEntity.GetRandBits, _enums.ExpressionEntity.RandRange, _enums.ExpressionEntity.RandInt, _enums.ExpressionEntity.Choice, _enums.ExpressionEntity.Choices, _enums.ExpressionEntity.Shuffle, _enums.ExpressionEntity.Sample, _enums.ExpressionEntity.RandomMethod, _enums.ExpressionEntity.Uniform, _enums.ExpressionEntity.Triangular, _enums.ExpressionEntity.BetaVariate, _enums.ExpressionEntity.ExpoVariate, _enums.ExpressionEntity.GammaVariate, _enums.ExpressionEntity.Gauss, _enums.ExpressionEntity.LogNormVariate, _enums.ExpressionEntity.NormalVariate, _enums.ExpressionEntity.VonMisesVariate, _enums.ExpressionEntity.ParetoVariate, _enums.ExpressionEntity.WeibullVariate, _enums.ExpressionCategory.MagicMethods])], [_enums.DataType.Math, new Set([_enums.ExpressionEntity.Acos, _enums.ExpressionEntity.Acosh, _enums.ExpressionEntity.Asin, _enums.ExpressionEntity.Asinh, _enums.ExpressionEntity.Atan, _enums.ExpressionEntity.Atan2, _enums.ExpressionEntity.Atanh, _enums.ExpressionEntity.Ceil, _enums.ExpressionEntity.Comb, _enums.ExpressionEntity.CopySign, _enums.ExpressionEntity.Cos, _enums.ExpressionEntity.Cosh, _enums.ExpressionEntity.Degrees, _enums.ExpressionEntity.Dist, _enums.ExpressionEntity.Erf, _enums.ExpressionEntity.Erfc, _enums.ExpressionEntity.Exp, _enums.ExpressionEntity.Expm1, _enums.ExpressionEntity.Fabs, _enums.ExpressionEntity.Factorial, _enums.ExpressionEntity.Floor, _enums.ExpressionEntity.Fmod, _enums.ExpressionEntity.Frexp, _enums.ExpressionEntity.Fsum, _enums.ExpressionEntity.Gamma, _enums.ExpressionEntity.Gcd, _enums.ExpressionEntity.Hypot, _enums.ExpressionEntity.IsClose, _enums.ExpressionEntity.IsFinite, _enums.ExpressionEntity.IsInf, _enums.ExpressionEntity.IsNaN, _enums.ExpressionEntity.ISqrt, _enums.ExpressionEntity.Ldexp, _enums.ExpressionEntity.LGamma, _enums.ExpressionEntity.Log, _enums.ExpressionEntity.Log10, _enums.ExpressionEntity.Log1P, _enums.ExpressionEntity.Log2, _enums.ExpressionEntity.Perm, _enums.ExpressionEntity.Pow, _enums.ExpressionEntity.Prod, _enums.ExpressionEntity.Radians, _enums.ExpressionEntity.Remainder, _enums.ExpressionEntity.Sin, _enums.ExpressionEntity.Sinh, _enums.ExpressionEntity.Sqrt, _enums.ExpressionEntity.Tan, _enums.ExpressionEntity.Tanh, _enums.ExpressionEntity.Trunc])], [_enums.DataType.StringModule, new Set([_enums.ExpressionEntity.Formatter, _enums.ExpressionEntity.Template, _enums.ExpressionEntity.Capwords])], [_enums.DataType.Re, new Set([_enums.ExpressionEntity.Compile, _enums.ExpressionEntity.Search, _enums.ExpressionEntity.Match, _enums.ExpressionEntity.FullMatch, _enums.ExpressionEntity.FindAll, _enums.ExpressionEntity.FindIter, _enums.ExpressionEntity.Sub, _enums.ExpressionEntity.SubN, _enums.ExpressionEntity.Escape, _enums.ExpressionEntity.Purge, _enums.ExpressionEntity.Split])], [_enums.DataType.Sys, new Set([_enums.ExpressionEntity.AddAuditHook, _enums.ExpressionEntity.Audit, _enums.ExpressionEntity.CallTracing, _enums.ExpressionEntity.ClearTypeCache, _enums.ExpressionEntity.CurrentFrames, _enums.ExpressionEntity.CurrentExceptions, _enums.ExpressionEntity.BreakpointHook, _enums.ExpressionEntity.DebugMallocStats, _enums.ExpressionEntity.DisplayHook, _enums.ExpressionEntity.ExceptHook, _enums.ExpressionEntity.ExcInfo, _enums.ExpressionEntity.SysExit, _enums.ExpressionEntity.GetAllocatedBlocks, _enums.ExpressionEntity.GetAndroidApiLevel, _enums.ExpressionEntity.GetDefaultEncoding, _enums.ExpressionEntity.GetDLOpenFlags, _enums.ExpressionEntity.GetFileSystemEncoding, _enums.ExpressionEntity.GetFileSystemEncodeErrors, _enums.ExpressionEntity.GetRefCount, _enums.ExpressionEntity.GetRecursionLimit, _enums.ExpressionEntity.GetSizeOf, _enums.ExpressionEntity.GetSwitchInterval, _enums.ExpressionEntity.GetFrame, _enums.ExpressionEntity.GetProfile, _enums.ExpressionEntity.GetTrace, _enums.ExpressionEntity.GetWindowsVersion, _enums.ExpressionEntity.GetAsyncGenHooks, _enums.ExpressionEntity.GetCoroutineOriginTrackingDepth, _enums.ExpressionEntity.Intern, _enums.ExpressionEntity.IsFinalizing, _enums.ExpressionEntity.SetDLOpenFlags, _enums.ExpressionEntity.SetProfile, _enums.ExpressionEntity.SetRecursionLimit, _enums.ExpressionEntity.SetSwitchInterval, _enums.ExpressionEntity.SetTrace, _enums.ExpressionEntity.SetAsyncgenHooks, _enums.ExpressionEntity.EnableLegacyWindowsFSEncoding])]]); //#endregion - lookups
 
 exports.validMethodLookup = validMethodLookup;
-},{"../doc-model/enums.js":4,"./constants.js":12}],14:[function(require,module,exports){
+},{"../doc-model/enums.js":4,"./constants.js":13}],15:[function(require,module,exports){
 (function (global){(function (){
 const SIDElib=require("./dist/index.js");global.window.misconceptionInfo=SIDElib.misconceptionInfo,global.window.symptomInfo=SIDElib.symptomInfo,global.window.parse=SIDElib.parse;
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./dist/index.js":9}]},{},[14]);
+},{"./dist/index.js":10}]},{},[15]);

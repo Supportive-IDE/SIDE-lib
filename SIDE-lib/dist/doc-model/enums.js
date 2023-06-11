@@ -1611,6 +1611,8 @@ var SymptomType = /*#__PURE__*/function (_Enum6) {
   // ??? 
   // RiskFactor
   // ???
+  // RiskFactor TO IMPLEMENT
+  //static MixesSpacesAndTabs = new SymptomType("MixesSpacesAndTabs", "Indentation is created using a mix of tabs and spaces.");
   // ???
   // RiskFactor
   // Error
@@ -1677,7 +1679,7 @@ _defineProperty(SymptomType, "InfiniteLoop", new SymptomType("InfiniteLoop", "A 
 
 _defineProperty(SymptomType, "LoopReturn", new SymptomType("LoopEarlyExit", "A return or break statement causes a loop to always exit on the first iteration."));
 
-_defineProperty(SymptomType, "LoopVarModifiedInChildLoop", new SymptomType("WhileLoopVarModifiedInChildLoop", "A while loops variable is modified in a nested for or while loop."));
+_defineProperty(SymptomType, "LoopVarModifiedInChildLoop", new SymptomType("WhileLoopVarModifiedInChildLoop", "A while loop variable is modified in a nested for or while loop."));
 
 _defineProperty(SymptomType, "LoopVarNotModified", new SymptomType("WhileLoopVarNotModified", "None of the variables used in a while loop definition are modified in the body of the while loop. If the while loop contains a nested loop, only usages of the variable in the outer loop are checked."));
 
@@ -1685,7 +1687,7 @@ _defineProperty(SymptomType, "NaturalLanguageBoolean", new SymptomType("BooleanS
 
 _defineProperty(SymptomType, "OneLineConditional", new SymptomType("OneLineConditional", "A conditional that could be re-written as one line. Although this is not an error, it may indicate a misconception about Boolean values."));
 
-_defineProperty(SymptomType, "OutOfPlaceBooleanOperator", new SymptomType("BooleanSyntax.outOfPlace", "A comparison or logical operator is used in an expected place in a conditional expression."));
+_defineProperty(SymptomType, "OutOfPlaceBooleanOperator", new SymptomType("BooleanSyntax.outOfPlace", "A comparison or logical operator is used in an unexpected place in a conditional expression."));
 
 _defineProperty(SymptomType, "OverwrittenVariable", new SymptomType("VariableOverwrite", "A variable's value is initialised or changed then overwritten without being used."));
 

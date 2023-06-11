@@ -23,6 +23,8 @@ var _rawtextprocessing = require("./rawtextprocessing.js");
 
 var _constants = require("../utils/constants.js");
 
+var _indent2 = require("./indent.js");
+
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -95,6 +97,8 @@ var _expressions = /*#__PURE__*/new WeakMap();
 
 var _indentation = /*#__PURE__*/new WeakMap();
 
+var _indent = /*#__PURE__*/new WeakMap();
+
 var _expressionTree = /*#__PURE__*/new WeakMap();
 
 var _completeProcessing = /*#__PURE__*/new WeakSet();
@@ -132,6 +136,8 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
 
   /** @type {Number} */
 
+  /** @type {Indent} */
+
   /** @type {ExpressionNode[]} */
   // The expressions summarised in tree form, with multipart expressions where needed e.g. function calls
 
@@ -139,10 +145,10 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
    * Creates a new Statement. 
    * @param {String} rawText The raw text of the statement. 
    * @param {Number} firstLineNumber The document line number that the statement begins on.
-   * @param {Number} indentation The number of spaces at the start of the statement.
+   * @param {Indent} indent The indent object representing the number of spaces.
    * @param {ExpressionNode[]} expressions. Optional. The expression nodes that make up the statment.
    */
-  function Statement(rawText, firstLineNumber, indentation) {
+  function Statement(rawText, firstLineNumber, indent) {
     var _this;
 
     var _expressions2 = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : [];
@@ -183,6 +189,11 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
       value: void 0
     });
 
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _indent, {
+      writable: true,
+      value: void 0
+    });
+
     _classPrivateFieldInitSpec(_assertThisInitialized(_this), _expressionTree, {
       writable: true,
       value: void 0
@@ -192,7 +203,9 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
 
     _classPrivateFieldGet(_assertThisInitialized(_this), _lineNumbers).add(firstLineNumber);
 
-    _classPrivateFieldSet(_assertThisInitialized(_this), _indentation, indentation);
+    _classPrivateFieldSet(_assertThisInitialized(_this), _indent, indent);
+
+    _classPrivateFieldSet(_assertThisInitialized(_this), _indentation, indent.getSpaceCount() + indent.getTabCount());
 
     if (_expressions2.length > 0) {
       if (_expressions2[_expressions2.length - 1].is(_enums.ExpressionEntity.ContinuationLine)) {
@@ -284,6 +297,16 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
     key: "getIndentation",
     value: function getIndentation() {
       return _classPrivateFieldGet(this, _indentation);
+    }
+    /**
+     * Gets the indent object describing the indentation
+     * @returns {Indent}
+     */
+
+  }, {
+    key: "getIndent",
+    value: function getIndent() {
+      return _classPrivateFieldGet(this, _indent);
     }
     /**
      * Gets the parsed expressions in the statement (the AST version)
@@ -455,7 +478,7 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
   }], [{
     key: "createFromSource",
     value: function createFromSource(processedSource) {
-      return new Statement(processedSource.getText(), processedSource.getLineNumber(), processedSource.getIndentation(), processedSource.getExpressions(), !processedSource.continuesOnNextLine());
+      return new Statement(processedSource.getText(), processedSource.getLineNumber(), processedSource.getIndent(), processedSource.getExpressions(), !processedSource.continuesOnNextLine());
     }
   }]);
 
@@ -610,7 +633,7 @@ var BlockStatement = /*#__PURE__*/function (_Statement) {
     _classCallCheck(this, BlockStatement);
 
     // expressions will be handled differently
-    _this2 = _super2.call(this, definitionStatement.getRawText(), definitionStatement.getFirstLineNumber(), definitionStatement.getIndentation());
+    _this2 = _super2.call(this, definitionStatement.getRawText(), definitionStatement.getFirstLineNumber(), definitionStatement.getIndent());
 
     _classPrivateMethodInitSpec(_assertThisInitialized(_this2), _checkForLoopIteratorModified);
 

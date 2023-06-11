@@ -225,7 +225,7 @@ function getTextOfExpressions(expressions) {
   var text = expressions[0].getTextValue();
 
   for (var i = 1; i < expressions.length; i++) {
-    var numSpaces = expressions[i].getDocumentStartIndex() - expressions[i - 1].getDocumentEndIndex();
+    var numSpaces = expressions[i].getDocumentStartIndex() - expressions[i - 1].getDocumentEndIndex() - 1;
 
     for (var l = expressions[i - 1].getEndLineNumber(); l < expressions[i].getStartLineNumber(); l++) {
       text += "\n";

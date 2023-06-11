@@ -258,7 +258,7 @@ var ExpressionNode = /*#__PURE__*/function (_TypeChangeObserverNo) {
     var _this;
 
     var dataType = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : _enums.DataType.NotParsed;
-    var documentEndIndex = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : documentStartIndex + textValue.length;
+    var documentEndIndex = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : documentStartIndex + textValue.length - 1;
     var endLineNumber = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : startLineNumber;
 
     _classCallCheck(this, ExpressionNode);
@@ -6321,6 +6321,7 @@ function _computeAssignments4() {
     var elements = _rawtextprocessing.StatementProcessor.split(tupleExpressions, _enums.ExpressionEntity.Comma);
 
     var tuple = new CompoundTypeExpression((0, _utils.getTextOfExpressions)(tupleExpressions), tupleExpressions, _enums.ExpressionEntity.TupleDefinition, elements);
+    tuple.setParent(this);
 
     while (children.length > 2) {
       children.pop();

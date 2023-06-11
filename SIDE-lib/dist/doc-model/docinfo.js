@@ -257,9 +257,7 @@ var DocInfo = /*#__PURE__*/function () {
   }, {
     key: "getMisconceptions",
     value: function getMisconceptions() {
-      return (0, _misconception.identifyMisconceptions)(_symptom.SymptomFinder.symptoms, _classPrivateFieldGet(this, _variables)
-      /*, this.#userDefinedFunctionsOLD*/
-      );
+      return (0, _misconception.identifyMisconceptions)(_symptom.SymptomFinder.symptoms, _classPrivateFieldGet(this, _variables));
     }
     /**
      * Gets the raw text in the document.

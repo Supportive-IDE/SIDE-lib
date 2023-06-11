@@ -25,6 +25,8 @@ var _symptom2 = require("../problem-finder/symptom.js");
 
 var _constants = require("../utils/constants.js");
 
+var _indent = require("./indent.js");
+
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -1243,6 +1245,10 @@ var _userDefinedFunctionMap = /*#__PURE__*/new WeakMap();
 
 var _unconnectedFunctionCalls = /*#__PURE__*/new WeakMap();
 
+var _indentCharacter = /*#__PURE__*/new WeakMap();
+
+var _indentLevelCount = /*#__PURE__*/new WeakMap();
+
 var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
   _inherits(ScopeBlock, _StatementBlock);
 
@@ -1257,6 +1263,11 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
   /** @type {Map<String, UserDefinedFunctionExpression>} */
 
   /** @type {Map<String, UserDefinedFunctionCall[]>} */
+
+  /** @type {String} */
+
+  /** @type {Number} */
+  // The number of the indentCharacter that make up one level of indentation
 
   /**
    * Creates a new StatementBlock representing a block of Python code
@@ -1299,6 +1310,16 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
     _classPrivateFieldInitSpec(_assertThisInitialized(_this2), _unconnectedFunctionCalls, {
       writable: true,
       value: new Map()
+    });
+
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this2), _indentCharacter, {
+      writable: true,
+      value: void 0
+    });
+
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this2), _indentLevelCount, {
+      writable: true,
+      value: void 0
     });
 
     return _this2;
@@ -1774,7 +1795,7 @@ var ListComprehensionBlock = /*#__PURE__*/function (_ScopeBlock2) {
     _classCallCheck(this, ListComprehensionBlock);
 
     _this4 = _super4.call(this, _enums.ExpressionEntity.ListComprehension, parentBlock);
-    var statement = new _statement.Statement(listComprehensionExpression.getTextValue(), listComprehensionExpression.getStartLineNumber(), 0, [listComprehensionExpression]);
+    var statement = new _statement.Statement(listComprehensionExpression.getTextValue(), listComprehensionExpression.getStartLineNumber(), new _indent.Indent(""), [listComprehensionExpression]);
 
     _this4.addStatement(statement);
 

@@ -17,6 +17,8 @@ var _block = require("./block.js");
 
 var _identifiers = require("./identifiers.js");
 
+var _indent2 = require("./indent.js");
+
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -82,6 +84,8 @@ var _stringLiteralDelimiter = /*#__PURE__*/new WeakMap();
 var _text = /*#__PURE__*/new WeakMap();
 
 var _indentSize = /*#__PURE__*/new WeakMap();
+
+var _indent = /*#__PURE__*/new WeakMap();
 
 var _currentLineNumber = /*#__PURE__*/new WeakMap();
 
@@ -181,6 +185,8 @@ var SourceProcessor = /*#__PURE__*/function () {
   /** @type {String} */
 
   /** @type {Number} */
+
+  /** @type {Indent} */
 
   /** @type {Number} */
 
@@ -325,6 +331,11 @@ var SourceProcessor = /*#__PURE__*/function () {
       value: void 0
     });
 
+    _classPrivateFieldInitSpec(this, _indent, {
+      writable: true,
+      value: void 0
+    });
+
     _classPrivateFieldInitSpec(this, _currentLineNumber, {
       writable: true,
       value: void 0
@@ -365,6 +376,8 @@ var SourceProcessor = /*#__PURE__*/function () {
     _classPrivateFieldSet(this, _groupCharCounts, groupCharCounts);
 
     _classPrivateFieldSet(this, _indentSize, _classPrivateMethodGet(this, _countSpacesAtStartOfLine, _countSpacesAtStartOfLine2).call(this, _text2));
+
+    _classPrivateFieldSet(this, _indent, new _indent2.Indent(_text2.substring(0, _classPrivateFieldGet(this, _indentSize))));
 
     _classPrivateFieldSet(this, _lastLineExpressions, lastLineExpressions);
 
@@ -436,6 +449,16 @@ var SourceProcessor = /*#__PURE__*/function () {
     key: "getIndentation",
     value: function getIndentation() {
       return _classPrivateFieldGet(this, _indentSize);
+    }
+    /**
+     * Gets the indent object that describes the indentation
+     * @returns {Indent}
+     */
+
+  }, {
+    key: "getIndent",
+    value: function getIndent() {
+      return _classPrivateFieldGet(this, _indent);
     }
     /**
      * Whether or not the statement continues on the next line of source code.
@@ -590,15 +613,16 @@ function _parseLine2(startFrom, varsWithTypeNames, moduleNames) {
 }
 
 function _countSpacesAtStartOfLine2(rawContent) {
-  var spaces = 0;
-  var charAt = rawContent.charCodeAt(spaces);
-
-  while (rawContent.length > 0 && _enums.Character.getCategory(charAt) === _enums.Character.Space || _enums.Character.getCategory(charAt) === _enums.Character.Tab) {
-    spaces++;
-    charAt = rawContent.charCodeAt(spaces);
+  /*let spaces = 0;
+  let charAt = rawContent.charCodeAt(spaces);
+  while (rawContent.length > 0 && 
+          Character.getCategory(charAt) === Character.Space || 
+          Character.getCategory(charAt) === Character.Tab) {
+      spaces++;
+      charAt = rawContent.charCodeAt(spaces);
   }
-
-  return spaces;
+  return spaces;*/
+  return Math.max(rawContent.search(/\S/), 0);
 }
 
 function _checkIfContinues2() {
@@ -1825,6 +1849,9 @@ function _processComparisons(expressions) {
 
     if (expressions[nextIndex].is(_enums.ExpressionEntity.InKeyword) && start > 1 && expressions[start - 1].is(_enums.ExpressionEntity.Comma)) {
       start = start - 2;
+      exp = _classStaticPrivateMethodGet(this, StatementProcessor, _multipartExpressionFactory).call(this, expressions.slice(start, nextIndex + 2), _enums.ExpressionEntity.IteratorExpression);
+    } else if (expressions[nextIndex].is(_enums.ExpressionEntity.InKeyword) && nextIndex === 1 && nextIndex + 1 < expressions.length && expressions[nextIndex + 1].is(_enums.ExpressionEntity.BuiltInFunctionCall) && expressions[nextIndex + 1].getFunctionExpression().isOneOf([_enums.ExpressionEntity.EnumerateFunction])) {
+      start = 0;
       exp = _classStaticPrivateMethodGet(this, StatementProcessor, _multipartExpressionFactory).call(this, expressions.slice(start, nextIndex + 2), _enums.ExpressionEntity.IteratorExpression);
     } else {
       exp = _classStaticPrivateMethodGet(this, StatementProcessor, _multipartExpressionFactory).call(this, expressions.slice(start, nextIndex + 2), _enums.ExpressionEntity.ComparisonExpression);

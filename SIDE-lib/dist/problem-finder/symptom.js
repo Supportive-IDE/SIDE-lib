@@ -1608,3 +1608,5 @@ var SymptomFinder = /*#__PURE__*/function () {
 exports.SymptomFinder = SymptomFinder;
 
 _defineProperty(SymptomFinder, "symptoms", []);
+
+_defineProperty(SymptomFinder, "text", "");
