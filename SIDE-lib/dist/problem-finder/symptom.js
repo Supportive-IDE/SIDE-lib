@@ -5,7 +5,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.SymptomWrongArgNumber = exports.SymptomVariableWithSameNameAsFunction = exports.SymptomUnusedReturn = exports.SymptomUnreachableLoop = exports.SymptomUnreachableExit = exports.SymptomUnknownMethod = exports.SymptomUnexpectedColon = exports.SymptomUndefinedVariable = exports.SymptomTypeUnnecessary = exports.SymptomTypeInvalid = exports.SymptomTernaryReturnsBool = exports.SymptomSubscriptedNonSubscriptable = exports.SymptomSequentialIfs = exports.SymptomReturnInParentheses = exports.SymptomOverwrittenVariable = exports.SymptomOneLineConditional = exports.SymptomNaturalLanguageBoolean = exports.SymptomLoopVarNotUsed = exports.SymptomLoopVarModifiedInChildLoop = exports.SymptomFunctionPrints = exports.SymptomFinder = exports.SymptomDefinitionFollowedByReservedWord = exports.SymptomCompareBoolLiteral = exports.SymptomAssignmentInReturn = exports.SymptomAssignedNoReturn = exports.Symptom = void 0;
+exports.SymptomWrongArgNumber = exports.SymptomVariableWithSameNameAsFunction = exports.SymptomUnusedReturn = exports.SymptomUnreachableLoop = exports.SymptomUnreachableExit = exports.SymptomUnknownMethod = exports.SymptomUnexpectedColon = exports.SymptomUndefinedVariable = exports.SymptomTypeUnnecessary = exports.SymptomTypeInvalid = exports.SymptomTernaryReturnsBool = exports.SymptomSubscriptedNonSubscriptable = exports.SymptomSequentialIfs = exports.SymptomReturnInParentheses = exports.SymptomOverwrittenVariable = exports.SymptomOneLineConditional = exports.SymptomNaturalLanguageBoolean = exports.SymptomLoopVarNotUsed = exports.SymptomLoopVarModifiedInChildLoop = exports.SymptomLoopEarlyExit = exports.SymptomFunctionPrints = exports.SymptomFinder = exports.SymptomDefinitionFollowedByReservedWord = exports.SymptomCompareBoolLiteral = exports.SymptomAssignmentInReturn = exports.SymptomAssignedNoReturn = exports.Symptom = void 0;
 
 var _enums = require("../doc-model/enums.js");
 
@@ -415,6 +415,10 @@ var SymptomAssignedNoReturn = /*#__PURE__*/function (_Symptom) {
         };
       }
 
+      if (additionalInfo.hasOwnProperty("usage")) {
+        obj.usage = additionalInfo.usage;
+      }
+
       return obj;
     }
   }]);
@@ -573,23 +577,70 @@ var SymptomFunctionPrints = /*#__PURE__*/function (_Symptom5) {
 
   return SymptomFunctionPrints;
 }(Symptom);
+
+exports.SymptomFunctionPrints = SymptomFunctionPrints;
+
+var SymptomLoopEarlyExit = /*#__PURE__*/function (_Symptom6) {
+  _inherits(SymptomLoopEarlyExit, _Symptom6);
+
+  var _super6 = _createSuper(SymptomLoopEarlyExit);
+
+  function SymptomLoopEarlyExit() {
+    _classCallCheck(this, SymptomLoopEarlyExit);
+
+    return _super6.apply(this, arguments);
+  }
+
+  _createClass(SymptomLoopEarlyExit, [{
+    key: "toJSON",
+    value:
+    /**
+     * @inheritdoc
+     */
+    function toJSON() {
+      var obj = _get(_getPrototypeOf(SymptomLoopEarlyExit.prototype), "toJSON", this).call(this);
+
+      var additionalInfo = this.getAdditionalInfo();
+
+      if (additionalInfo.hasOwnProperty("loopType")) {
+        obj.loopType = additionalInfo.loopType;
+      }
+
+      if (additionalInfo.hasOwnProperty("exitLevel")) {
+        obj.exitLevel = additionalInfo.exitLevel;
+      }
+
+      if (additionalInfo.hasOwnProperty("exitType")) {
+        obj.exitType = additionalInfo.exitType;
+      }
+
+      if (additionalInfo.hasOwnProperty("exitTypes")) {
+        obj.exitTypes = additionalInfo.exitTypes;
+      }
+
+      return obj;
+    }
+  }]);
+
+  return SymptomLoopEarlyExit;
+}(Symptom);
 /**
  * A class representing the LoopVarModifiedInChildLoop symptom.
  * @extends Symptom
  */
 
 
-exports.SymptomFunctionPrints = SymptomFunctionPrints;
+exports.SymptomLoopEarlyExit = SymptomLoopEarlyExit;
 
-var SymptomLoopVarModifiedInChildLoop = /*#__PURE__*/function (_Symptom6) {
-  _inherits(SymptomLoopVarModifiedInChildLoop, _Symptom6);
+var SymptomLoopVarModifiedInChildLoop = /*#__PURE__*/function (_Symptom7) {
+  _inherits(SymptomLoopVarModifiedInChildLoop, _Symptom7);
 
-  var _super6 = _createSuper(SymptomLoopVarModifiedInChildLoop);
+  var _super7 = _createSuper(SymptomLoopVarModifiedInChildLoop);
 
   function SymptomLoopVarModifiedInChildLoop() {
     _classCallCheck(this, SymptomLoopVarModifiedInChildLoop);
 
-    return _super6.apply(this, arguments);
+    return _super7.apply(this, arguments);
   }
 
   _createClass(SymptomLoopVarModifiedInChildLoop, [{
@@ -621,15 +672,15 @@ var SymptomLoopVarModifiedInChildLoop = /*#__PURE__*/function (_Symptom6) {
 
 exports.SymptomLoopVarModifiedInChildLoop = SymptomLoopVarModifiedInChildLoop;
 
-var SymptomLoopVarNotUsed = /*#__PURE__*/function (_Symptom7) {
-  _inherits(SymptomLoopVarNotUsed, _Symptom7);
+var SymptomLoopVarNotUsed = /*#__PURE__*/function (_Symptom8) {
+  _inherits(SymptomLoopVarNotUsed, _Symptom8);
 
-  var _super7 = _createSuper(SymptomLoopVarNotUsed);
+  var _super8 = _createSuper(SymptomLoopVarNotUsed);
 
   function SymptomLoopVarNotUsed() {
     _classCallCheck(this, SymptomLoopVarNotUsed);
 
-    return _super7.apply(this, arguments);
+    return _super8.apply(this, arguments);
   }
 
   _createClass(SymptomLoopVarNotUsed, [{
@@ -661,15 +712,15 @@ var SymptomLoopVarNotUsed = /*#__PURE__*/function (_Symptom7) {
 
 exports.SymptomLoopVarNotUsed = SymptomLoopVarNotUsed;
 
-var SymptomNaturalLanguageBoolean = /*#__PURE__*/function (_Symptom8) {
-  _inherits(SymptomNaturalLanguageBoolean, _Symptom8);
+var SymptomNaturalLanguageBoolean = /*#__PURE__*/function (_Symptom9) {
+  _inherits(SymptomNaturalLanguageBoolean, _Symptom9);
 
-  var _super8 = _createSuper(SymptomNaturalLanguageBoolean);
+  var _super9 = _createSuper(SymptomNaturalLanguageBoolean);
 
   function SymptomNaturalLanguageBoolean() {
     _classCallCheck(this, SymptomNaturalLanguageBoolean);
 
-    return _super8.apply(this, arguments);
+    return _super9.apply(this, arguments);
   }
 
   _createClass(SymptomNaturalLanguageBoolean, [{
@@ -683,9 +734,16 @@ var SymptomNaturalLanguageBoolean = /*#__PURE__*/function (_Symptom8) {
 
       var additionalInfo = this.getAdditionalInfo();
 
-      if (additionalInfo.hasOwnProperty("valueType")) {
+      if (additionalInfo.hasOwnProperty("form")) {
+        obj.form = additionalInfo.form;
+      }
+
+      if (additionalInfo.hasOwnProperty("operator")) {
         obj.operator = additionalInfo.operator;
-        obj.valueType = additionalInfo.valueType.name; //additionalInfo.valueType.map(t => t.name);
+      }
+
+      if (additionalInfo.hasOwnProperty("valueType")) {
+        obj.valueType = additionalInfo.valueType.name;
       }
 
       return obj;
@@ -702,15 +760,15 @@ var SymptomNaturalLanguageBoolean = /*#__PURE__*/function (_Symptom8) {
 
 exports.SymptomNaturalLanguageBoolean = SymptomNaturalLanguageBoolean;
 
-var SymptomOneLineConditional = /*#__PURE__*/function (_Symptom9) {
-  _inherits(SymptomOneLineConditional, _Symptom9);
+var SymptomOneLineConditional = /*#__PURE__*/function (_Symptom10) {
+  _inherits(SymptomOneLineConditional, _Symptom10);
 
-  var _super9 = _createSuper(SymptomOneLineConditional);
+  var _super10 = _createSuper(SymptomOneLineConditional);
 
   function SymptomOneLineConditional() {
     _classCallCheck(this, SymptomOneLineConditional);
 
-    return _super9.apply(this, arguments);
+    return _super10.apply(this, arguments);
   }
 
   _createClass(SymptomOneLineConditional, [{
@@ -746,15 +804,15 @@ var SymptomOneLineConditional = /*#__PURE__*/function (_Symptom9) {
 
 exports.SymptomOneLineConditional = SymptomOneLineConditional;
 
-var SymptomOverwrittenVariable = /*#__PURE__*/function (_Symptom10) {
-  _inherits(SymptomOverwrittenVariable, _Symptom10);
+var SymptomOverwrittenVariable = /*#__PURE__*/function (_Symptom11) {
+  _inherits(SymptomOverwrittenVariable, _Symptom11);
 
-  var _super10 = _createSuper(SymptomOverwrittenVariable);
+  var _super11 = _createSuper(SymptomOverwrittenVariable);
 
   function SymptomOverwrittenVariable() {
     _classCallCheck(this, SymptomOverwrittenVariable);
 
-    return _super10.apply(this, arguments);
+    return _super11.apply(this, arguments);
   }
 
   _createClass(SymptomOverwrittenVariable, [{
@@ -802,15 +860,15 @@ var SymptomOverwrittenVariable = /*#__PURE__*/function (_Symptom10) {
 
 exports.SymptomOverwrittenVariable = SymptomOverwrittenVariable;
 
-var SymptomReturnInParentheses = /*#__PURE__*/function (_Symptom11) {
-  _inherits(SymptomReturnInParentheses, _Symptom11);
+var SymptomReturnInParentheses = /*#__PURE__*/function (_Symptom12) {
+  _inherits(SymptomReturnInParentheses, _Symptom12);
 
-  var _super11 = _createSuper(SymptomReturnInParentheses);
+  var _super12 = _createSuper(SymptomReturnInParentheses);
 
   function SymptomReturnInParentheses() {
     _classCallCheck(this, SymptomReturnInParentheses);
 
-    return _super11.apply(this, arguments);
+    return _super12.apply(this, arguments);
   }
 
   _createClass(SymptomReturnInParentheses, [{
@@ -842,15 +900,15 @@ var SymptomReturnInParentheses = /*#__PURE__*/function (_Symptom11) {
 
 exports.SymptomReturnInParentheses = SymptomReturnInParentheses;
 
-var SymptomSequentialIfs = /*#__PURE__*/function (_Symptom12) {
-  _inherits(SymptomSequentialIfs, _Symptom12);
+var SymptomSequentialIfs = /*#__PURE__*/function (_Symptom13) {
+  _inherits(SymptomSequentialIfs, _Symptom13);
 
-  var _super12 = _createSuper(SymptomSequentialIfs);
+  var _super13 = _createSuper(SymptomSequentialIfs);
 
   function SymptomSequentialIfs() {
     _classCallCheck(this, SymptomSequentialIfs);
 
-    return _super12.apply(this, arguments);
+    return _super13.apply(this, arguments);
   }
 
   _createClass(SymptomSequentialIfs, [{
@@ -882,15 +940,15 @@ var SymptomSequentialIfs = /*#__PURE__*/function (_Symptom12) {
 
 exports.SymptomSequentialIfs = SymptomSequentialIfs;
 
-var SymptomSubscriptedNonSubscriptable = /*#__PURE__*/function (_Symptom13) {
-  _inherits(SymptomSubscriptedNonSubscriptable, _Symptom13);
+var SymptomSubscriptedNonSubscriptable = /*#__PURE__*/function (_Symptom14) {
+  _inherits(SymptomSubscriptedNonSubscriptable, _Symptom14);
 
-  var _super13 = _createSuper(SymptomSubscriptedNonSubscriptable);
+  var _super14 = _createSuper(SymptomSubscriptedNonSubscriptable);
 
   function SymptomSubscriptedNonSubscriptable() {
     _classCallCheck(this, SymptomSubscriptedNonSubscriptable);
 
-    return _super13.apply(this, arguments);
+    return _super14.apply(this, arguments);
   }
 
   _createClass(SymptomSubscriptedNonSubscriptable, [{
@@ -930,15 +988,15 @@ var SymptomSubscriptedNonSubscriptable = /*#__PURE__*/function (_Symptom13) {
 
 exports.SymptomSubscriptedNonSubscriptable = SymptomSubscriptedNonSubscriptable;
 
-var SymptomTernaryReturnsBool = /*#__PURE__*/function (_Symptom14) {
-  _inherits(SymptomTernaryReturnsBool, _Symptom14);
+var SymptomTernaryReturnsBool = /*#__PURE__*/function (_Symptom15) {
+  _inherits(SymptomTernaryReturnsBool, _Symptom15);
 
-  var _super14 = _createSuper(SymptomTernaryReturnsBool);
+  var _super15 = _createSuper(SymptomTernaryReturnsBool);
 
   function SymptomTernaryReturnsBool() {
     _classCallCheck(this, SymptomTernaryReturnsBool);
 
-    return _super14.apply(this, arguments);
+    return _super15.apply(this, arguments);
   }
 
   _createClass(SymptomTernaryReturnsBool, [{
@@ -968,15 +1026,15 @@ var SymptomTernaryReturnsBool = /*#__PURE__*/function (_Symptom14) {
 
 exports.SymptomTernaryReturnsBool = SymptomTernaryReturnsBool;
 
-var SymptomTypeInvalid = /*#__PURE__*/function (_Symptom15) {
-  _inherits(SymptomTypeInvalid, _Symptom15);
+var SymptomTypeInvalid = /*#__PURE__*/function (_Symptom16) {
+  _inherits(SymptomTypeInvalid, _Symptom16);
 
-  var _super15 = _createSuper(SymptomTypeInvalid);
+  var _super16 = _createSuper(SymptomTypeInvalid);
 
   function SymptomTypeInvalid() {
     _classCallCheck(this, SymptomTypeInvalid);
 
-    return _super15.apply(this, arguments);
+    return _super16.apply(this, arguments);
   }
 
   _createClass(SymptomTypeInvalid, [{
@@ -1008,15 +1066,15 @@ var SymptomTypeInvalid = /*#__PURE__*/function (_Symptom15) {
 
 exports.SymptomTypeInvalid = SymptomTypeInvalid;
 
-var SymptomTypeUnnecessary = /*#__PURE__*/function (_Symptom16) {
-  _inherits(SymptomTypeUnnecessary, _Symptom16);
+var SymptomTypeUnnecessary = /*#__PURE__*/function (_Symptom17) {
+  _inherits(SymptomTypeUnnecessary, _Symptom17);
 
-  var _super16 = _createSuper(SymptomTypeUnnecessary);
+  var _super17 = _createSuper(SymptomTypeUnnecessary);
 
   function SymptomTypeUnnecessary() {
     _classCallCheck(this, SymptomTypeUnnecessary);
 
-    return _super16.apply(this, arguments);
+    return _super17.apply(this, arguments);
   }
 
   _createClass(SymptomTypeUnnecessary, [{
@@ -1056,15 +1114,15 @@ var SymptomTypeUnnecessary = /*#__PURE__*/function (_Symptom16) {
 
 exports.SymptomTypeUnnecessary = SymptomTypeUnnecessary;
 
-var SymptomUndefinedVariable = /*#__PURE__*/function (_Symptom17) {
-  _inherits(SymptomUndefinedVariable, _Symptom17);
+var SymptomUndefinedVariable = /*#__PURE__*/function (_Symptom18) {
+  _inherits(SymptomUndefinedVariable, _Symptom18);
 
-  var _super17 = _createSuper(SymptomUndefinedVariable);
+  var _super18 = _createSuper(SymptomUndefinedVariable);
 
   function SymptomUndefinedVariable() {
     _classCallCheck(this, SymptomUndefinedVariable);
 
-    return _super17.apply(this, arguments);
+    return _super18.apply(this, arguments);
   }
 
   _createClass(SymptomUndefinedVariable, [{
@@ -1096,15 +1154,15 @@ var SymptomUndefinedVariable = /*#__PURE__*/function (_Symptom17) {
 
 exports.SymptomUndefinedVariable = SymptomUndefinedVariable;
 
-var SymptomUnexpectedColon = /*#__PURE__*/function (_Symptom18) {
-  _inherits(SymptomUnexpectedColon, _Symptom18);
+var SymptomUnexpectedColon = /*#__PURE__*/function (_Symptom19) {
+  _inherits(SymptomUnexpectedColon, _Symptom19);
 
-  var _super18 = _createSuper(SymptomUnexpectedColon);
+  var _super19 = _createSuper(SymptomUnexpectedColon);
 
   function SymptomUnexpectedColon() {
     _classCallCheck(this, SymptomUnexpectedColon);
 
-    return _super18.apply(this, arguments);
+    return _super19.apply(this, arguments);
   }
 
   _createClass(SymptomUnexpectedColon, [{
@@ -1140,15 +1198,15 @@ var SymptomUnexpectedColon = /*#__PURE__*/function (_Symptom18) {
 
 exports.SymptomUnexpectedColon = SymptomUnexpectedColon;
 
-var SymptomUnknownMethod = /*#__PURE__*/function (_Symptom19) {
-  _inherits(SymptomUnknownMethod, _Symptom19);
+var SymptomUnknownMethod = /*#__PURE__*/function (_Symptom20) {
+  _inherits(SymptomUnknownMethod, _Symptom20);
 
-  var _super19 = _createSuper(SymptomUnknownMethod);
+  var _super20 = _createSuper(SymptomUnknownMethod);
 
   function SymptomUnknownMethod() {
     _classCallCheck(this, SymptomUnknownMethod);
 
-    return _super19.apply(this, arguments);
+    return _super20.apply(this, arguments);
   }
 
   _createClass(SymptomUnknownMethod, [{
@@ -1180,15 +1238,15 @@ var SymptomUnknownMethod = /*#__PURE__*/function (_Symptom19) {
 
 exports.SymptomUnknownMethod = SymptomUnknownMethod;
 
-var SymptomUnreachableExit = /*#__PURE__*/function (_Symptom20) {
-  _inherits(SymptomUnreachableExit, _Symptom20);
+var SymptomUnreachableExit = /*#__PURE__*/function (_Symptom21) {
+  _inherits(SymptomUnreachableExit, _Symptom21);
 
-  var _super20 = _createSuper(SymptomUnreachableExit);
+  var _super21 = _createSuper(SymptomUnreachableExit);
 
   function SymptomUnreachableExit() {
     _classCallCheck(this, SymptomUnreachableExit);
 
-    return _super20.apply(this, arguments);
+    return _super21.apply(this, arguments);
   }
 
   _createClass(SymptomUnreachableExit, [{
@@ -1224,15 +1282,15 @@ var SymptomUnreachableExit = /*#__PURE__*/function (_Symptom20) {
 
 exports.SymptomUnreachableExit = SymptomUnreachableExit;
 
-var SymptomUnreachableLoop = /*#__PURE__*/function (_Symptom21) {
-  _inherits(SymptomUnreachableLoop, _Symptom21);
+var SymptomUnreachableLoop = /*#__PURE__*/function (_Symptom22) {
+  _inherits(SymptomUnreachableLoop, _Symptom22);
 
-  var _super21 = _createSuper(SymptomUnreachableLoop);
+  var _super22 = _createSuper(SymptomUnreachableLoop);
 
   function SymptomUnreachableLoop() {
     _classCallCheck(this, SymptomUnreachableLoop);
 
-    return _super21.apply(this, arguments);
+    return _super22.apply(this, arguments);
   }
 
   _createClass(SymptomUnreachableLoop, [{
@@ -1264,15 +1322,15 @@ var SymptomUnreachableLoop = /*#__PURE__*/function (_Symptom21) {
 
 exports.SymptomUnreachableLoop = SymptomUnreachableLoop;
 
-var SymptomUnusedReturn = /*#__PURE__*/function (_Symptom22) {
-  _inherits(SymptomUnusedReturn, _Symptom22);
+var SymptomUnusedReturn = /*#__PURE__*/function (_Symptom23) {
+  _inherits(SymptomUnusedReturn, _Symptom23);
 
-  var _super22 = _createSuper(SymptomUnusedReturn);
+  var _super23 = _createSuper(SymptomUnusedReturn);
 
   function SymptomUnusedReturn() {
     _classCallCheck(this, SymptomUnusedReturn);
 
-    return _super22.apply(this, arguments);
+    return _super23.apply(this, arguments);
   }
 
   _createClass(SymptomUnusedReturn, [{
@@ -1315,15 +1373,15 @@ var SymptomUnusedReturn = /*#__PURE__*/function (_Symptom22) {
 
 exports.SymptomUnusedReturn = SymptomUnusedReturn;
 
-var SymptomVariableWithSameNameAsFunction = /*#__PURE__*/function (_Symptom23) {
-  _inherits(SymptomVariableWithSameNameAsFunction, _Symptom23);
+var SymptomVariableWithSameNameAsFunction = /*#__PURE__*/function (_Symptom24) {
+  _inherits(SymptomVariableWithSameNameAsFunction, _Symptom24);
 
-  var _super23 = _createSuper(SymptomVariableWithSameNameAsFunction);
+  var _super24 = _createSuper(SymptomVariableWithSameNameAsFunction);
 
   function SymptomVariableWithSameNameAsFunction() {
     _classCallCheck(this, SymptomVariableWithSameNameAsFunction);
 
-    return _super23.apply(this, arguments);
+    return _super24.apply(this, arguments);
   }
 
   _createClass(SymptomVariableWithSameNameAsFunction, [{
@@ -1358,15 +1416,15 @@ var SymptomVariableWithSameNameAsFunction = /*#__PURE__*/function (_Symptom23) {
 
 exports.SymptomVariableWithSameNameAsFunction = SymptomVariableWithSameNameAsFunction;
 
-var SymptomWrongArgNumber = /*#__PURE__*/function (_Symptom24) {
-  _inherits(SymptomWrongArgNumber, _Symptom24);
+var SymptomWrongArgNumber = /*#__PURE__*/function (_Symptom25) {
+  _inherits(SymptomWrongArgNumber, _Symptom25);
 
-  var _super24 = _createSuper(SymptomWrongArgNumber);
+  var _super25 = _createSuper(SymptomWrongArgNumber);
 
   function SymptomWrongArgNumber() {
     _classCallCheck(this, SymptomWrongArgNumber);
 
-    return _super24.apply(this, arguments);
+    return _super25.apply(this, arguments);
   }
 
   _createClass(SymptomWrongArgNumber, [{

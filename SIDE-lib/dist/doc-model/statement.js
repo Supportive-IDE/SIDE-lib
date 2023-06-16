@@ -518,7 +518,9 @@ function _checkSymptoms2(statement) {
 
   for (var i = 0; i < expressions.length; i++) {
     if (_classStaticPrivateMethodGet(Statement, Statement, _isAndOr).call(Statement, expressions, i)) {
-      symptoms.push(_symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.AndOr, expressions, i, i + 1));
+      symptoms.push(_symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.NaturalLanguageBoolean, expressions, i, i + 1, {
+        form: _constants.AND_OR
+      })); //symptoms.push(SymptomFinder.createStatementSymptom(SymptomType.AndOr, expressions, i, i+1));
     }
 
     if (_classStaticPrivateMethodGet(Statement, Statement, _isOutOfPlaceBooleanOperator).call(Statement, expressions, i)) {

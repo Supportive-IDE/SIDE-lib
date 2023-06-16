@@ -1483,6 +1483,7 @@ var MisconceptionType = /*#__PURE__*/function (_Enum5) {
   // Needs testing (no occurrences in dataset)
   // Done
   // Progmiscon 
+  // Progmiscon
   // Done
   // Gama et al PG.4
   // Not implemented
@@ -1561,11 +1562,11 @@ _defineProperty(MisconceptionType, "FunctionCallsUseSquareBrackets", new Misconc
 
 _defineProperty(MisconceptionType, "IterationRequiresTwoLoops", new MisconceptionType("IterationRequiresTwoLoops", "A while loop with an integer loop variable contains a nested for loop. The while loop variable is only modified in the nested for loop and is used to count items in the variable iterated in the for loop. The two nested loops could be replaced with a single for loop using enumerate() or range()."));
 
-_defineProperty(MisconceptionType, "IteratorInitialisedOutsideLoop", new MisconceptionType("IteratorInitialisedOutsideLoop", "The iterating variable in a for loop is initialised before the loop with the same value. The programmer may not know that the iterating variable is initialised in the for loop definition."));
+_defineProperty(MisconceptionType, "IteratorInitialisedOutsideLoop", new MisconceptionType("TargetInitialisedOutsideLoop", "The target variable in a for loop is initialised before the loop with the same value. The programmer may not know that the iterating variable is initialised in the for loop definition."));
 
 _defineProperty(MisconceptionType, "LocalVariablesAreGlobal", new MisconceptionType("LocalVariablesAreGlobal", "An undefined variable in document scope has the same name as a variable with function scope. This may indicate a misunderstanding of variable scope."));
 
-_defineProperty(MisconceptionType, "LoopCounter", new MisconceptionType("LoopCounter", "A for loop iterator variable is modified in the loop and the modified variable is not used, or a while loop counter is assigned an int literal rather than incremented, or assigned the result of a function call. This may indicate confusion over how loops use loop variables."));
+_defineProperty(MisconceptionType, "LoopCounter", new MisconceptionType("LoopCounter", "A for loop target variable is modified in the loop and the modified variable is not used, or a while loop counter is assigned an int literal rather than incremented, or assigned the result of a function call. This may indicate confusion over how loops use loop variables."));
 
 _defineProperty(MisconceptionType, "MapToBooleanWithIf", new MisconceptionType("MapToBooleanWithIf", "A conditional statement checks a boolean expression only to return or assign a value that matches the value of the boolean expression. The programmer may not realise that a boolean expression can be assigned or returned directly."));
 
@@ -1583,7 +1584,7 @@ _defineProperty(MisconceptionType, "PrintSameAsReturn", new MisconceptionType("P
 
 _defineProperty(MisconceptionType, "ReturnCall", new MisconceptionType("ReturnCall", "Function return values are surrounded by parentheses. There may be a belief that return needs to be called like a function."));
 
-_defineProperty(MisconceptionType, "SequentialIfsAreExclusive", new MisconceptionType("SequentialIfsAreExclusive", "If statements with very similar conditional statements appear in a sequence. There may be a belief that subsequent if statements will only execute if the previous condition does not. Alternatively, the programmer may not be aware of the efficiency drawbacks of using sequential if statements where a multiway conditional would be more appropriate."));
+_defineProperty(MisconceptionType, "SequentialIfsAreExclusive", new MisconceptionType("ConditionalIsSequence", "If statements with very similar conditional statements appear in a sequence. There may be a belief that subsequent if statements will only execute if the previous condition does not. The programmer may not be aware of the efficiency drawbacks of using sequential if statements where a multiway conditional would be more appropriate."));
 
 _defineProperty(MisconceptionType, "StringMethodsModifyTheString", new MisconceptionType("StringMethodsModifyTheString", "A string method is called but the result is not saved or passed. There may be an assumption that string methods mutate the string."));
 
@@ -1600,7 +1601,6 @@ var SymptomType = /*#__PURE__*/function (_Enum6) {
 
   // Error
   // Error
-  // Error
   // ???
   // RiskFactor
   // Error
@@ -1608,7 +1608,7 @@ var SymptomType = /*#__PURE__*/function (_Enum6) {
   // RiskFactor
   // RiskFactor
   // ???
-  // ??? 
+  // ???
   // RiskFactor
   // ???
   // RiskFactor TO IMPLEMENT
@@ -1657,9 +1657,7 @@ var SymptomType = /*#__PURE__*/function (_Enum6) {
 
 exports.SymptomType = SymptomType;
 
-_defineProperty(SymptomType, "AndOr", new SymptomType("BooleanSyntax.andOr", "A Boolean expression contains \"and or\"."));
-
-_defineProperty(SymptomType, "AssignmentInBoolean", new SymptomType("BooleanSyntax.assignment", "An assignment operator is used in a Boolean expression. This could be a typo or an indication of confusion about = and ==."));
+_defineProperty(SymptomType, "AssignmentInBoolean", new SymptomType("AssignmentInBoolean", "An assignment operator is used in a Boolean expression. This could be a typo or an indication of confusion about = and ==."));
 
 _defineProperty(SymptomType, "AssignmentInReturn", new SymptomType("AssignmentInReturn", "A variable is assigned in a return statement."));
 
@@ -1669,9 +1667,9 @@ _defineProperty(SymptomType, "CompareBoolLiteral", new SymptomType("CompareBoolL
 
 _defineProperty(SymptomType, "DefinitionFollowedByReservedWord", new SymptomType("DefinitionFollowedByReservedWord", "A definition keyword (def or class) is followed by a reserved word, suggesting the intention to define a function or class with the same name as a reserved word."));
 
-_defineProperty(SymptomType, "DoubleComparisonOperators", new SymptomType("BooleanSyntax.doubleOperators", "Two comparison operators are used side by side. This may be due to an extra space e.g. <= is written as < =."));
+_defineProperty(SymptomType, "DoubleComparisonOperators", new SymptomType("DoubleComparisonOperators", "Two comparison operators are used side by side. This may be due to an extra space e.g. <= is written as < =."));
 
-_defineProperty(SymptomType, "ForLoopIteratorModified", new SymptomType("ForLoopIteratorModified", "A for loop iterator variable is modified in the loop and the modified value is not used."));
+_defineProperty(SymptomType, "ForLoopIteratorModified", new SymptomType("ForLoopTargetModified", "A for loop target variable is modified in the loop and the modified value is not used."));
 
 _defineProperty(SymptomType, "FunctionPrints", new SymptomType("FunctionPrints", "A user-defined function contains print statements. This is not an issue unless AssignedNoReturn is also present and print is used in place of return statements."));
 
@@ -1683,11 +1681,11 @@ _defineProperty(SymptomType, "LoopVarModifiedInChildLoop", new SymptomType("Whil
 
 _defineProperty(SymptomType, "LoopVarNotModified", new SymptomType("WhileLoopVarNotModified", "None of the variables used in a while loop definition are modified in the body of the while loop. If the while loop contains a nested loop, only usages of the variable in the outer loop are checked."));
 
-_defineProperty(SymptomType, "NaturalLanguageBoolean", new SymptomType("BooleanSyntax.naturalLanguage", "A Boolean expression checking if a particular expression is equal to one of a range of values uses \"or\" in a way that makes sense in natural language but may produce unexpected results in Python. For example, \"day == 'sat' or 'sun'\""));
+_defineProperty(SymptomType, "NaturalLanguageBoolean", new SymptomType("NaturalLanguageBoolean", "A Boolean expression uses syntax that makes sense in spoken English but may produce unexpected results or even and error in Python. The most common form is checking if a particular expression is equal to one of a range of values using \"or <non_boolean>\" e.g., \"day == 'sat' or 'sun'\"."));
 
 _defineProperty(SymptomType, "OneLineConditional", new SymptomType("OneLineConditional", "A conditional that could be re-written as one line. Although this is not an error, it may indicate a misconception about Boolean values."));
 
-_defineProperty(SymptomType, "OutOfPlaceBooleanOperator", new SymptomType("BooleanSyntax.outOfPlace", "A comparison or logical operator is used in an unexpected place in a conditional expression."));
+_defineProperty(SymptomType, "OutOfPlaceBooleanOperator", new SymptomType("OutOfPlaceOperatorsInBoolean", "A comparison or logical operator is used in an unexpected place in a conditional expression."));
 
 _defineProperty(SymptomType, "OverwrittenVariable", new SymptomType("VariableOverwrite", "A variable's value is initialised or changed then overwritten without being used."));
 
@@ -1705,7 +1703,7 @@ _defineProperty(SymptomType, "TernaryReturnsBool", new SymptomType("TernaryRetur
 
 _defineProperty(SymptomType, "TypeErrorInvalid", new SymptomType("InvalidCalculation", "A calculation that produces a TypeError e.g. string + int."));
 
-_defineProperty(SymptomType, "TypeUnnecessary", new SymptomType("TypeError.unnecessary", "A value that has a guaranteed data type is passed to a type conversion function that produces the same data type. Also captures strings converted to lists."));
+_defineProperty(SymptomType, "TypeUnnecessary", new SymptomType("UnnecessaryTypeConversion", "A value that has a guaranteed data type is passed to a type conversion function that produces the same data type. Also captures strings converted to lists."));
 
 _defineProperty(SymptomType, "UndefinedVariable", new SymptomType("UndefinedVariable", "A variable that was not declared is called. Depending on context, may be due to sloppiness (e.g. a typo) or may suggest misconception about variable scope, function parameters, or how to call functions."));
 

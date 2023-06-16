@@ -129,8 +129,6 @@ var _inverseBooleanTypes = /*#__PURE__*/new WeakSet();
 
 var _unpackGroup = /*#__PURE__*/new WeakSet();
 
-var _compareBranches = /*#__PURE__*/new WeakSet();
-
 /**
  * An unspecified type of block. Base class for more specific block types
  * @extends SymptomMonitor
@@ -170,8 +168,6 @@ var StatementBlock = /*#__PURE__*/function (_SymptomMonitor) {
     _classCallCheck(this, StatementBlock);
 
     _this = _super.call(this);
-
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _compareBranches);
 
     _classPrivateMethodInitSpec(_assertThisInitialized(_this), _unpackGroup);
 
@@ -256,8 +252,8 @@ var StatementBlock = /*#__PURE__*/function (_SymptomMonitor) {
   }, {
     key: "getId",
     value: function getId() {
-      var lineNum = _classPrivateFieldGet(this, _statements).length > 0 ? _classPrivateFieldGet(this, _blockEntity) === _enums.ExpressionEntity.DocumentDefinition ? 0 : _classPrivateFieldGet(this, _statements)[0].getFirstLineNumber() : -1;
-      return _classPrivateFieldGet(this, _statements).length > 0 ? "".concat(lineNum, "-").concat(_classPrivateFieldGet(this, _blockEntity).name) : "-1-".concat(_classPrivateFieldGet(this, _blockEntity).name);
+      var lineNum = _classPrivateFieldGet(this, _blockEntity) === _enums.ExpressionEntity.DocumentDefinition ? 0 : _classPrivateFieldGet(this, _statements).length > 0 ? _classPrivateFieldGet(this, _statements)[0].getFirstLineNumber() : -1;
+      return "".concat(lineNum, "-").concat(_classPrivateFieldGet(this, _blockEntity).name);
     }
     /**
      * Gets the parent block of this Block.
@@ -1226,15 +1222,6 @@ function _unpackGroup2(expressions) {
   return expressions;
 }
 
-function _compareBranches2(ifBranch, elseBranch) {
-  /*
-  {
-  //                                                            form: VALUE_ASSIGNED,
-  //                                                            variableAssigned: varName // additional info
-  //                                                    }
-  */
-}
-
 var _variableMap = /*#__PURE__*/new WeakMap();
 
 var _globalVars = /*#__PURE__*/new WeakMap();
@@ -2171,7 +2158,11 @@ function _checkBranchExit2(branch) {
         var statement = _step24.value;
 
         if (!statement.isBlockStatement() && !statement.isBlank() && (0, _utils.containsExit)(statement.getFirstExpression())) {
-          symptoms.push(_symptom2.SymptomFinder.createStatementSymptom(_enums.SymptomType.LoopReturn, [statement.getFirstExpression()], 0, 0, {}, branch.getId()));
+          symptoms.push(_symptom2.SymptomFinder.createStatementSymptom(_enums.SymptomType.LoopReturn, [statement.getFirstExpression()], 0, 0, {}, branch.getId(), {
+            loopType: branch.getBlockEntity().name,
+            exitLevel: _constants.TOP_LEVEL,
+            exitType: statement.getFirstExpression().isOneOf([_enums.ExpressionEntity.ReturnKeyword, _enums.ExpressionEntity.ReturnStatement]) ? "return" : statement.getFirstExpression().getTextValue()
+          }));
         }
       }
     } catch (err) {
@@ -2201,7 +2192,16 @@ function _checkBranchExit2(branch) {
       }
 
       var allExpressions = (0, _utils.getExpressionsInBranches)([branch].concat(_toConsumableArray(Array.from(branch.getSiblingConditionalBranches()))));
-      symptoms.push(_symptom2.SymptomFinder.createStatementSymptom(_enums.SymptomType.LoopReturn, allExpressions, 0, allExpressions.length, {}, branch.getParentBlock().getId()));
+      var exits = allExpressions.flatMap(function (e) {
+        return e.getExpressionsOfKind(_enums.ExpressionEntity.ReturnKeyword).concat(e.getExpressionsOfKind(_enums.ExpressionEntity.BreakKeyword), e.getExpressionsOfKind(_enums.ExpressionEntity.ExitFunction), e.getExpressionsOfKind(_enums.ExpressionEntity.SysExit), e.getExpressionsOfKind(_enums.ExpressionEntity.QuitFunction));
+      }).map(function (e) {
+        return e.getTextValue();
+      });
+      symptoms.push(_symptom2.SymptomFinder.createStatementSymptom(_enums.SymptomType.LoopReturn, allExpressions, 0, allExpressions.length, {}, branch.getParentBlock().getId(), {
+        loopType: branch.getBlockEntity().name,
+        exitLevel: _constants.ALL_BRANCHES_EXHAUSTIVE,
+        exitTypes: exits
+      }));
     }
   }
 

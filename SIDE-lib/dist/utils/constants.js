@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.WHILE_TRUE = exports.VARIABLE = exports.VALUE_RETURNED = exports.VALUE_ASSIGNED = exports.USER_DEFINED_VARIABLE = exports.USER_DEFINED_FUNCTION = exports.UNKNOWN = exports.TRUE = exports.STRING = exports.SKIP = exports.SAME_VALUE = exports.RETURN_KEYWORD = exports.NO_MATCH = exports.MATCH_ENTITY = exports.MATCH_CATEGORY = exports.LITERAL = exports.LIST = exports.INT = exports.FUNCTION_CALL = exports.FOR_LOOP_VAR = exports.FLOAT = exports.FALSE = exports.EXHAUSTIVE_CONDITIONAL = exports.EXACT_MATCH = exports.EMPTY = exports.DIFFERENT_VALUE = exports.COMPOUND_TYPE_DEFINITION = exports.COMPOUND_EXPRESSION = exports.BUILT_IN_FUNCTION = exports.BREAK_KEYWORD = exports.BOOLEAN_EXPRESSION = exports.BOOL = exports.ASSIGNMENT = void 0;
+exports.WHILE_TRUE = exports.VARIABLE = exports.VALUE_RETURNED = exports.VALUE_ASSIGNED = exports.USER_DEFINED_VARIABLE = exports.USER_DEFINED_FUNCTION = exports.UNKNOWN = exports.TRUE = exports.TOP_LEVEL = exports.TARGET_REPLACES_ITERABLE = exports.STRING = exports.SKIP = exports.SAME_VALUE = exports.RETURN_KEYWORD = exports.OR_NON_BOOL = exports.OR_IF = exports.NO_MATCH = exports.MATCH_ENTITY = exports.MATCH_CATEGORY = exports.LITERAL = exports.LIST = exports.INT = exports.FUNCTION_CALL = exports.FUNCTION_ARG = exports.FOR_LOOP_VAR = exports.FLOAT = exports.FALSE = exports.EXHAUSTIVE_CONDITIONAL = exports.EXACT_MATCH = exports.EMPTY = exports.DIFFERENT_VALUE = exports.COMPOUND_TYPE_DEFINITION = exports.COMPOUND_EXPRESSION = exports.COMPARISON = exports.CALCULATION = exports.BUILT_IN_FUNCTION = exports.BREAK_KEYWORD = exports.BOOLEAN_EXPRESSION = exports.BOOL = exports.ASSIGNMENT = exports.AND_OR = exports.ALL_BRANCHES_EXHAUSTIVE = void 0;
 var USER_DEFINED_FUNCTION = "userDefinedFunction";
 exports.USER_DEFINED_FUNCTION = USER_DEFINED_FUNCTION;
 var USER_DEFINED_VARIABLE = "userDefinedVariable";
@@ -60,6 +60,8 @@ var NO_MATCH = "noMatch";
 exports.NO_MATCH = NO_MATCH;
 var FOR_LOOP_VAR = "forLoopVariable";
 exports.FOR_LOOP_VAR = FOR_LOOP_VAR;
+var TARGET_REPLACES_ITERABLE = "forLoopTargetReplacesIterable";
+exports.TARGET_REPLACES_ITERABLE = TARGET_REPLACES_ITERABLE;
 var ASSIGNMENT = "assignment";
 exports.ASSIGNMENT = ASSIGNMENT;
 var SAME_VALUE = "same";
@@ -70,3 +72,19 @@ var UNKNOWN = "unknown";
 exports.UNKNOWN = UNKNOWN;
 var EMPTY = "empty";
 exports.EMPTY = EMPTY;
+var OR_NON_BOOL = "orNonBoolean";
+exports.OR_NON_BOOL = OR_NON_BOOL;
+var AND_OR = "andOr";
+exports.AND_OR = AND_OR;
+var OR_IF = "orIf";
+exports.OR_IF = OR_IF;
+var TOP_LEVEL = "topLevel";
+exports.TOP_LEVEL = TOP_LEVEL;
+var ALL_BRANCHES_EXHAUSTIVE = "allBranchesOfExhaustiveConditional";
+exports.ALL_BRANCHES_EXHAUSTIVE = ALL_BRANCHES_EXHAUSTIVE;
+var FUNCTION_ARG = "functionArgument";
+exports.FUNCTION_ARG = FUNCTION_ARG;
+var CALCULATION = "calculation";
+exports.CALCULATION = CALCULATION;
+var COMPARISON = "comparison";
+exports.COMPARISON = COMPARISON;
