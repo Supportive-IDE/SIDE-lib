@@ -419,6 +419,10 @@ var SymptomAssignedNoReturn = /*#__PURE__*/function (_Symptom) {
         obj.usage = additionalInfo.usage;
       }
 
+      if (additionalInfo.hasOwnProperty("target")) {
+        obj.target = additionalInfo.target;
+      }
+
       return obj;
     }
   }]);

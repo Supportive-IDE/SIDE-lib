@@ -6481,7 +6481,8 @@ function _checkAssignsNone2(exp) {
     symptoms.push.apply(symptoms, _toConsumableArray(noneValues.map(function (val) {
       return _symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.AssignedNone, [val], 0, 0, {
         expression: val,
-        usage: _constants.ASSIGNMENT
+        usage: _constants.ASSIGNMENT,
+        target: _classPrivateFieldGet(exp, _variables)[0].getTextValue()
       });
     })));
   }
@@ -6777,7 +6778,8 @@ function _checkAssignsNone4(exp) {
   if (value.getDataType() === _enums.DataType.None && !value.isOneOf([_enums.ExpressionEntity.NoneType, _enums.ExpressionEntity.VariableName]) || (0, _utils.isNoneFunction)(value)) {
     symptoms.push(_symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.AssignedNone, [value], 0, 0, {
       expression: value,
-      usage: _constants.ASSIGNMENT
+      usage: _constants.ASSIGNMENT,
+      target: _classPrivateFieldGet(exp, _variables2)[0].getTextValue()
     }));
   }
 
@@ -9241,12 +9243,16 @@ function _checkReturnNone2(returnExpression) {
   var noneValues = expandGroups.filter(function (val) {
     return (0, _utils.isNoneFunction)(val) || val.getDataType() === _enums.DataType.None && !val.isOneOf([_enums.ExpressionEntity.NoneType, _enums.ExpressionEntity.VariableName]);
   });
-  symptoms.push.apply(symptoms, _toConsumableArray(noneValues.map(function (val) {
-    return _symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.AssignedNone, [val], 0, 0, {
-      expression: val,
-      usage: _constants.RETURN_KEYWORD
-    });
-  })));
+
+  if (noneValues.length > 0) {
+    symptoms.push.apply(symptoms, _toConsumableArray(noneValues.map(function (val) {
+      return _symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.AssignedNone, [val], 0, 0, {
+        expression: val,
+        usage: _constants.RETURN_KEYWORD
+      });
+    })));
+  }
+
   return symptoms;
 }
 
@@ -21270,6 +21276,10 @@ var SymptomAssignedNoReturn = /*#__PURE__*/function (_Symptom) {
 
       if (additionalInfo.hasOwnProperty("usage")) {
         obj.usage = additionalInfo.usage;
+      }
+
+      if (additionalInfo.hasOwnProperty("target")) {
+        obj.target = additionalInfo.target;
       }
 
       return obj;
