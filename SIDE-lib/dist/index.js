@@ -16,6 +16,7 @@ var sortSymptoms = function sortSymptoms(a, b) {
 };
 
 var parse = function parse(pyString) {
+  var showTree = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
   var doc = new _docinfo.DocInfo(pyString);
   var symptoms = doc.getSymptoms().sort(sortSymptoms).map(function (symptom) {
     try {
@@ -65,13 +66,21 @@ var parse = function parse(pyString) {
       };
     }
   });
-  return {
+  var blocks = doc.getBlocks();
+  var retObj = {
     misconceptions: misconceptions,
     symptoms: symptoms,
-    blocks: doc.getBlocks().toJSON(),
+    blocks: blocks.toJSON(),
     variables: variables,
     functions: functions
   };
+
+  if (showTree) {
+    var tree = blocks.toTree();
+    retObj.tree = tree;
+  }
+
+  return retObj;
 }; // Add functions that return info about misconceptions and symptoms defined in the library (symptom checker should be able to just pull from the misconceptions)
 
 

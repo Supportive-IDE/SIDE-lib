@@ -796,6 +796,19 @@ var StatementBlock = /*#__PURE__*/function (_SymptomMonitor) {
         })
       };
     }
+  }, {
+    key: "toTree",
+    value: function toTree() {
+      return {
+        id: this.getId(),
+        statements: _classPrivateFieldGet(this, _statements).map(function (s) {
+          return s.toJSON();
+        }),
+        children: _classPrivateFieldGet(this, _childBlocks).map(function (b) {
+          return b.toTree();
+        })
+      };
+    }
     /**
      * Factory method to create an appropriate block type based on the entity.
      * @param {ExpressionEntity} blockEntity Optional. DocumentDefinition by default.
@@ -1699,8 +1712,20 @@ var FunctionBlock = /*#__PURE__*/function (_ScopeBlock) {
      * @param {FunctionBlock} block 
      * @returns {Symptom[]}
      */
-    //#endregion - symptoms
 
+  }, {
+    key: "toTree",
+    value: //#endregion - symptoms
+    function toTree() {
+      var statements = this.getStatements();
+      return {
+        id: this.getId(),
+        definition: statements.length > 0 ? statements[0].toJSON() : {},
+        statements: statements.slice(1).map(function (s) {
+          return s.toJSON();
+        })
+      };
+    }
   }]);
 
   return FunctionBlock;

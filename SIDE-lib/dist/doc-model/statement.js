@@ -212,7 +212,7 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
         _expressions2.pop();
       }
 
-      if (_expressions2[0].isOneOf([_enums.ExpressionEntity.IfDefinition, _enums.ExpressionEntity.ElifDefinition, _enums.ExpressionEntity.WhileDefinition])) {
+      if (_expressions2.length > 0 && _expressions2[0].isOneOf([_enums.ExpressionEntity.IfDefinition, _enums.ExpressionEntity.ElifDefinition, _enums.ExpressionEntity.WhileDefinition])) {
         _this.addRule(_classPrivateMethodGet(_assertThisInitialized(_this), _checkAssignmentInBoolean, _checkAssignmentInBoolean2));
       }
     }
@@ -474,6 +474,15 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
       if (!processedSource.continuesOnNextLine()) {
         _classPrivateMethodGet(this, _completeProcessing, _completeProcessing2).call(this);
       }
+    }
+  }, {
+    key: "toJSON",
+    value: function toJSON() {
+      return {
+        expressions: _classPrivateFieldGet(this, _expressionTree).map(function (e) {
+          return e.toJSON();
+        })
+      };
     }
   }], [{
     key: "createFromSource",
@@ -986,8 +995,18 @@ var BlockStatement = /*#__PURE__*/function (_Statement) {
       }
     } //#endregion - extensions
     //#region - symptoms
-    //#endregion - symptoms
 
+  }, {
+    key: "toJSON",
+    value: //#endregion - symptoms
+    function toJSON() {
+      return {
+        definition: this.getDefinitionStatement().toJSON(),
+        statements: _classPrivateFieldGet(this, _statements).slice(1).map(function (s) {
+          return s.toJSON();
+        })
+      };
+    }
   }]);
 
   return BlockStatement;
