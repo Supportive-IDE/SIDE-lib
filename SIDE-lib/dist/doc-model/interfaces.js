@@ -23,6 +23,8 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -127,15 +129,12 @@ var SymptomMonitor = /*#__PURE__*/function () {
 
 exports.SymptomMonitor = SymptomMonitor;
 
-var _observers = /*#__PURE__*/new WeakMap();
-
-var _observing = /*#__PURE__*/new WeakMap();
-
 var TypeChangeObserverNotifier = /*#__PURE__*/function (_SymptomMonitor) {
   _inherits(TypeChangeObserverNotifier, _SymptomMonitor);
 
   var _super = _createSuper(TypeChangeObserverNotifier);
 
+  // WEIRD ERROR: This variable was originally private, but the debugger seems to crash if there is a private attribute with type Set() or Map()
   function TypeChangeObserverNotifier() {
     var _this;
 
@@ -143,16 +142,9 @@ var TypeChangeObserverNotifier = /*#__PURE__*/function (_SymptomMonitor) {
 
     _this = _super.call(this);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _observers, {
-      writable: true,
-      value: new Set()
-    });
+    _defineProperty(_assertThisInitialized(_this), "observers", void 0);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _observing, {
-      writable: true,
-      value: new Set()
-    });
-
+    _this.observers = new Set();
     return _this;
   }
   /**
@@ -166,8 +158,7 @@ var TypeChangeObserverNotifier = /*#__PURE__*/function (_SymptomMonitor) {
     key: "addObserver",
     value: function addObserver(observer) {
       var dataType = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
-
-      _classPrivateFieldGet(this, _observers).add(observer);
+      this.observers.add(observer);
 
       if (observer instanceof TypeChangeObserverNotifier) {
         if (dataType !== undefined) observer.typeUpdateReceived(dataType);
@@ -176,7 +167,7 @@ var TypeChangeObserverNotifier = /*#__PURE__*/function (_SymptomMonitor) {
   }, {
     key: "getObservers",
     value: function getObservers() {
-      return _classPrivateFieldGet(this, _observers);
+      return this.observers;
     }
     /**
      * Removes the observer if found.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
@@ -186,7 +177,7 @@ var TypeChangeObserverNotifier = /*#__PURE__*/function (_SymptomMonitor) {
   }, {
     key: "removeObserver",
     value: function removeObserver(observer) {
-      _classPrivateFieldGet(this, _observers)["delete"](observer);
+      this.observers["delete"](observer);
     }
     /**
      * Notify all observers of this object's DataType
@@ -196,7 +187,7 @@ var TypeChangeObserverNotifier = /*#__PURE__*/function (_SymptomMonitor) {
   }, {
     key: "sendUpdate",
     value: function sendUpdate(dataType) {
-      var _iterator2 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _observers)),
+      var _iterator2 = _createForOfIteratorHelper(this.observers),
           _step2;
 
       try {

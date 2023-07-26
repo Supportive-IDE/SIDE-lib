@@ -359,6 +359,8 @@ _defineProperty(ExpressionCategory, "ModuleFunctions", new ExpressionCategory("M
 
 _defineProperty(ExpressionCategory, "ModuleProperties", new ExpressionCategory("ModuleProperties"));
 
+_defineProperty(ExpressionCategory, "ClassAttributes", new ExpressionCategory("ClassAttributes"));
+
 _defineProperty(ExpressionCategory, "ImportedEntities", new ExpressionCategory("ImportedEntities"));
 
 _defineProperty(ExpressionCategory, "TypeHint", new ExpressionCategory("TypeHint"));
@@ -1327,6 +1329,8 @@ _defineProperty(ExpressionEntity, "ExceptionCall", new ExpressionEntity("Excepti
 
 _defineProperty(ExpressionEntity, "FunctionDefinitionStatement", new ExpressionEntity("FunctionDefinitionStatement"));
 
+_defineProperty(ExpressionEntity, "MethodDefinitionStatement", new ExpressionEntity("MethodDefinitionStatement"));
+
 _defineProperty(ExpressionEntity, "ForDefinitionStatement", new ExpressionEntity("ForDefinitionStatement"));
 
 _defineProperty(ExpressionEntity, "ExceptDefinitionStatement", new ExpressionEntity("ExceptDefinitionStatement"));
@@ -1388,13 +1392,50 @@ var DataType = /*#__PURE__*/function (_Enum4) {
 
   var _super4 = _createSuper(DataType);
 
-  function DataType() {
+  // Reserved for unknown classes
+  // For entities that don't have a type e.g. maths operators
+  // Default starting type
+  // Reserved for cases where an operation would result in a TypeError e.g. string / int
+  // Reserved for cases where a variable is used before it is declared
+  // Built in modules
+  function DataType(name) {
+    var _this;
+
+    var isCustom = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    var attributes = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new Map();
+    var methods = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : new Map();
+
     _classCallCheck(this, DataType);
 
-    return _super4.apply(this, arguments);
+    _this = _super4.call(this, name);
+    _this.isCustom = isCustom;
+    _this.attributes = attributes;
+    _this.methods = methods;
+    return _this;
   }
 
-  return _createClass(DataType);
+  _createClass(DataType, [{
+    key: "toJSON",
+    value: function toJSON() {
+      return {
+        name: this.name,
+        attributes: Array.from(this.attributes.values()).map(function (v) {
+          return v.toJSON();
+        }),
+        methods: Array.from(this.methods.values()).map(function (m) {
+          return m.toJSON();
+        })
+      };
+    }
+  }], [{
+    key: "createCustomType",
+    value: function createCustomType(name) {
+      DataType[name] = new DataType(name, true);
+      return DataType[name];
+    }
+  }]);
+
+  return DataType;
 }(Enum);
 /**
  * An enum providing information about each misconception--a unique name and a description.
@@ -1522,16 +1563,16 @@ var MisconceptionType = /*#__PURE__*/function (_Enum5) {
    * @param {String} desc The description of the misconception
    */
   function MisconceptionType(name, desc) {
-    var _this;
+    var _this2;
 
     _classCallCheck(this, MisconceptionType);
 
-    _this = _super5.call(this, name);
+    _this2 = _super5.call(this, name);
 
-    _defineProperty(_assertThisInitialized(_this), "description", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "description", void 0);
 
-    _this.description = desc;
-    return _this;
+    _this2.description = desc;
+    return _this2;
   }
 
   return _createClass(MisconceptionType);
@@ -1640,16 +1681,16 @@ var SymptomType = /*#__PURE__*/function (_Enum6) {
   // Error
   // RiskFactor
   function SymptomType(name, desc) {
-    var _this2;
+    var _this3;
 
     _classCallCheck(this, SymptomType);
 
-    _this2 = _super6.call(this, name);
+    _this3 = _super6.call(this, name);
 
-    _defineProperty(_assertThisInitialized(_this2), "description", void 0);
+    _defineProperty(_assertThisInitialized(_this3), "description", void 0);
 
-    _this2.description = desc;
-    return _this2;
+    _this3.description = desc;
+    return _this3;
   }
 
   return _createClass(SymptomType);

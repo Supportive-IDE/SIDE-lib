@@ -87,6 +87,8 @@ var _usedInChildScopes = /*#__PURE__*/new WeakMap();
 
 var _childScopeUsages = /*#__PURE__*/new WeakMap();
 
+var _attributesOfSameClass = /*#__PURE__*/new WeakSet();
+
 var _processConditionalUsage = /*#__PURE__*/new WeakSet();
 
 var _checkUnused = /*#__PURE__*/new WeakSet();
@@ -96,7 +98,7 @@ var _isNamedArgInCall = /*#__PURE__*/new WeakSet();
 var _checkUndefined = /*#__PURE__*/new WeakSet();
 
 /**
- * Information about a variable and its usages
+ * Information about a variable (or attribute) and its usages
  */
 var VariableInfo = /*#__PURE__*/function (_SymptomMonitor) {
   _inherits(VariableInfo, _SymptomMonitor);
@@ -120,8 +122,8 @@ var VariableInfo = /*#__PURE__*/function (_SymptomMonitor) {
 
   /**
    * Creates a new VariableInfo object
-   * @param {UsageInfo} firstUsage The first time the new variable is encountered
-   * @param {Statment} containingStatement The statment that contains firstExpression
+   * @param {UsageInfo} firstUsage The first time the new variable or attribute is encountered
+   * @param {Statement} containingStatement The statment that contains firstExpression
    * @param {StatementBlock} definedInBlock The Block that the containingStatement belongs to
    */
   function VariableInfo(_firstUsage, containingStatement, definedInBlock) {
@@ -138,6 +140,8 @@ var VariableInfo = /*#__PURE__*/function (_SymptomMonitor) {
     _classPrivateMethodInitSpec(_assertThisInitialized(_this), _checkUnused);
 
     _classPrivateMethodInitSpec(_assertThisInitialized(_this), _processConditionalUsage);
+
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this), _attributesOfSameClass);
 
     _classPrivateFieldInitSpec(_assertThisInitialized(_this), _name, {
       writable: true,
@@ -174,7 +178,7 @@ var VariableInfo = /*#__PURE__*/function (_SymptomMonitor) {
       value: []
     });
 
-    if (!_firstUsage.getVariable().is(_enums.ExpressionEntity.VariableName)) {
+    if (!_firstUsage.getVariable().isOneOf([_enums.ExpressionEntity.VariableName, _enums.ExpressionEntity.PropertyName])) {
       throw new Error("First expression of variable is not a variable.");
     }
 
@@ -279,10 +283,10 @@ var VariableInfo = /*#__PURE__*/function (_SymptomMonitor) {
               i--;
               continue;
             }
-          } // If the last usage is in the same block or a parent - connect
+          } // If the last usage is in the same block or a parent, or both are attributes of the same class - connect
 
 
-          if (usage.isInSameBlock(lastUsage) || lastUsage.isInParentBlock(usage)) {
+          if (usage.isInSameBlock(lastUsage) || lastUsage.isInParentBlock(usage) || _classPrivateMethodGet(this, _attributesOfSameClass, _attributesOfSameClass2).call(this, lastUsageVar, newUsageVar)) {
             newUsageVar.addLastUsage(lastUsageVar);
             lastUsagesFound = true;
           } // If last in #usages in in branch that is child of current - add that and find last in same block, else set DataType to Unknown
@@ -315,6 +319,13 @@ var VariableInfo = /*#__PURE__*/function (_SymptomMonitor) {
 
       if (!newUsageVar.isProxy()) _classPrivateFieldGet(this, _usages).push(usage);
     }
+    /**
+     * Checks of the usages are the same attribute in the same class
+     * @param {VariableExpression | PropertyExpression} usageVar1 
+     * @param {VariableExpression | PropertyExpression} usageVar2 
+     * @returns {boolean}
+     */
+
   }, {
     key: "checkAndAdjustUndefined",
     value: function checkAndAdjustUndefined() {
@@ -466,6 +477,11 @@ var VariableInfo = /*#__PURE__*/function (_SymptomMonitor) {
 
 exports.VariableInfo = VariableInfo;
 
+function _attributesOfSameClass2(usageVar1, usageVar2) {
+  if (usageVar1.is(_enums.ExpressionEntity.VariableName) || usageVar2.is(_enums.ExpressionEntity.VariableName)) return false;
+  return usageVar1.getOwnerType().name === usageVar2.getOwnerType().name;
+}
+
 function _processConditionalUsage2(lastUsageBlock, targetBlock, openExhaustiveConditionals, usageBlocksAdded) {
   var _iterator3 = _createForOfIteratorHelper(openExhaustiveConditionals),
       _step3;
@@ -512,8 +528,9 @@ function _checkUnused2(varInfo) {
   if (usages.length === 1) {
     var firstUsage = usages[0];
     var usageVar = firstUsage.getVariable();
+    var isClassVarInMethodDefinition = usageVar.getParent() && usageVar.getParent().is(_enums.ExpressionEntity.MethodDefinitionStatement) && usageVar.getParent().getClassVar().getTextValue() === usageVar.getTextValue();
 
-    if (usages.length === 1 && usageVar.isAssignedOrChanged() && !_classPrivateMethodGet(varInfo, _isNamedArgInCall, _isNamedArgInCall2).call(varInfo, usageVar) && usageVar.getDataType() !== _enums.DataType.Undefined) {
+    if (usages.length === 1 && usageVar.isAssignedOrChanged() && !isClassVarInMethodDefinition && !_classPrivateMethodGet(varInfo, _isNamedArgInCall, _isNamedArgInCall2).call(varInfo, usageVar) && usageVar.getDataType() !== _enums.DataType.Undefined) {
       symptoms.push(_symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.UnusedVariable, [usages[0].getVariable()], 0, 0));
     }
   }

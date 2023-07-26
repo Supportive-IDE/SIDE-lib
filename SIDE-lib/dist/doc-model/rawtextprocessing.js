@@ -219,7 +219,9 @@ var SourceProcessor = /*#__PURE__*/function () {
         _ref$moduleNames = _ref.moduleNames,
         _moduleNames = _ref$moduleNames === void 0 ? [] : _ref$moduleNames,
         _ref$varsWithTypeName = _ref.varsWithTypeNames,
-        _varsWithTypeNames = _ref$varsWithTypeName === void 0 ? [] : _ref$varsWithTypeName;
+        _varsWithTypeNames = _ref$varsWithTypeName === void 0 ? [] : _ref$varsWithTypeName,
+        _ref$classDefinitionI = _ref.classDefinitionInProgress,
+        _classDefinitionInProgress = _ref$classDefinitionI === void 0 ? false : _ref$classDefinitionI;
 
     _classCallCheck(this, SourceProcessor);
 
@@ -381,7 +383,7 @@ var SourceProcessor = /*#__PURE__*/function () {
 
     _classPrivateFieldSet(this, _lastLineExpressions, lastLineExpressions);
 
-    if (_classPrivateFieldGet(this, _text).length > 0) _classPrivateMethodGet(this, _parseLine, _parseLine2).call(this, _startFrom > 0 ? _startFrom : _classPrivateFieldGet(this, _indentSize), _varsWithTypeNames, _moduleNames);else _classPrivateMethodGet(this, _checkIfContinues, _checkIfContinues2).call(this);
+    if (_classPrivateFieldGet(this, _text).length > 0) _classPrivateMethodGet(this, _parseLine, _parseLine2).call(this, _startFrom > 0 ? _startFrom : _classPrivateFieldGet(this, _indentSize), _varsWithTypeNames, _moduleNames, _classDefinitionInProgress);else _classPrivateMethodGet(this, _checkIfContinues, _checkIfContinues2).call(this);
   } //#region - raw text parsing
 
 
@@ -569,7 +571,7 @@ var SourceProcessor = /*#__PURE__*/function () {
 
 exports.SourceProcessor = SourceProcessor;
 
-function _parseLine2(startFrom, varsWithTypeNames, moduleNames) {
+function _parseLine2(startFrom, varsWithTypeNames, moduleNames, classDefinitionInProgress) {
   if (_classPrivateFieldGet(this, _multilineCommentDelimiter) !== undefined) {
     startFrom = _classPrivateMethodGet(this, _completeBlockComment, _completeBlockComment2).call(this, _classPrivateFieldGet(this, _multilineCommentDelimiter), 0) + 1;
   } else if (_classPrivateFieldGet(this, _stringLiteralDelimiter) !== undefined) {
@@ -588,7 +590,7 @@ function _parseLine2(startFrom, varsWithTypeNames, moduleNames) {
       i = _classPrivateMethodGet(this, _processBlockCommentOrString, _processBlockCommentOrString2).call(this, currentCharCategory, i);
     } // IDENTIFIER OR KEYWORD
     else if (_classPrivateMethodGet(this, _isIdentifierOrKeyword, _isIdentifierOrKeyword2).call(this, currentCharCategory)) {
-      i = _classPrivateMethodGet(this, _processIdentifierOrKeyword, _processIdentifierOrKeyword2).call(this, i, varsWithTypeNames, moduleNames);
+      i = _classPrivateMethodGet(this, _processIdentifierOrKeyword, _processIdentifierOrKeyword2).call(this, i, varsWithTypeNames, moduleNames, classDefinitionInProgress);
     } // NUMBER LITERAL
     else if (_classPrivateMethodGet(this, _isNumber, _isNumber2).call(this, currentCharCategory, i, i === 0 || _enums.Character.getCategory(_classPrivateFieldGet(this, _text).charCodeAt(i - 1)) === _enums.Character.Space)) {
       i = _classPrivateMethodGet(this, _processNumberLiteral, _processNumberLiteral2).call(this, i);
@@ -642,21 +644,21 @@ function _checkIfSeparateStatmentAfterLineEnd2() {
 }
 
 function _contains2(entity) {
-  var _iterator4 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _expressions)),
-      _step4;
+  var _iterator8 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _expressions)),
+      _step8;
 
   try {
-    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-      var expression = _step4.value;
+    for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+      var expression = _step8.value;
 
       if (expression.is(entity)) {
         return true;
       }
     }
   } catch (err) {
-    _iterator4.e(err);
+    _iterator8.e(err);
   } finally {
-    _iterator4.f();
+    _iterator8.f();
   }
 
   return false;
@@ -762,10 +764,10 @@ function _isIdentifierOrKeyword2(characterCategory) {
   return characterCategory === _enums.Character.Underscore || characterCategory === _enums.Character.Letter;
 }
 
-function _processIdentifierOrKeyword2(localIndex, varsWithTypeNames, moduleNames) {
+function _processIdentifierOrKeyword2(localIndex, varsWithTypeNames, moduleNames, classDefinitionInProgress) {
   var name = _classPrivateMethodGet(this, _getIdentifierOrKeyword, _getIdentifierOrKeyword2).call(this, localIndex);
 
-  var info = _classPrivateMethodGet(this, _getIdentifierInfo, _getIdentifierInfo2).call(this, name, _classPrivateMethodGet(this, _getNextNonSpaceCharacter, _getNextNonSpaceCharacter2).call(this, localIndex + name.length), varsWithTypeNames, moduleNames);
+  var info = _classPrivateMethodGet(this, _getIdentifierInfo, _getIdentifierInfo2).call(this, name, _classPrivateMethodGet(this, _getNextNonSpaceCharacter, _getNextNonSpaceCharacter2).call(this, localIndex + name.length), varsWithTypeNames, moduleNames, classDefinitionInProgress);
 
   var expression = (0, _ast.expressionFactory)(name, info, _classPrivateFieldGet(this, _currentLineNumber), _classPrivateFieldGet(this, _currentLineStartIndex) + localIndex, localIndex); // not in, is not
 
@@ -797,14 +799,14 @@ function _getIdentifierOrKeyword2(startIndex) {
   return _classPrivateFieldGet(this, _text).substring(startIndex, endIndex + 1);
 }
 
-function _getIdentifierInfo2(identifier, nextCharacter, varsWithTypeNames, moduleNames) {
+function _getIdentifierInfo2(identifier, nextCharacter, varsWithTypeNames, moduleNames, classDefinitionInProgress) {
   var knownEntity = (0, _utils.keywordLookup)(identifier);
 
   if (_classPrivateMethodGet(this, _hasExpressions, _hasExpressions2).call(this)) {
     var priorExpression = _classPrivateMethodGet(this, _getLastExpression, _getLastExpression2).call(this);
 
     if (priorExpression.is(_enums.ExpressionEntity.FunctionDefinition)) {
-      return new _utils.ExpressionInfo(_enums.ExpressionEntity.FunctionName, _enums.ExpressionCategory.Identifiers);
+      return classDefinitionInProgress ? new _utils.ExpressionInfo(_enums.ExpressionEntity.MethodName, _enums.ExpressionCategory.Identifiers) : new _utils.ExpressionInfo(_enums.ExpressionEntity.FunctionName, _enums.ExpressionCategory.Identifiers);
     } else if (priorExpression.is(_enums.ExpressionEntity.ClassDefinition)) {
       return new _utils.ExpressionInfo(_enums.ExpressionEntity.ClassName, _enums.ExpressionCategory.Identifiers);
     } // Module name
@@ -1073,6 +1075,8 @@ var StatementProcessor = /*#__PURE__*/function () {
       if (_classStaticPrivateMethodGet(this, StatementProcessor, _isDefinitionStatement).call(this, expressions)) {
         return [_classStaticPrivateMethodGet(this, StatementProcessor, _definitionFactory).call(this, expressions)];
       } else if (expressionTree.length > 1) {
+        expressionTree = _classStaticPrivateMethodGet(this, StatementProcessor, _combineStringLiterals).call(this, expressionTree);
+        expressionTree = _classStaticPrivateMethodGet(this, StatementProcessor, _combinePropertyCalls).call(this, expressionTree);
         expressionTree = _classStaticPrivateMethodGet(this, StatementProcessor, _processGroups).call(this, expressionTree);
         expressionTree = _classStaticPrivateMethodGet(this, StatementProcessor, _processCalculations).call(this, expressionTree);
         expressionTree = _classStaticPrivateMethodGet(this, StatementProcessor, _processComparisons).call(this, expressionTree);
@@ -1138,14 +1142,16 @@ var StatementProcessor = /*#__PURE__*/function () {
   }, {
     key: "connectVariableUsages",
     value: function connectVariableUsages(statement, block) {
-      var scopeBlock = block.getScope(); //if (!statement.isBlank() && statement.getFirstExpression().isOneOf([ExpressionEntity.FromKeyword, ExpressionEntity.ImportKeyword])) {
+      var scopeBlock = block.getScope();
 
       if (!statement.isBlank() && statement.getFirstExpression().is(_enums.ExpressionEntity.ImportStatement)) {
         _classStaticPrivateMethodGet(StatementProcessor, StatementProcessor, _trackImports).call(StatementProcessor, statement, scopeBlock);
       }
 
-      if (statement.isBlockStatement() && !statement.isBlank() && statement.getFirstExpression().is(_enums.ExpressionEntity.ForDefinitionStatement)) {
-        block = _classStaticPrivateMethodGet(StatementProcessor, StatementProcessor, _updateForLoopBlock).call(StatementProcessor, block);
+      if (statement.isBlockStatement() && !statement.isBlank()) {
+        if (statement.getFirstExpression().is(_enums.ExpressionEntity.ForDefinitionStatement)) {
+          block = _classStaticPrivateMethodGet(StatementProcessor, StatementProcessor, _updateForLoopBlock).call(StatementProcessor, block);
+        }
       }
 
       var variables = statement.getVariableUsages();
@@ -1164,6 +1170,14 @@ var StatementProcessor = /*#__PURE__*/function () {
           var _step$value = _slicedToArray(_step.value, 2),
               name = _step$value[0],
               usages = _step$value[1];
+
+          if (block.getBlockEntity() === _enums.ExpressionEntity.ClassDefinition && usages.length > 0) {
+            if (usages[0].getParent() === undefined || usages[0].getParent().is(_enums.ExpressionEntity.AssignmentStatement) && usages[0].getParent().getTargetVariables().includes(usages[0])) {
+              _classStaticPrivateMethodGet(this, StatementProcessor, _connectAttributeUsages).call(this, usages[0], block.getClassType(), statement, block, scopeBlock);
+
+              continue;
+            }
+          }
 
           var usageInfos = usages.map(function (v) {
             return new _identifiers.UsageInfo(v, block, isGlobal);
@@ -1196,6 +1210,27 @@ var StatementProcessor = /*#__PURE__*/function () {
             variableMap.set(name, vInfo);
           } else {
             variableMap.get(name).addUsages(usageInfos);
+
+            var _iterator2 = _createForOfIteratorHelper(usageInfos),
+                _step2;
+
+            try {
+              for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+                var _vInfo = _step2.value;
+
+                var varParent = _vInfo.getVariable().getParent();
+
+                if (varParent && varParent.is(_enums.ExpressionEntity.PropertyCallExpression) && varParent.getObject().getDataType().isCustom) {
+                  var classType = varParent.getObject().getDataType();
+
+                  _classStaticPrivateMethodGet(this, StatementProcessor, _connectAttributeUsages).call(this, varParent.getProperty(), classType, statement, block, scopeBlock);
+                }
+              }
+            } catch (err) {
+              _iterator2.e(err);
+            } finally {
+              _iterator2.f();
+            }
           }
         }
       } catch (err) {
@@ -1205,10 +1240,12 @@ var StatementProcessor = /*#__PURE__*/function () {
       }
     }
     /**
-     * 
-     * @param {StatementBlock} block 
-     * @param {String} name 
-     * @param {VariableExpression} firstUsageVar 
+     * Tracks usage of a custom attribute 
+     * @param {PropertyExpression} attributeNode The instance of a class attribute
+     * @param {DataType} classType The custom datatype the attribute appears to belong to
+     * @param {Statement} statment The statement that the attribute is used in
+     * @param {StatementBlock} currentBlock The current block that the attribute is used in
+     * @param {ScopeBlock} scopeBlock The scope that the attribute is used in
      */
 
   }, {
@@ -1222,42 +1259,116 @@ var StatementProcessor = /*#__PURE__*/function () {
      */
     function connectUserDefinedFunctions(statement, scopeBlock) {
       var functions = scopeBlock.findAllFunctions();
+      var classes = scopeBlock.getRootBlock().getUserDefinedClasses();
       var statementExpressions = statement.getExpressions();
 
-      var _iterator2 = _createForOfIteratorHelper(statementExpressions),
-          _step2;
+      var _iterator3 = _createForOfIteratorHelper(statementExpressions),
+          _step3;
 
       try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var e = _step2.value;
+        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+          var e = _step3.value;
           var funcCalls = e.getExpressionsOfKind(_enums.ExpressionEntity.UserDefinedFunctionCall);
 
-          var _iterator3 = _createForOfIteratorHelper(funcCalls),
-              _step3;
+          var _iterator4 = _createForOfIteratorHelper(funcCalls),
+              _step4;
 
           try {
-            for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-              var call = _step3.value;
+            for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+              var call = _step4.value;
               var callName = call.getFunctionName();
 
               if (functions.has(callName)) {
                 var funcDef = functions.get(callName);
                 call.setDataType(funcDef.getDataType());
                 funcDef.addObserver(call);
+              } else if (classes.has(callName)) {
+                var classDef = classes.get(callName);
+                call.setDataType(classDef);
               } else {
                 scopeBlock.addUnconnectedFunctionCall(call);
               }
             }
           } catch (err) {
-            _iterator3.e(err);
+            _iterator4.e(err);
           } finally {
-            _iterator3.f();
+            _iterator4.f();
           }
         }
       } catch (err) {
-        _iterator2.e(err);
+        _iterator3.e(err);
       } finally {
-        _iterator2.f();
+        _iterator3.f();
+      }
+    }
+    /**
+     * Connects calls to user defined methods to the method expression that stores
+     * return type information
+     * @param {Statement} statement
+     * @param {ScopeBlock} scopeBlock
+     */
+
+  }, {
+    key: "connectUserDefinedMethods",
+    value: function connectUserDefinedMethods(statement, scopeBlock) {
+      var methods = scopeBlock.findAllFunctions();
+
+      var _iterator5 = _createForOfIteratorHelper(methods.entries()),
+          _step5;
+
+      try {
+        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+          var _step5$value = _slicedToArray(_step5.value, 2),
+              k = _step5$value[0],
+              m = _step5$value[1];
+
+          if (!m.is(_enums.ExpressionEntity.MethodName)) {
+            methods["delete"](k);
+          }
+        }
+      } catch (err) {
+        _iterator5.e(err);
+      } finally {
+        _iterator5.f();
+      }
+
+      var statementExpressions = statement.getExpressions();
+
+      var _iterator6 = _createForOfIteratorHelper(statementExpressions),
+          _step6;
+
+      try {
+        for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+          var e = _step6.value;
+          // Add methods?
+          var funcCalls = e.getExpressionsOfKind(_enums.ExpressionEntity.UserDefinedMethodCall);
+
+          var _iterator7 = _createForOfIteratorHelper(funcCalls),
+              _step7;
+
+          try {
+            for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+              var call = _step7.value;
+              var callName = call.getMethodName();
+
+              if (methods.has(callName)) {
+                var funcDef = methods.get(callName);
+                call.setDataType(funcDef.getDataType());
+                funcDef.addObserver(call);
+              } else {
+                scopeBlock.addUnconnectedMethodCall(call);
+              }
+            }
+          } catch (err) {
+            _iterator7.e(err);
+          } finally {
+            _iterator7.f();
+          }
+        }
+      } catch (err) {
+        _iterator6.e(err);
+      } finally {
+        _iterator6.f();
       }
     }
     /**
@@ -1340,6 +1451,37 @@ var StatementProcessor = /*#__PURE__*/function () {
 
 exports.StatementProcessor = StatementProcessor;
 
+function _connectAttributeUsages(attributeNode, classType, statement, currentBlock, scopeBlock) {
+  var attName = attributeNode.getTextValue();
+  /**
+   * Cases to handle
+   * 1. The attribute is referenced from inside the class
+   *  a. The class does not have an attribute of the same name > create and track a new VariableInfo
+   *  b. The class does have an attribute of the same name > add a new UsageInfo to tracking
+   * 2. The attribute is referenced from outside the class
+   *  a. The object it is called on is not parsed / unknown > set data type to Unknown and put in unconnected attribute tracking at the document level
+   *  b. The object it is called on is known > add a new UsageInfo to tracking
+   */
+
+  var attUsage = new _identifiers.UsageInfo(attributeNode, currentBlock);
+
+  if (classType.attributes.has(attName)) {
+    // Should only happen if this is a known attribute called on a known class
+    classType.attributes.get(attName).addUsage(attUsage);
+  } else {
+    var parentClass = scopeBlock.getNearestParentOfAny([_enums.ExpressionEntity.ClassDefinition]);
+    var attributeInfo = new _identifiers.VariableInfo(attUsage, statement, currentBlock);
+
+    if (parentClass && parentClass.getClassType().name === classType.name) {
+      // add new attribute to current class
+      classType.attributes.set(attName, attributeInfo);
+    } else {
+      // add to unconnected class tracking - shouldn't ever end up here?
+      console.log("add to unconnected attribute tracking");
+    }
+  }
+}
+
 function _couldBeInHigherScope(block, name, firstUsageVar) {
   //if (firstUsageVar.isAssignedOrChanged() && !firstUsageVar.isObjectOfMethodCall() && !firstUsageVar.isSubscripted()) return false;
   var scopeBlock = block.getScope();
@@ -1382,73 +1524,73 @@ function _trackImports(statement, scopeBlock) {
   var modules = [];
   var asFound = false;
 
-  var _iterator5 = _createForOfIteratorHelper(expressions),
-      _step5;
+  var _iterator9 = _createForOfIteratorHelper(expressions),
+      _step9;
 
   try {
-    for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-      var e = _step5.value;
+    for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+      var e = _step9.value;
 
       if (e.isOneOf([_enums.ExpressionEntity.ModuleName, _enums.ExpressionCategory.BuiltInModules])) {
         if (!asFound) {
           var moduleInfo = new _identifiers.ModuleInfo(e.getTextValue(), e.getEntity());
           modules.push(moduleInfo);
         } else {
-          var _iterator6 = _createForOfIteratorHelper(modules),
-              _step6;
+          var _iterator10 = _createForOfIteratorHelper(modules),
+              _step10;
 
           try {
-            for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-              var _m = _step6.value;
+            for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+              var _m = _step10.value;
 
               if (_m.getEntity() === e.getEntity()) {
                 _m.setAlias(e.getTextValue());
               }
             }
           } catch (err) {
-            _iterator6.e(err);
+            _iterator10.e(err);
           } finally {
-            _iterator6.f();
+            _iterator10.f();
           }
         }
       } else if (e.is(_enums.ExpressionEntity.AsKeyword)) {
         asFound = e;
       } else if (e.isOneOf([_enums.ExpressionCategory.ModuleProperties, _enums.ExpressionEntity.NamedImport])) {
-        var _iterator7 = _createForOfIteratorHelper(modules),
-            _step7;
+        var _iterator11 = _createForOfIteratorHelper(modules),
+            _step11;
 
         try {
-          for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-            var _m2 = _step7.value;
+          for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+            var _m2 = _step11.value;
 
             _m2.addDirectImport(e.getTextValue(), (0, _identifiers.directImport)(e.getEntity(), e.getCategory()));
           }
         } catch (err) {
-          _iterator7.e(err);
+          _iterator11.e(err);
         } finally {
-          _iterator7.f();
+          _iterator11.f();
         }
       } else if (e.is(_enums.ExpressionEntity.ImportAll)) {
-        var _iterator8 = _createForOfIteratorHelper(modules),
-            _step8;
+        var _iterator12 = _createForOfIteratorHelper(modules),
+            _step12;
 
         try {
-          for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-            var _m3 = _step8.value;
+          for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
+            var _m3 = _step12.value;
 
             _m3.setImportAll();
           }
         } catch (err) {
-          _iterator8.e(err);
+          _iterator12.e(err);
         } finally {
-          _iterator8.f();
+          _iterator12.f();
         }
       }
     }
   } catch (err) {
-    _iterator5.e(err);
+    _iterator9.e(err);
   } finally {
-    _iterator5.f();
+    _iterator9.f();
   }
 
   for (var _i2 = 0, _modules = modules; _i2 < _modules.length; _i2++) {
@@ -1478,7 +1620,7 @@ function _definitionFactory(expressions) {
   switch (expressions[0].getEntity()) {
     case _enums.ExpressionEntity.FunctionDefinition:
       // DOESN'T HANDLE METHODS OR MAGIC METHODS
-      return new _ast.FunctionDefinitionStatement(textValue, expressions);
+      return _classStaticPrivateMethodGet(this, StatementProcessor, _functionOrMethod).call(this, textValue, expressions);
 
     case _enums.ExpressionEntity.IfDefinition:
       return new _ast.BlockDefinitionStatement(textValue, expressions, _enums.ExpressionEntity.IfDefinitionStatement);
@@ -1503,8 +1645,9 @@ function _definitionFactory(expressions) {
 
     case _enums.ExpressionEntity.FinallyDefinition:
       return new _ast.BlockDefinitionStatement(textValue, expressions, _enums.ExpressionEntity.FinallyDefinitionStatement);
-    //case ExpressionEntity.ClassDefinition:
-    //throw new Error("Class definition expression not implemented");
+
+    case _enums.ExpressionEntity.ClassDefinition:
+      return new _ast.ClassDefinitionStatement(textValue, expressions);
 
     case _enums.ExpressionEntity.LambdaDefinition:
       return new _ast.LambdaExpression(textValue, expressions);
@@ -1514,6 +1657,14 @@ function _definitionFactory(expressions) {
 
     default:
       return expressions;
+  }
+}
+
+function _functionOrMethod(textValue, expressions) {
+  if (expressions.length < 2 || expressions[1].is(_enums.ExpressionEntity.FunctionName)) {
+    return new _ast.FunctionDefinitionStatement(textValue, expressions);
+  } else {
+    return new _ast.MethodDefinitionStatement(textValue, expressions);
   }
 }
 
@@ -1649,7 +1800,7 @@ function _processSquareBrackets(brackets, expressions) {
     var subscriptor = _classStaticPrivateMethodGet(this, StatementProcessor, _isSlice).call(this, colonParts, expressions, openIndex, closeIndex) ? _classStaticPrivateMethodGet(this, StatementProcessor, _multipartExpressionFactory).call(this, expressions.slice(openIndex, closeIndex + 1), _enums.ExpressionEntity.Slice, colonParts) : _classStaticPrivateMethodGet(this, StatementProcessor, _multipartExpressionFactory).call(this, expressions.slice(openIndex, closeIndex + 1), _enums.ExpressionEntity.IndexKey);
     var start = openIndex - 1;
 
-    while (start >= 0 && !expressions[start].isOneOf([_enums.ExpressionCategory.Identifiers, _enums.ExpressionCategory.BuiltInFunctions, _enums.ExpressionCategory.CompoundTypes, _enums.ExpressionEntity.BuiltInFunctionCall, _enums.ExpressionEntity.BuiltInMethodCall, _enums.ExpressionEntity.UserDefinedFunctionCall, _enums.ExpressionEntity.UserDefinedMethodCall, _enums.ExpressionEntity.SubscriptedExpression])) {
+    while (start >= 0 && !expressions[start].isOneOf([_enums.ExpressionCategory.Identifiers, _enums.ExpressionCategory.BuiltInFunctions, _enums.ExpressionCategory.CompoundTypes, _enums.ExpressionEntity.BuiltInFunctionCall, _enums.ExpressionEntity.BuiltInMethodCall, _enums.ExpressionEntity.UserDefinedFunctionCall, _enums.ExpressionEntity.UserDefinedMethodCall, _enums.ExpressionEntity.SubscriptedExpression, _enums.ExpressionEntity.PropertyCallExpression])) {
       start--;
     }
 
@@ -1677,12 +1828,12 @@ function _processBraces(brackets, expressions) {
     var entries = this.split(betweenBrackets, _enums.ExpressionEntity.Comma);
     var keyValues = [];
 
-    var _iterator9 = _createForOfIteratorHelper(entries),
-        _step9;
+    var _iterator13 = _createForOfIteratorHelper(entries),
+        _step13;
 
     try {
-      for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
-        var entry = _step9.value;
+      for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+        var entry = _step13.value;
         var kV = this.split(entry, _enums.ExpressionEntity.Colon);
 
         if (kV.length === 2) {
@@ -1690,9 +1841,9 @@ function _processBraces(brackets, expressions) {
         }
       }
     } catch (err) {
-      _iterator9.e(err);
+      _iterator13.e(err);
     } finally {
-      _iterator9.f();
+      _iterator13.f();
     }
 
     if (keyValues.length === entries.length) {
@@ -1761,9 +1912,7 @@ function _multipartExpressionFactory(children, entity) {
 }
 
 function _processCalculations(expressions) {
-  expressions = _classStaticPrivateMethodGet(this, StatementProcessor, _combineStringLiterals).call(this, expressions);
-  expressions = _classStaticPrivateMethodGet(this, StatementProcessor, _combinePropertyCalls).call(this, expressions); // negative entities
-
+  // negative entities
   var nextIndex = _classStaticPrivateMethodGet(this, StatementProcessor, _findNextCalculationEntity).call(this, expressions);
 
   while (nextIndex > -1) {
@@ -1783,10 +1932,8 @@ function _combinePropertyCalls(expressions) {
   var i = 1;
 
   while (i < expressions.length - 1) {
-    if (expressions[i].is(_enums.ExpressionEntity.Dot)
-    /*&& expressions[i+1].isOneOf([ExpressionCategory.ModuleProperties, ExpressionCategory.Properties])*/
-    ) {
-      var newTextValue = (0, _utils.getTextOfExpressions)([expressions[i - 1], expressions[i + 1]]);
+    if (expressions[i].is(_enums.ExpressionEntity.Dot) && expressions[i + 1].isOneOf([_enums.ExpressionEntity.PropertyName, _enums.ExpressionCategory.ModuleProperties])) {
+      var newTextValue = (0, _utils.getTextOfExpressions)([expressions[i - 1], expressions[i], expressions[i + 1]]);
       var newExp = new _ast.PropertyCallNode(newTextValue, [expressions[i - 1], expressions[i], expressions[i + 1]], _enums.ExpressionEntity.PropertyCallExpression, _enums.ExpressionCategory.MultipartValue);
       expressions = expressions.slice(0, i - 1).concat([newExp], expressions.slice(i + 2));
       i--;

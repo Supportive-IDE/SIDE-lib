@@ -5,7 +5,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.StatementBlock = exports.ScopeBlock = exports.ListComprehensionBlock = exports.FunctionBlock = exports.BranchBlock = void 0;
+exports.StatementBlock = exports.ScopeBlock = exports.ListComprehensionBlock = exports.FunctionBlock = exports.ClassBlock = exports.BranchBlock = void 0;
 
 var _enums = require("./enums.js");
 
@@ -46,6 +46,8 @@ function _nonIterableRest() { throw new TypeError("Invalid attempt to destructur
 function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
@@ -1235,16 +1237,6 @@ function _unpackGroup2(expressions) {
   return expressions;
 }
 
-var _variableMap = /*#__PURE__*/new WeakMap();
-
-var _globalVars = /*#__PURE__*/new WeakMap();
-
-var _moduleMap = /*#__PURE__*/new WeakMap();
-
-var _userDefinedFunctionMap = /*#__PURE__*/new WeakMap();
-
-var _unconnectedFunctionCalls = /*#__PURE__*/new WeakMap();
-
 var _indentCharacter = /*#__PURE__*/new WeakMap();
 
 var _indentLevelCount = /*#__PURE__*/new WeakMap();
@@ -1263,6 +1255,10 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
   /** @type {Map<String, UserDefinedFunctionExpression>} */
 
   /** @type {Map<String, UserDefinedFunctionCall[]>} */
+
+  /** @type {Map<String, DataType} */
+
+  /** @type {Map<String, UserDefinedMethodCall[]} */
 
   /** @type {String} */
 
@@ -1287,30 +1283,19 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
     if (blockEntity !== _enums.ExpressionEntity.DocumentDefinition && blockEntity !== _enums.ExpressionEntity.FunctionDefinition && blockEntity !== _enums.ExpressionEntity.ClassDefinition && blockEntity !== _enums.ExpressionEntity.ListComprehension) throw new Error("".concat(blockEntity.name, " is not a scope block"));
     _this2 = _super2.call(this, blockEntity, parentBlock, indentation);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this2), _variableMap, {
-      writable: true,
-      value: new Map()
-    });
+    _defineProperty(_assertThisInitialized(_this2), "variableMap", new Map());
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this2), _globalVars, {
-      writable: true,
-      value: new Set()
-    });
+    _defineProperty(_assertThisInitialized(_this2), "globalVars", new Set());
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this2), _moduleMap, {
-      writable: true,
-      value: new Map()
-    });
+    _defineProperty(_assertThisInitialized(_this2), "moduleMap", new Map());
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this2), _userDefinedFunctionMap, {
-      writable: true,
-      value: new Map()
-    });
+    _defineProperty(_assertThisInitialized(_this2), "userDefinedFunctionMap", new Map());
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this2), _unconnectedFunctionCalls, {
-      writable: true,
-      value: new Map()
-    });
+    _defineProperty(_assertThisInitialized(_this2), "unconnectedFunctionCalls", new Map());
+
+    _defineProperty(_assertThisInitialized(_this2), "userDefinedClassMap", new Map());
+
+    _defineProperty(_assertThisInitialized(_this2), "unconnectedMethodCalls", new Map());
 
     _classPrivateFieldInitSpec(_assertThisInitialized(_this2), _indentCharacter, {
       writable: true,
@@ -1359,6 +1344,8 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
       var scope = this.getParentBlock() !== undefined && this.getBlockEntity() !== _enums.ExpressionEntity.ListComprehension ? this.getParentBlock().getScope() : this;
 
       _rawtextprocessing.StatementProcessor.connectUserDefinedFunctions(statement, scope !== undefined ? scope : this);
+
+      _rawtextprocessing.StatementProcessor.connectUserDefinedMethods(statement, scope !== undefined ? scope : this);
     } //#endregion - overrides
     //#region - extensions
 
@@ -1370,7 +1357,7 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
   }, {
     key: "getVariableMap",
     value: function getVariableMap() {
-      return _classPrivateFieldGet(this, _variableMap);
+      return this.variableMap;
     }
     /**
      * Gets the map of modules found in this block
@@ -1380,7 +1367,7 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
   }, {
     key: "getModuleMap",
     value: function getModuleMap() {
-      return _classPrivateFieldGet(this, _moduleMap);
+      return this.moduleMap;
     }
     /**
      * Gets the BlockStatement that should be updated with a new statement or undefined
@@ -1411,11 +1398,10 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
     key: "addUserDefinedFunction",
     value: function addUserDefinedFunction(functionExp) {
       var funcName = functionExp.getTextValue();
+      this.userDefinedFunctionMap.set(funcName, functionExp);
 
-      _classPrivateFieldGet(this, _userDefinedFunctionMap).set(funcName, functionExp);
-
-      if (_classPrivateFieldGet(this, _unconnectedFunctionCalls).has(funcName)) {
-        var _iterator8 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _unconnectedFunctionCalls).get(funcName)),
+      if (this.unconnectedFunctionCalls.has(funcName)) {
+        var _iterator8 = _createForOfIteratorHelper(this.unconnectedFunctionCalls.get(funcName)),
             _step8;
 
         try {
@@ -1429,8 +1415,18 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
           _iterator8.f();
         }
 
-        _classPrivateFieldGet(this, _unconnectedFunctionCalls)["delete"](funcName);
+        this.unconnectedFunctionCalls["delete"](funcName);
       }
+    }
+    /**
+     * Adds a user defined class to the tracking
+     * @param {DataType} classType 
+     */
+
+  }, {
+    key: "addUserDefinedClass",
+    value: function addUserDefinedClass(classType) {
+      this.userDefinedClassMap.set(classType.name, classType); // TODO: search unconnectedFunctionCalls for functions matching the classname
     }
     /**
      * Gets the user defined functions defined in this block
@@ -1440,7 +1436,17 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
   }, {
     key: "getUserDefinedFunctions",
     value: function getUserDefinedFunctions() {
-      return _classPrivateFieldGet(this, _userDefinedFunctionMap);
+      return this.userDefinedFunctionMap;
+    }
+    /**
+     * Gets the user defined classes defined in this block
+     * @returns {Map<String, UserDefinedClassExpression}
+     */
+
+  }, {
+    key: "getUserDefinedClasses",
+    value: function getUserDefinedClasses() {
+      return this.userDefinedClassMap;
     }
     /**
      * Get unconnected function calls
@@ -1450,7 +1456,17 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
   }, {
     key: "getUnconnectedFunctionCalls",
     value: function getUnconnectedFunctionCalls() {
-      return _classPrivateFieldGet(this, _unconnectedFunctionCalls);
+      return this.unconnectedFunctionCalls;
+    }
+    /**
+     * Get unconnected method calls
+     * @returns {Map<String, UserDefinedMethodCall[]}
+     */
+
+  }, {
+    key: "getUnconnectedMethodCalls",
+    value: function getUnconnectedMethodCalls() {
+      return this.unconnectedMethodCalls;
     }
     /**
      * Adds a call of a function that is not yet tracked to the unconnected function map
@@ -1462,11 +1478,27 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
     value: function addUnconnectedFunctionCall(functionCallExp) {
       var funcName = functionCallExp.getFunctionName();
 
-      if (!_classPrivateFieldGet(this, _unconnectedFunctionCalls).has(funcName)) {
-        _classPrivateFieldGet(this, _unconnectedFunctionCalls).set(funcName, []);
+      if (!this.unconnectedFunctionCalls.has(funcName)) {
+        this.unconnectedFunctionCalls.set(funcName, []);
       }
 
-      _classPrivateFieldGet(this, _unconnectedFunctionCalls).get(funcName).push(functionCallExp);
+      this.unconnectedFunctionCalls.get(funcName).push(functionCallExp);
+    }
+    /**
+     * Adds a call of a method that is not yet tracked to the unconnected method map
+     * @param {UserDefinedMethodCall} methodCallExp 
+     */
+
+  }, {
+    key: "addUnconnectedMethodCall",
+    value: function addUnconnectedMethodCall(methodCallExp) {
+      var methodName = methodCallExp.getMethodName();
+
+      if (!this.unconnectedMethodCalls.has(methodName)) {
+        this.unconnectedMethodCalls.set(methodName, []);
+      }
+
+      this.unconnectedMethodCalls.get(methodName).push(methodCallExp);
     }
     /**
      * Adds tracking for a variable marked with the global keyword
@@ -1476,7 +1508,7 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
   }, {
     key: "addGlobalVar",
     value: function addGlobalVar(name) {
-      _classPrivateFieldGet(this, _globalVars).add(name);
+      this.globalVars.add(name);
     }
     /**
      * Gets the names of any global variables
@@ -1486,7 +1518,7 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
   }, {
     key: "getGlobalVars",
     value: function getGlobalVars() {
-      return _classPrivateFieldGet(this, _globalVars);
+      return this.globalVars;
     }
     /**
      * Find all function definitions in this scope block or a parent scope.
@@ -1574,16 +1606,90 @@ var ScopeBlock = /*#__PURE__*/function (_StatementBlock) {
 
 exports.ScopeBlock = ScopeBlock;
 
+var _classType = /*#__PURE__*/new WeakMap();
+
+var ClassBlock = /*#__PURE__*/function (_ScopeBlock) {
+  _inherits(ClassBlock, _ScopeBlock);
+
+  var _super3 = _createSuper(ClassBlock);
+
+  /** @type {DataType} */
+
+  /**
+   * Creates a new ClassBlock
+   * @param {StatementBlock} parentBlock This block's parent, which will be undefined if this is the document root
+   * @param {Statement} definitionStatement The definition line
+   */
+  function ClassBlock(parentBlock, definitionStatement) {
+    var _this3;
+
+    _classCallCheck(this, ClassBlock);
+
+    _this3 = _super3.call(this, _enums.ExpressionEntity.ClassDefinition, parentBlock, definitionStatement.getIndentation());
+
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this3), _classType, {
+      writable: true,
+      value: void 0
+    });
+
+    _classPrivateFieldSet(_assertThisInitialized(_this3), _classType, definitionStatement.getFirstExpression().getDataType()); // CHANGE CLASS TRACKING TO USE DATATYPE
+
+
+    parentBlock.getScope().addUserDefinedClass(_classPrivateFieldGet(_assertThisInitialized(_this3), _classType));
+
+    _this3.addStatement(definitionStatement); //TODO: Class block symptoms this.addRules([this.#checkFunctionPrints]);
+
+
+    return _this3;
+  } //#region - overrides
+  //#endregion - overrides
+  //#region - extensions
+
+  /**
+   * Gets the data type of the class
+   * @returns {DataType}
+   */
+
+
+  _createClass(ClassBlock, [{
+    key: "getClassType",
+    value: function getClassType() {
+      return _classPrivateFieldGet(this, _classType);
+    }
+  }, {
+    key: "toTree",
+    value: function toTree() {
+      var statements = this.getStatements();
+      return {
+        id: this.getId(),
+        definition: statements.length > 0 ? statements[0].toJSON() : {},
+        statements: statements.slice(1).map(function (s) {
+          return s.toJSON();
+        })
+      };
+    } //#endregion - extensions
+
+  }]);
+
+  return ClassBlock;
+}(ScopeBlock);
+/**
+ * @extends ScopeBlock
+ */
+
+
+exports.ClassBlock = ClassBlock;
+
 var _return = /*#__PURE__*/new WeakMap();
 
 var _functionName = /*#__PURE__*/new WeakMap();
 
 var _checkFunctionPrints = /*#__PURE__*/new WeakSet();
 
-var FunctionBlock = /*#__PURE__*/function (_ScopeBlock) {
-  _inherits(FunctionBlock, _ScopeBlock);
+var FunctionBlock = /*#__PURE__*/function (_ScopeBlock2) {
+  _inherits(FunctionBlock, _ScopeBlock2);
 
-  var _super3 = _createSuper(FunctionBlock);
+  var _super4 = _createSuper(FunctionBlock);
 
   /** @type {ReturnStatement | undefined} */
   // Top level return 
@@ -1596,74 +1702,54 @@ var FunctionBlock = /*#__PURE__*/function (_ScopeBlock) {
    * @param {Statement} definitionStatement The definition line
    */
   function FunctionBlock(parentBlock, definitionStatement) {
-    var _this3;
+    var _this4;
 
     _classCallCheck(this, FunctionBlock);
 
-    _this3 = _super3.call(this, _enums.ExpressionEntity.FunctionDefinition, parentBlock, definitionStatement.getIndentation());
+    _this4 = _super4.call(this, _enums.ExpressionEntity.FunctionDefinition, parentBlock, definitionStatement.getIndentation());
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this3), _checkFunctionPrints);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this4), _checkFunctionPrints);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this3), _return, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this4), _return, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this3), _functionName, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this4), _functionName, {
       writable: true,
       value: void 0
     });
 
-    var firstExp = definitionStatement.getFirstExpression().getFunctionNameExpression();
+    var definition = definitionStatement.getFirstExpression(); //.getFunctionNameExpression();
 
-    _classPrivateFieldSet(_assertThisInitialized(_this3), _functionName, firstExp.getTextValue());
+    var firstExp = definition.getEntity() === _enums.ExpressionEntity.FunctionDefinitionStatement ? definition.getFunctionNameExpression() : definition.getMethodNameExpression();
+
+    _classPrivateFieldSet(_assertThisInitialized(_this4), _functionName, firstExp.getTextValue());
 
     parentBlock.getScope().addUserDefinedFunction(firstExp);
 
-    _this3.addStatement(definitionStatement);
+    if (definition.is(_enums.ExpressionEntity.MethodDefinitionStatement) && definition.getClassVar() && parentBlock.getBlockEntity() === _enums.ExpressionEntity.ClassDefinition) {
+      var classDefinition = parentBlock.getStatements()[0];
+      var classDataType = classDefinition.getFirstExpression().getDataType();
+      definition.getClassVar().setDataType(classDataType);
+    }
 
-    _this3.addRules([_classPrivateMethodGet(_assertThisInitialized(_this3), _checkFunctionPrints, _checkFunctionPrints2)]);
+    _this4.addStatement(definitionStatement);
 
-    return _this3;
+    _this4.addRules([_classPrivateMethodGet(_assertThisInitialized(_this4), _checkFunctionPrints, _checkFunctionPrints2)]);
+
+    return _this4;
   } //#region - overrides
+  //#endregion - overrides
+  //#region - extensions
 
   /**
-   * @override
+   * Gets the aggregated return type of the function
+   * @returns {DataType}
    */
 
 
   _createClass(FunctionBlock, [{
-    key: "isScopeBlock",
-    value: function isScopeBlock() {
-      return true;
-    }
-    /**
-     * @override
-     */
-
-  }, {
-    key: "getScope",
-    value: function getScope() {
-      return this;
-    }
-    /**
-     * @override
-     * @inheritdoc 
-     */
-
-  }, {
-    key: "addStatement",
-    value: function addStatement(statement) {
-      _get(_getPrototypeOf(FunctionBlock.prototype), "addStatement", this).call(this, statement);
-    } //#endregion - overrides
-    //#region - extensions
-
-    /**
-     * Gets the aggregated return type of the function
-     * @returns {DataType}
-     */
-
-  }, {
     key: "getReturnType",
     value: function getReturnType() {
       var lastExecuted = this.getLastExecutedStatements();
@@ -1704,19 +1790,10 @@ var FunctionBlock = /*#__PURE__*/function (_ScopeBlock) {
       }
 
       return undefined;
-    } //#endregion - extensions
-    //#region - symptoms
-
-    /**
-     * Rule finder. Checks a function scope block for print statements.
-     * @param {FunctionBlock} block 
-     * @returns {Symptom[]}
-     */
-
+    }
   }, {
     key: "toTree",
-    value: //#endregion - symptoms
-    function toTree() {
+    value: function toTree() {
       var statements = this.getStatements();
       return {
         id: this.getId(),
@@ -1725,7 +1802,16 @@ var FunctionBlock = /*#__PURE__*/function (_ScopeBlock) {
           return s.toJSON();
         })
       };
-    }
+    } //#endregion - extensions
+    //#region - symptoms
+
+    /**
+     * Rule finder. Checks a function scope block for print statements.
+     * @param {FunctionBlock} block 
+     * @returns {Symptom[]}
+     */
+    //#endregion - symptoms
+
   }]);
 
   return FunctionBlock;
@@ -1791,10 +1877,10 @@ function _checkStatementsForPrint(statements) {
   return prints;
 }
 
-var ListComprehensionBlock = /*#__PURE__*/function (_ScopeBlock2) {
-  _inherits(ListComprehensionBlock, _ScopeBlock2);
+var ListComprehensionBlock = /*#__PURE__*/function (_ScopeBlock3) {
+  _inherits(ListComprehensionBlock, _ScopeBlock3);
 
-  var _super4 = _createSuper(ListComprehensionBlock);
+  var _super5 = _createSuper(ListComprehensionBlock);
 
   /**
    * Creates a new ListComprehensionBlock
@@ -1802,16 +1888,16 @@ var ListComprehensionBlock = /*#__PURE__*/function (_ScopeBlock2) {
    * @param {ListComprehensionExpression} listComprehensionExpression The definition line
    */
   function ListComprehensionBlock(parentBlock, listComprehensionExpression) {
-    var _this4;
+    var _this5;
 
     _classCallCheck(this, ListComprehensionBlock);
 
-    _this4 = _super4.call(this, _enums.ExpressionEntity.ListComprehension, parentBlock);
+    _this5 = _super5.call(this, _enums.ExpressionEntity.ListComprehension, parentBlock);
     var statement = new _statement.Statement(listComprehensionExpression.getTextValue(), listComprehensionExpression.getStartLineNumber(), new _indent.Indent(""), [listComprehensionExpression]);
 
-    _this4.addStatement(statement);
+    _this5.addStatement(statement);
 
-    return _this4;
+    return _this5;
   }
   /**
    * @override
@@ -1837,8 +1923,6 @@ var ListComprehensionBlock = /*#__PURE__*/function (_ScopeBlock2) {
 
 exports.ListComprehensionBlock = ListComprehensionBlock;
 
-var _conditionalSiblings = /*#__PURE__*/new WeakMap();
-
 var _getInnerStatements = /*#__PURE__*/new WeakSet();
 
 var _hasSiblingOfEntity = /*#__PURE__*/new WeakSet();
@@ -1856,7 +1940,7 @@ var _findBlocksOfVarMod = /*#__PURE__*/new WeakSet();
 var BranchBlock = /*#__PURE__*/function (_StatementBlock2) {
   _inherits(BranchBlock, _StatementBlock2);
 
-  var _super5 = _createSuper(BranchBlock);
+  var _super6 = _createSuper(BranchBlock);
 
   /** @type {Set<BranchBlock>} */
   // Stores the ids of conditional branch siblings if this is a conditional branch
@@ -1867,38 +1951,35 @@ var BranchBlock = /*#__PURE__*/function (_StatementBlock2) {
   * @param {Statement} definitionStatement The definition line
   */
   function BranchBlock(parentBlock, definitionStatement) {
-    var _this5;
+    var _this6;
 
     _classCallCheck(this, BranchBlock);
 
     var blockEntity = definitionStatement.getFirstExpression().getBlockEntity();
     if (blockEntity === _enums.ExpressionEntity.DocumentDefinition || blockEntity === _enums.ExpressionEntity.FunctionDefinition || blockEntity === _enums.ExpressionEntity.ClassDefinition || blockEntity === _enums.ExpressionEntity.ListComprehension) throw new Error("".concat(blockEntity.name, " is a scope block"));
-    _this5 = _super5.call(this, blockEntity, parentBlock, definitionStatement.getIndentation());
+    _this6 = _super6.call(this, blockEntity, parentBlock, definitionStatement.getIndentation());
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this5), _findBlocksOfVarMod);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this6), _findBlocksOfVarMod);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this5), _checkLoopVarModification);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this6), _checkLoopVarModification);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this5), _checkLoopVarAssignedIntLiteral);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this6), _checkLoopVarAssignedIntLiteral);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this5), _checkBranchExit);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this6), _checkBranchExit);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this5), _checkOneLineConditional3);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this6), _checkOneLineConditional3);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this5), _hasSiblingOfEntity);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this6), _hasSiblingOfEntity);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this5), _getInnerStatements);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this6), _getInnerStatements);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this5), _conditionalSiblings, {
-      writable: true,
-      value: new Set()
-    });
+    _defineProperty(_assertThisInitialized(_this6), "conditionalSiblings", new Set());
 
-    _this5.addStatement(definitionStatement);
+    _this6.addStatement(definitionStatement);
 
-    _this5.addRules([_classPrivateMethodGet(_assertThisInitialized(_this5), _checkBranchExit, _checkBranchExit2), _classPrivateMethodGet(_assertThisInitialized(_this5), _checkLoopVarModification, _checkLoopVarModification2), _classPrivateMethodGet(_assertThisInitialized(_this5), _checkOneLineConditional3, _checkOneLineConditional4), _classPrivateMethodGet(_assertThisInitialized(_this5), _checkLoopVarAssignedIntLiteral, _checkLoopVarAssignedIntLiteral2)]);
+    _this6.addRules([_classPrivateMethodGet(_assertThisInitialized(_this6), _checkBranchExit, _checkBranchExit2), _classPrivateMethodGet(_assertThisInitialized(_this6), _checkLoopVarModification, _checkLoopVarModification2), _classPrivateMethodGet(_assertThisInitialized(_this6), _checkOneLineConditional3, _checkOneLineConditional4), _classPrivateMethodGet(_assertThisInitialized(_this6), _checkLoopVarAssignedIntLiteral, _checkLoopVarAssignedIntLiteral2)]);
 
-    return _this5;
+    return _this6;
   } //#region - overrides
 
   /**
@@ -2057,7 +2138,7 @@ var BranchBlock = /*#__PURE__*/function (_StatementBlock2) {
         var ifFound = false;
         var elseFound = false;
 
-        var _iterator14 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _conditionalSiblings)),
+        var _iterator14 = _createForOfIteratorHelper(this.conditionalSiblings),
             _step14;
 
         try {
@@ -2098,7 +2179,7 @@ var BranchBlock = /*#__PURE__*/function (_StatementBlock2) {
      * @returns {Set<BranchBlock>}
      */
     function getSiblingConditionalBranches() {
-      return _classPrivateFieldGet(this, _conditionalSiblings);
+      return this.conditionalSiblings;
     }
     /**
      * Connects a sibling conditional branch.
@@ -2117,7 +2198,7 @@ var BranchBlock = /*#__PURE__*/function (_StatementBlock2) {
         throw new Error("Trying to add a non-conditional branch as a sibling.");
       }
 
-      _classPrivateFieldGet(this, _conditionalSiblings).add(branch);
+      this.conditionalSiblings.add(branch);
     } //#endregion - custom
     //#region - symptoms
 
@@ -2138,15 +2219,14 @@ exports.BranchBlock = BranchBlock;
 function _getInnerStatements2() {
   var blockStatement = this.getStatements();
 
-  if (blockStatement.length !== 1) {
-    throw new Error("A branch block should only contain one statement, which should be a block statement");
+  if (blockStatement.length !== 1) {//throw new Error("A branch block should only contain one statement, which should be a block statement")
   }
 
   return blockStatement[0].getStatements();
 }
 
 function _hasSiblingOfEntity2(entity) {
-  var _iterator23 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _conditionalSiblings)),
+  var _iterator23 = _createForOfIteratorHelper(this.conditionalSiblings),
       _step23;
 
   try {

@@ -25,6 +25,8 @@ var _constants = require("../utils/constants.js");
 
 var _utils = require("../utils/utils.js");
 
+var _interfaces = require("./interfaces.js");
+
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -46,6 +48,8 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
 
 function _classPrivateMethodInitSpec(obj, privateSet) { _checkPrivateRedeclaration(obj, privateSet); privateSet.add(obj); }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _classPrivateFieldInitSpec(obj, privateMap, value) { _checkPrivateRedeclaration(obj, privateMap); privateMap.set(obj, value); }
 
@@ -69,12 +73,6 @@ var _statements = /*#__PURE__*/new WeakMap();
 
 var _documentRoot = /*#__PURE__*/new WeakMap();
 
-var _variables = /*#__PURE__*/new WeakMap();
-
-var _userDefinedFunctions = /*#__PURE__*/new WeakMap();
-
-var _modules = /*#__PURE__*/new WeakMap();
-
 var _processSource = /*#__PURE__*/new WeakSet();
 
 var _findAllScopeBlocks = /*#__PURE__*/new WeakSet();
@@ -95,6 +93,8 @@ var _findAllFunctions = /*#__PURE__*/new WeakSet();
 
 var _processUnconnectedFunctions = /*#__PURE__*/new WeakSet();
 
+var _processUnconnectedMethods = /*#__PURE__*/new WeakSet();
+
 var _isImportedEntity = /*#__PURE__*/new WeakSet();
 
 var _getVariableNamesMatchingTypeNames = /*#__PURE__*/new WeakSet();
@@ -103,11 +103,15 @@ var _updateBlock = /*#__PURE__*/new WeakSet();
 
 var _processListComprehensions = /*#__PURE__*/new WeakSet();
 
+var _connectMethodToClass = /*#__PURE__*/new WeakSet();
+
 var _prepareListComprehensions = /*#__PURE__*/new WeakSet();
 
 var _createNewBranchBlock = /*#__PURE__*/new WeakSet();
 
 var _createNewFunctionBlock = /*#__PURE__*/new WeakSet();
+
+var _createNewClassBlock = /*#__PURE__*/new WeakSet();
 
 var _shiftCurrentBlock = /*#__PURE__*/new WeakSet();
 
@@ -124,6 +128,8 @@ var DocInfo = /*#__PURE__*/function () {
 
   /** @type {Map<String, UserDefinedFunctionExpression>} */
 
+  /** @type {Map<String, ClassNode} */
+
   /** @type {Map<string, ModuleInfo>} */
 
   /**
@@ -135,11 +141,15 @@ var DocInfo = /*#__PURE__*/function () {
 
     _classPrivateMethodInitSpec(this, _shiftCurrentBlock);
 
+    _classPrivateMethodInitSpec(this, _createNewClassBlock);
+
     _classPrivateMethodInitSpec(this, _createNewFunctionBlock);
 
     _classPrivateMethodInitSpec(this, _createNewBranchBlock);
 
     _classPrivateMethodInitSpec(this, _prepareListComprehensions);
+
+    _classPrivateMethodInitSpec(this, _connectMethodToClass);
 
     _classPrivateMethodInitSpec(this, _processListComprehensions);
 
@@ -148,6 +158,8 @@ var DocInfo = /*#__PURE__*/function () {
     _classPrivateMethodInitSpec(this, _getVariableNamesMatchingTypeNames);
 
     _classPrivateMethodInitSpec(this, _isImportedEntity);
+
+    _classPrivateMethodInitSpec(this, _processUnconnectedMethods);
 
     _classPrivateMethodInitSpec(this, _processUnconnectedFunctions);
 
@@ -184,29 +196,20 @@ var DocInfo = /*#__PURE__*/function () {
       value: void 0
     });
 
-    _classPrivateFieldInitSpec(this, _variables, {
-      writable: true,
-      value: void 0
-    });
+    _defineProperty(this, "variables", void 0);
 
-    _classPrivateFieldInitSpec(this, _userDefinedFunctions, {
-      writable: true,
-      value: void 0
-    });
+    _defineProperty(this, "userDefinedFunctions", void 0);
 
-    _classPrivateFieldInitSpec(this, _modules, {
-      writable: true,
-      value: void 0
-    });
+    _defineProperty(this, "userDefinedClasses", void 0);
+
+    _defineProperty(this, "modules", void 0);
 
     _classPrivateFieldSet(this, _text, _text2);
 
     _classPrivateFieldSet(this, _documentRoot, new _block.ScopeBlock());
 
-    _classPrivateFieldSet(this, _variables, new Map());
-
-    _classPrivateFieldSet(this, _modules, new Map());
-
+    this.variables = new Map();
+    this.modules = new Map();
     _symptom.SymptomFinder.symptoms = [];
 
     _classPrivateMethodGet(this, _processSource, _processSource2).call(this, _text2);
@@ -227,7 +230,17 @@ var DocInfo = /*#__PURE__*/function () {
      * @returns {Map<String, UserDefinedFunctionExpression>} A Map, where each key is the name of a function and each value is a UserDefinedFunction object
      */
     function getUserDefinedFunctions() {
-      return _classPrivateFieldGet(this, _userDefinedFunctions);
+      return this.userDefinedFunctions;
+    }
+    /**
+     * Gets all user defined classes in the document
+     * @returns {Map<string, DataType}
+     */
+
+  }, {
+    key: "getUserDefinedClasses",
+    value: function getUserDefinedClasses() {
+      return this.userDefinedClasses;
     }
     /**
      * Gets all variables defined in the document.
@@ -237,7 +250,7 @@ var DocInfo = /*#__PURE__*/function () {
   }, {
     key: "getVariables",
     value: function getVariables() {
-      return _classPrivateFieldGet(this, _variables);
+      return this.variables;
     }
     /**
      * Gets all symptoms in the document.
@@ -257,7 +270,7 @@ var DocInfo = /*#__PURE__*/function () {
   }, {
     key: "getMisconceptions",
     value: function getMisconceptions() {
-      return (0, _misconception.identifyMisconceptions)(_symptom.SymptomFinder.symptoms, _classPrivateFieldGet(this, _variables));
+      return (0, _misconception.identifyMisconceptions)(_symptom.SymptomFinder.symptoms, this.variables);
     }
     /**
      * Gets the raw text in the document.
@@ -309,7 +322,8 @@ function _processSource2(text) {
       var moduleNames = Array.from(currentBlock.getScope().findAllModules().keys());
       var options = {
         varsWithTypeNames: varsWithTypeNames,
-        moduleNames: moduleNames
+        moduleNames: moduleNames,
+        classDefinitionInProgress: currentBlock.hasParentOfEntity(_enums.ExpressionEntity.ClassDefinition)
       };
       var docStartIndex = lastSourceLine.getDocumentStartIndex() + lastSourceLine.getText().length + 1;
 
@@ -407,7 +421,7 @@ function _findSymptoms2() {
     _iterator.f();
   }
 
-  var _iterator2 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _variables).values()),
+  var _iterator2 = _createForOfIteratorHelper(this.variables.values()),
       _step2;
 
   try {
@@ -434,7 +448,7 @@ function _findSymptoms2() {
     _iterator2.f();
   }
 
-  var _iterator3 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _userDefinedFunctions).values()),
+  var _iterator3 = _createForOfIteratorHelper(this.userDefinedFunctions.values()),
       _step3;
 
   try {
@@ -538,11 +552,12 @@ function _summariseVariables2() {
     _iterator8.f();
   }
 
-  _classPrivateFieldSet(this, _variables, allVariables);
+  this.variables = allVariables;
 }
 
 function _summariseUserDefinedFunctions2() {
-  _classPrivateFieldSet(this, _userDefinedFunctions, _classPrivateMethodGet(this, _findAllFunctions, _findAllFunctions2).call(this));
+  this.userDefinedFunctions = _classPrivateMethodGet(this, _findAllFunctions, _findAllFunctions2).call(this);
+  this.userDefinedClasses = _classPrivateFieldGet(this, _documentRoot).getUserDefinedClasses();
 
   var functions = _classPrivateFieldGet(this, _documentRoot).getChildBlocksOfKind(_enums.ExpressionEntity.FunctionDefinition);
 
@@ -562,7 +577,19 @@ function _summariseUserDefinedFunctions2() {
       } // Add to function call expression
 
 
-      if (_classPrivateFieldGet(this, _userDefinedFunctions).has(f.getFunctionName()) && _classPrivateFieldGet(this, _userDefinedFunctions).get(f.getFunctionName()).is(_enums.ExpressionEntity.FunctionName)) _classPrivateFieldGet(this, _userDefinedFunctions).get(f.getFunctionName()).addReturns(lastLines, !alwaysReturns);
+      if (f.getParentBlock().getBlockEntity() !== _enums.ExpressionEntity.ClassDefinition) {
+        if (this.userDefinedFunctions.has(f.getFunctionName()) && this.userDefinedFunctions.get(f.getFunctionName()).is(_enums.ExpressionEntity.FunctionName)) this.userDefinedFunctions.get(f.getFunctionName()).addReturns(lastLines, !alwaysReturns);
+      } else {
+        var className = f.getParentBlock().getClassType().name;
+
+        if (this.userDefinedClasses.has(className)) {
+          var methodTracking = this.userDefinedClasses.get(className).methods;
+
+          if (methodTracking.has(f.getFunctionName())) {
+            methodTracking.get(f.getFunctionName()).addReturns(lastLines, !alwaysReturns);
+          }
+        }
+      }
     }
   } catch (err) {
     _iterator10.e(err);
@@ -577,15 +604,16 @@ function _summariseUserDefinedFunctions2() {
   _classPrivateMethodGet(this, _convertBuiltIns, _convertBuiltIns2).call(this, overriddenBuiltIns);
 
   _classPrivateMethodGet(this, _checkVariablesWithSameNameAsUserDefinedFunctions, _checkVariablesWithSameNameAsUserDefinedFunctions2).call(this);
+
+  _classPrivateMethodGet(this, _processUnconnectedMethods, _processUnconnectedMethods2).call(this);
 }
 
 function _checkVariablesWithSameNameAsUserDefinedFunctions2() {
   var _this = this;
 
-  var funcNames = _classPrivateFieldGet(this, _userDefinedFunctions).keys();
-
+  var funcNames = this.userDefinedFunctions.keys();
   var matchingVarNames = Array.from(funcNames).filter(function (name) {
-    return _classPrivateFieldGet(_this, _variables).has(name);
+    return _this.variables.has(name);
   });
 
   var _iterator11 = _createForOfIteratorHelper(matchingVarNames),
@@ -594,11 +622,10 @@ function _checkVariablesWithSameNameAsUserDefinedFunctions2() {
   try {
     for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
       var name = _step11.value;
-
-      var func = _classPrivateFieldGet(this, _userDefinedFunctions).get(name).getParent();
+      var func = this.userDefinedFunctions.get(name).getParent();
 
       if (func !== undefined) {
-        var _iterator12 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _variables).get(name)),
+        var _iterator12 = _createForOfIteratorHelper(this.variables.get(name)),
             _step12;
 
         try {
@@ -630,8 +657,7 @@ function _checkVariablesWithSameNameAsUserDefinedFunctions2() {
 }
 
 function _findFunctionWithSameNameAsBuiltIns2() {
-  var funcNames = _classPrivateFieldGet(this, _userDefinedFunctions).keys();
-
+  var funcNames = this.userDefinedFunctions.keys();
   var overrides = [];
 
   var _iterator13 = _createForOfIteratorHelper(funcNames),
@@ -677,6 +703,8 @@ function _convertBuiltIns2(functionNames) {
             var expressions = s.getExpressions();
             var funcCalls = expressions.flatMap(function (e) {
               return e.getExpressionsOfKind(_enums.ExpressionEntity.BuiltInFunctionCall);
+            }).filter(function (f) {
+              return functionNames.includes(f.getFunctionName());
             });
 
             var _iterator16 = _createForOfIteratorHelper(funcCalls),
@@ -687,7 +715,7 @@ function _convertBuiltIns2(functionNames) {
                 var f = _step16.value;
 
                 if (functionNames.includes(f.getFunctionName())) {
-                  f.convertToUserDefinedFunction(_classPrivateFieldGet(this, _userDefinedFunctions).get(f.getFunctionName()));
+                  f.convertToUserDefinedFunction(this.userDefinedFunctions.get(f.getFunctionName()));
                 }
               }
             } catch (err) {
@@ -774,9 +802,8 @@ function _processUnconnectedFunctions2() {
             for (_iterator21.s(); !(_step21 = _iterator21.n()).done;) {
               var call = _step21.value;
 
-              if (_classPrivateFieldGet(this, _userDefinedFunctions).has(func[0])) {
-                var f = _classPrivateFieldGet(this, _userDefinedFunctions).get(func[0]);
-
+              if (this.userDefinedFunctions.has(func[0])) {
+                var f = this.userDefinedFunctions.get(func[0]);
                 f.addObserver(call);
                 call.setDataType(f.getReturnType());
               } else if (_classPrivateMethodGet(this, _isImportedEntity, _isImportedEntity2).call(this, func[0], block)) {
@@ -803,6 +830,94 @@ function _processUnconnectedFunctions2() {
     _iterator19.e(err);
   } finally {
     _iterator19.f();
+  }
+}
+
+function _processUnconnectedMethods2() {
+  var allScopeBlocks = _classPrivateMethodGet(this, _findAllScopeBlocks, _findAllScopeBlocks2).call(this);
+
+  var _iterator22 = _createForOfIteratorHelper(allScopeBlocks),
+      _step22;
+
+  try {
+    for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
+      var block = _step22.value;
+      var unconnectedCalls = block.getUnconnectedMethodCalls();
+
+      var _iterator23 = _createForOfIteratorHelper(unconnectedCalls),
+          _step23;
+
+      try {
+        for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
+          var func = _step23.value;
+
+          var _iterator24 = _createForOfIteratorHelper(func[1]),
+              _step24;
+
+          try {
+            for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
+              var call = _step24.value;
+              var obj = call.getObject();
+              var method = void 0;
+
+              if (obj.getDataType().isCustom) {
+                if (obj.getDataType().methods.has(func[0])) {
+                  method = obj.getDataType().methods.get(func[0]);
+                }
+              } else {
+                var _iterator25 = _createForOfIteratorHelper(this.userDefinedClasses.values()),
+                    _step25;
+
+                try {
+                  for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
+                    var userClass = _step25.value;
+
+                    if (userClass.methods.has(func[0])) {
+                      method = userClass.methods.get(func[0]);
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator25.e(err);
+                } finally {
+                  _iterator25.f();
+                }
+              }
+
+              if (method) {
+                method.addObserver(call);
+                call.setDataType(method.getReturnType());
+              }
+              /*if (this.userDefinedFunctions.has(func[0])) {
+                  const f = this.userDefinedFunctions.get(func[0]);
+                  f.addObserver(call);
+                  call.setDataType(f.getReturnType());
+              }
+              else if (this.#isImportedEntity(func[0], block)) {
+                  call.convertToImportedFunction();
+              }
+              else {
+                  call.setDataType(DataType.Unknown);
+                  SymptomFinder.symptoms.push(SymptomFinder.createStatementSymptom(SymptomType.UnknownFunction, [call], 0, 0))
+              }*/
+
+            }
+          } catch (err) {
+            _iterator24.e(err);
+          } finally {
+            _iterator24.f();
+          }
+        }
+      } catch (err) {
+        _iterator23.e(err);
+      } finally {
+        _iterator23.f();
+      }
+    }
+  } catch (err) {
+    _iterator22.e(err);
+  } finally {
+    _iterator22.f();
   }
 }
 
@@ -854,8 +969,14 @@ function _updateBlock2(lastStatement, currentBlock) {
       blockStatementToUpdate = scopeBlock.getStatementToUpdate(statementIndent, startLine);
     }
 
-    if (firstExpression.is(_enums.ExpressionEntity.FunctionDefinitionStatement)) {
+    if (firstExpression.isOneOf([_enums.ExpressionEntity.FunctionDefinitionStatement, _enums.ExpressionEntity.MethodDefinitionStatement])) {
       currentBlock = _classPrivateMethodGet(this, _createNewFunctionBlock, _createNewFunctionBlock2).call(this, currentBlock, lastStatement, statementIndent);
+
+      if (firstExpression.is(_enums.ExpressionEntity.MethodDefinitionStatement)) {
+        _classPrivateMethodGet(this, _connectMethodToClass, _connectMethodToClass2).call(this, currentBlock, firstExpression);
+      }
+    } else if (firstExpression.is(_enums.ExpressionEntity.ClassDefinitionStatement)) {
+      currentBlock = _classPrivateMethodGet(this, _createNewClassBlock, _createNewClassBlock2).call(this, currentBlock, lastStatement, statementIndent);
     } else {
       if (firstExpression.is(_enums.ExpressionCategory.BlockDefinitionStatement) && !firstExpression.is(_enums.ExpressionEntity.TernaryStatement)) {
         currentBlock = _classPrivateMethodGet(this, _createNewBranchBlock, _createNewBranchBlock2).call(this, currentBlock, lastStatement, statementIndent, blockStatementToUpdate);
@@ -877,19 +998,30 @@ function _updateBlock2(lastStatement, currentBlock) {
 }
 
 function _processListComprehensions2(listComprehensions, currentBlock) {
-  var _iterator22 = _createForOfIteratorHelper(listComprehensions),
-      _step22;
+  var _iterator26 = _createForOfIteratorHelper(listComprehensions),
+      _step26;
 
   try {
-    for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
-      var comp = _step22.value;
+    for (_iterator26.s(); !(_step26 = _iterator26.n()).done;) {
+      var comp = _step26.value;
       var compBlock = new _block.ListComprehensionBlock(currentBlock, comp);
       currentBlock.addChildBlock(compBlock);
     }
   } catch (err) {
-    _iterator22.e(err);
+    _iterator26.e(err);
   } finally {
-    _iterator22.f();
+    _iterator26.f();
+  }
+}
+
+function _connectMethodToClass2(methodBlock, methodDefinition) {
+  var parentBlock = methodBlock.getParentBlock();
+
+  if (parentBlock && parentBlock.getBlockEntity() === _enums.ExpressionEntity.ClassDefinition) {
+    var classType = parentBlock.getClassType();
+    var methodExpression = methodDefinition.getMethodNameExpression();
+    methodExpression.setContainingClass(classType);
+    classType.methods.set(methodExpression.getTextValue(), methodExpression);
   }
 }
 
@@ -897,32 +1029,32 @@ function _prepareListComprehensions2(statement) {
   var expressions = statement.getExpressions();
   var comprehensions = [];
 
-  var _iterator23 = _createForOfIteratorHelper(expressions),
-      _step23;
+  var _iterator27 = _createForOfIteratorHelper(expressions),
+      _step27;
 
   try {
-    for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
-      var e = _step23.value;
+    for (_iterator27.s(); !(_step27 = _iterator27.n()).done;) {
+      var e = _step27.value;
       var foundComps = e.getExpressionsOfKind(_enums.ExpressionEntity.ListComprehension);
 
-      var _iterator24 = _createForOfIteratorHelper(foundComps),
-          _step24;
+      var _iterator28 = _createForOfIteratorHelper(foundComps),
+          _step28;
 
       try {
-        for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
-          var found = _step24.value;
+        for (_iterator28.s(); !(_step28 = _iterator28.n()).done;) {
+          var found = _step28.value;
           comprehensions.push(found.copyAndConvertToPlaceholder());
         }
       } catch (err) {
-        _iterator24.e(err);
+        _iterator28.e(err);
       } finally {
-        _iterator24.f();
+        _iterator28.f();
       }
     }
   } catch (err) {
-    _iterator23.e(err);
+    _iterator27.e(err);
   } finally {
-    _iterator23.f();
+    _iterator27.f();
   }
 
   return comprehensions;
@@ -950,19 +1082,19 @@ function _createNewBranchBlock2(currentBlock, lastStatement, statementIndent, bl
       if (isConditional && (lastBlockEntity === _enums.ExpressionEntity.IfDefinition || lastBlockEntity === _enums.ExpressionEntity.ElifDefinition) || isExcept && lastBlockEntity === _enums.ExpressionEntity.TryDefinition) {
         var lastBlockSiblings = lastBlock.getSiblingConditionalBranches();
 
-        var _iterator25 = _createForOfIteratorHelper(lastBlockSiblings),
-            _step25;
+        var _iterator29 = _createForOfIteratorHelper(lastBlockSiblings),
+            _step29;
 
         try {
-          for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
-            var existing = _step25.value;
+          for (_iterator29.s(); !(_step29 = _iterator29.n()).done;) {
+            var existing = _step29.value;
             branchBlock.addSibling(existing);
             existing.addSibling(branchBlock);
           }
         } catch (err) {
-          _iterator25.e(err);
+          _iterator29.e(err);
         } finally {
-          _iterator25.f();
+          _iterator29.f();
         }
 
         lastBlock.addSibling(branchBlock);
@@ -983,6 +1115,13 @@ function _createNewFunctionBlock2(currentBlock, lastStatement, statementIndent) 
   //functionBlock.addStatement(lastStatement);
 
   return functionBlock;
+}
+
+function _createNewClassBlock2(currentBlock, lastStatement, statementIndent) {
+  currentBlock = _classPrivateMethodGet(this, _shiftCurrentBlock, _shiftCurrentBlock2).call(this, statementIndent, currentBlock, lastStatement.getFirstLineNumber());
+  var classBlock = new _block.ClassBlock(currentBlock, lastStatement);
+  currentBlock.addChildBlock(classBlock);
+  return classBlock;
 }
 
 function _shiftCurrentBlock2(statementIndent, currentBlock, statementStartLine) {

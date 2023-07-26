@@ -69,6 +69,8 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 function _classPrivateMethodInitSpec(obj, privateSet) { _checkPrivateRedeclaration(obj, privateSet); privateSet.add(obj); }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _classPrivateFieldInitSpec(obj, privateMap, value) { _checkPrivateRedeclaration(obj, privateMap); privateMap.set(obj, value); }
 
 function _checkPrivateRedeclaration(obj, privateCollection) { if (privateCollection.has(obj)) { throw new TypeError("Cannot initialize the same private elements twice on an object"); } }
@@ -77,11 +79,11 @@ function _classStaticPrivateMethodGet(receiver, classConstructor, method) { _cla
 
 function _classCheckPrivateStaticAccess(receiver, classConstructor) { if (receiver !== classConstructor) { throw new TypeError("Private static access of wrong provenance"); } }
 
-function _classPrivateMethodGet(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
-
 function _classPrivateFieldGet(receiver, privateMap) { var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "get"); return _classApplyDescriptorGet(receiver, descriptor); }
 
 function _classApplyDescriptorGet(receiver, descriptor) { if (descriptor.get) { return descriptor.get.call(receiver); } return descriptor.value; }
+
+function _classPrivateMethodGet(receiver, privateSet, fn) { if (!privateSet.has(receiver)) { throw new TypeError("attempted to get private field on non-instance"); } return fn; }
 
 function _classPrivateFieldSet(receiver, privateMap, value) { var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "set"); _classApplyDescriptorSet(receiver, descriptor, value); return value; }
 
@@ -90,8 +92,6 @@ function _classExtractFieldDescriptor(receiver, privateMap, action) { if (!priva
 function _classApplyDescriptorSet(receiver, descriptor, value) { if (descriptor.set) { descriptor.set.call(receiver, value); } else { if (!descriptor.writable) { throw new TypeError("attempted to set read only private field"); } descriptor.value = value; } }
 
 var _rawText = /*#__PURE__*/new WeakMap();
-
-var _lineNumbers = /*#__PURE__*/new WeakMap();
 
 var _expressions = /*#__PURE__*/new WeakMap();
 
@@ -174,10 +174,7 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
       value: void 0
     });
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _lineNumbers, {
-      writable: true,
-      value: new Set()
-    });
+    _defineProperty(_assertThisInitialized(_this), "lineNumbers", new Set());
 
     _classPrivateFieldInitSpec(_assertThisInitialized(_this), _expressions, {
       writable: true,
@@ -201,7 +198,7 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
 
     _classPrivateFieldSet(_assertThisInitialized(_this), _rawText, rawText);
 
-    _classPrivateFieldGet(_assertThisInitialized(_this), _lineNumbers).add(firstLineNumber);
+    _this.lineNumbers.add(firstLineNumber);
 
     _classPrivateFieldSet(_assertThisInitialized(_this), _indent, indent);
 
@@ -256,7 +253,7 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
   }, {
     key: "getLineNumbers",
     value: function getLineNumbers() {
-      return _classPrivateFieldGet(this, _lineNumbers);
+      return this.lineNumbers;
     }
     /**
      * Gets the line number of the first line in the statement.
@@ -266,7 +263,7 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
   }, {
     key: "getFirstLineNumber",
     value: function getFirstLineNumber() {
-      return _classPrivateFieldGet(this, _lineNumbers).size > 0 ? Math.min.apply(Math, _toConsumableArray(Array.from(_classPrivateFieldGet(this, _lineNumbers)))) : -1;
+      return this.lineNumbers.size > 0 ? Math.min.apply(Math, _toConsumableArray(Array.from(this.lineNumbers))) : -1;
     }
     /**
      * Gets the line number of the last line in the statement.
@@ -276,7 +273,7 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
   }, {
     key: "getLastLineNumber",
     value: function getLastLineNumber() {
-      return _classPrivateFieldGet(this, _lineNumbers).size > 0 ? Math.max.apply(Math, _toConsumableArray(Array.from(_classPrivateFieldGet(this, _lineNumbers)))) : -1;
+      return this.lineNumbers.size > 0 ? Math.max.apply(Math, _toConsumableArray(Array.from(this.lineNumbers))) : -1;
     }
     /**
      * Adds a line number that the statement occurs on.
@@ -286,7 +283,7 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
   }, {
     key: "addLineNumber",
     value: function addLineNumber(lineNum) {
-      _classPrivateFieldGet(this, _lineNumbers).add(lineNum);
+      this.lineNumbers.add(lineNum);
     }
     /**
      * Gets the number of spaces at the start of the statement.
@@ -943,6 +940,8 @@ var BlockStatement = /*#__PURE__*/function (_Statement) {
       var scope = block.getBlockEntity() === _enums.ExpressionEntity.DocumentDefinition ? block : block.getParentBlock().getScope();
 
       _rawtextprocessing.StatementProcessor.connectUserDefinedFunctions(statement, scope);
+
+      _rawtextprocessing.StatementProcessor.connectUserDefinedMethods(statement, scope);
     }
     /**
      * Gets the BlockStatement that a new statement should be added to, if any
