@@ -1258,6 +1258,58 @@ var Misconception = /*#__PURE__*/function () {
       _classPrivateFieldGet(this, _occurrences).push(occurrence);
     }
     /**
+     * Gets the (String) name of the misconception.
+     * @returns {string}
+     */
+
+  }, {
+    key: "getName",
+    value: function getName() {
+      return _classPrivateFieldGet(this, _id);
+    }
+    /**
+     * Checks if any of the contributing symptoms occur in the given range
+     * @param {number} startIndex The starting doc index of a token in the document
+     * @param {number} endIndex The ending doc index of a token in the document
+     * @returns {boolean} True if a contributing symptom is present in the given range
+     */
+
+  }, {
+    key: "isPresentInToken",
+    value: function isPresentInToken(startIndex, endIndex) {
+      var _iterator34 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _occurrences)),
+          _step34;
+
+      try {
+        for (_iterator34.s(); !(_step34 = _iterator34.n()).done;) {
+          var occurrence = _step34.value;
+
+          var _iterator35 = _createForOfIteratorHelper(occurrence.getReason().getContributingSymptoms()),
+              _step35;
+
+          try {
+            for (_iterator35.s(); !(_step35 = _iterator35.n()).done;) {
+              var symptom = _step35.value;
+
+              if (startIndex <= symptom.getDocIndex() && endIndex >= symptom.getDocIndex()) {
+                return true;
+              }
+            }
+          } catch (err) {
+            _iterator35.e(err);
+          } finally {
+            _iterator35.f();
+          }
+        }
+      } catch (err) {
+        _iterator34.e(err);
+      } finally {
+        _iterator34.f();
+      }
+
+      return false;
+    }
+    /**
      * Creates a JSON-friendly representation of the object
      * @returns {Object} A JSON-friendly representation of the object
      */
@@ -1430,13 +1482,18 @@ var Reason = /*#__PURE__*/function () {
 
     _classPrivateFieldSet(this, _explanation, explanation);
   }
-  /**
-   * Creates a JSON representation of the reason.
-   * @returns {Object} A JSON (or JSON-friendly) representation of the reason.
-   */
-
 
   _createClass(Reason, [{
+    key: "getContributingSymptoms",
+    value: function getContributingSymptoms() {
+      return _classPrivateFieldGet(this, _contributingSymptoms);
+    }
+    /**
+     * Creates a JSON representation of the reason.
+     * @returns {Object} A JSON (or JSON-friendly) representation of the reason.
+     */
+
+  }, {
     key: "toJSON",
     value: function toJSON() {
       return {

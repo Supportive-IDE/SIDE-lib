@@ -27,6 +27,8 @@ var _utils = require("../utils/utils.js");
 
 var _interfaces = require("./interfaces.js");
 
+var _asg = require("./asg.js");
+
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -34,6 +36,14 @@ function _nonIterableRest() { throw new TypeError("Invalid attempt to destructur
 function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
@@ -291,6 +301,53 @@ var DocInfo = /*#__PURE__*/function () {
     key: "getBlocks",
     value: function getBlocks() {
       return _classPrivateFieldGet(this, _documentRoot);
+    }
+    /**
+     * Returns the document as an Abstract Semantic Graph.
+     * 
+     *
+     * A Graph object (to be implemented) containing: 
+     * - An array all nodes in the graph (index = node ID, value = JSON attributes)
+     * - A 2D array of all connections e.g. at index 0, there will be an array of the IDs of all nodes that node 0 connects to)
+     */
+
+  }, {
+    key: "getGraph",
+    value: function getGraph() {
+      var allNodes = [];
+
+      var _iterator = _createForOfIteratorHelper(_classPrivateFieldGet(this, _statements)),
+          _step;
+
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var statement = _step.value;
+
+          var _iterator2 = _createForOfIteratorHelper(statement.getExpressions()),
+              _step2;
+
+          try {
+            for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+              var exp = _step2.value;
+              var allExp = exp.getAllNestedExpressions();
+              allNodes.push.apply(allNodes, _toConsumableArray(allExp.map(function (e) {
+                return new _asg.GraphNode(e);
+              })));
+            }
+          } catch (err) {
+            _iterator2.e(err);
+          } finally {
+            _iterator2.f();
+          }
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+
+      var graph = new _asg.Graph(allNodes, this.getMisconceptions());
+      return graph;
     } //#endregion
 
   }]);
@@ -377,64 +434,38 @@ function _findAllScopeBlocks2() {
 function _findSymptoms2() {
   var allScopeBlocks = _classPrivateMethodGet(this, _findAllScopeBlocks, _findAllScopeBlocks2).call(this);
 
-  var _iterator = _createForOfIteratorHelper(allScopeBlocks),
-      _step;
+  var _iterator3 = _createForOfIteratorHelper(allScopeBlocks),
+      _step3;
 
   try {
-    for (_iterator.s(); !(_step = _iterator.n()).done;) {
-      var block = _step.value;
+    for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+      var block = _step3.value;
 
-      var _iterator4 = _createForOfIteratorHelper(block.getStatements()),
-          _step4;
+      var _iterator6 = _createForOfIteratorHelper(block.getStatements()),
+          _step6;
 
       try {
-        for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-          var statement = _step4.value;
+        for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+          var statement = _step6.value;
 
-          var _iterator5 = _createForOfIteratorHelper(statement.getExpressions()),
-              _step5;
+          var _iterator7 = _createForOfIteratorHelper(statement.getExpressions()),
+              _step7;
 
           try {
-            for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-              var expression = _step5.value;
+            for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+              var expression = _step7.value;
               expression.checkForSymptoms();
+              expression.checkForConstructs(expression);
             }
           } catch (err) {
-            _iterator5.e(err);
+            _iterator7.e(err);
           } finally {
-            _iterator5.f();
+            _iterator7.f();
           }
 
           if (statement.isBlockStatement()) {
             statement.checkRules(statement);
           }
-        }
-      } catch (err) {
-        _iterator4.e(err);
-      } finally {
-        _iterator4.f();
-      }
-    }
-  } catch (err) {
-    _iterator.e(err);
-  } finally {
-    _iterator.f();
-  }
-
-  var _iterator2 = _createForOfIteratorHelper(this.variables.values()),
-      _step2;
-
-  try {
-    for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-      var vInfoArr = _step2.value;
-
-      var _iterator6 = _createForOfIteratorHelper(vInfoArr),
-          _step6;
-
-      try {
-        for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-          var vInfo = _step6.value;
-          vInfo.checkRules(vInfo);
         }
       } catch (err) {
         _iterator6.e(err);
@@ -443,17 +474,44 @@ function _findSymptoms2() {
       }
     }
   } catch (err) {
-    _iterator2.e(err);
+    _iterator3.e(err);
   } finally {
-    _iterator2.f();
+    _iterator3.f();
   }
 
-  var _iterator3 = _createForOfIteratorHelper(this.userDefinedFunctions.values()),
-      _step3;
+  var _iterator4 = _createForOfIteratorHelper(this.variables.values()),
+      _step4;
 
   try {
-    for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-      var exp = _step3.value;
+    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+      var vInfoArr = _step4.value;
+
+      var _iterator8 = _createForOfIteratorHelper(vInfoArr),
+          _step8;
+
+      try {
+        for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+          var vInfo = _step8.value;
+          vInfo.checkRules(vInfo);
+        }
+      } catch (err) {
+        _iterator8.e(err);
+      } finally {
+        _iterator8.f();
+      }
+    }
+  } catch (err) {
+    _iterator4.e(err);
+  } finally {
+    _iterator4.f();
+  }
+
+  var _iterator5 = _createForOfIteratorHelper(this.userDefinedFunctions.values()),
+      _step5;
+
+  try {
+    for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+      var exp = _step5.value;
       var funcDefinition = exp.getParent();
 
       if (funcDefinition !== undefined && funcDefinition.is(_enums.ExpressionEntity.FunctionDefinitionStatement)) {
@@ -463,12 +521,12 @@ function _findSymptoms2() {
           return e.is(_enums.ExpressionEntity.UserDefinedFunctionCall);
         });
 
-        var _iterator7 = _createForOfIteratorHelper(funcCalls),
-            _step7;
+        var _iterator9 = _createForOfIteratorHelper(funcCalls),
+            _step9;
 
         try {
-          for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-            var call = _step7.value;
+          for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+            var call = _step9.value;
             var numArgs = call.getArguments();
 
             if (numArgs.length < minArgs || numArgs.length > maxArgs) {
@@ -480,16 +538,16 @@ function _findSymptoms2() {
             }
           }
         } catch (err) {
-          _iterator7.e(err);
+          _iterator9.e(err);
         } finally {
-          _iterator7.f();
+          _iterator9.f();
         }
       }
     }
   } catch (err) {
-    _iterator3.e(err);
+    _iterator5.e(err);
   } finally {
-    _iterator3.f();
+    _iterator5.f();
   }
 
   _classPrivateFieldGet(this, _documentRoot).checkRules(_classPrivateFieldGet(this, _documentRoot));
@@ -500,23 +558,23 @@ function _summariseVariables2() {
 
   var allScopeBlocks = _classPrivateMethodGet(this, _findAllScopeBlocks, _findAllScopeBlocks2).call(this);
 
-  var _iterator8 = _createForOfIteratorHelper(allScopeBlocks),
-      _step8;
+  var _iterator10 = _createForOfIteratorHelper(allScopeBlocks),
+      _step10;
 
   try {
-    for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-      var block = _step8.value;
+    for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+      var block = _step10.value;
       var scopeVars = block.getVariableMap();
       var userFunctions = block.getUserDefinedFunctions();
 
-      var _iterator9 = _createForOfIteratorHelper(scopeVars),
-          _step9;
+      var _iterator11 = _createForOfIteratorHelper(scopeVars),
+          _step11;
 
       try {
-        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
-          var _step9$value = _slicedToArray(_step9.value, 2),
-              name = _step9$value[0],
-              vInfo = _step9$value[1];
+        for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+          var _step11$value = _slicedToArray(_step11.value, 2),
+              name = _step11$value[0],
+              vInfo = _step11$value[1];
 
           var movedToParent = false;
           var varExp = vInfo.getUsages()[0].getVariable();
@@ -541,15 +599,15 @@ function _summariseVariables2() {
           }
         }
       } catch (err) {
-        _iterator9.e(err);
+        _iterator11.e(err);
       } finally {
-        _iterator9.f();
+        _iterator11.f();
       }
     }
   } catch (err) {
-    _iterator8.e(err);
+    _iterator10.e(err);
   } finally {
-    _iterator8.f();
+    _iterator10.f();
   }
 
   this.variables = allVariables;
@@ -561,12 +619,12 @@ function _summariseUserDefinedFunctions2() {
 
   var functions = _classPrivateFieldGet(this, _documentRoot).getChildBlocksOfKind(_enums.ExpressionEntity.FunctionDefinition);
 
-  var _iterator10 = _createForOfIteratorHelper(functions),
-      _step10;
+  var _iterator12 = _createForOfIteratorHelper(functions),
+      _step12;
 
   try {
-    for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
-      var f = _step10.value;
+    for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
+      var f = _step12.value;
       var lastLines = f.getLastExecutedStatements();
       var alwaysReturns = f.alwaysReturnsAValue();
 
@@ -592,9 +650,9 @@ function _summariseUserDefinedFunctions2() {
       }
     }
   } catch (err) {
-    _iterator10.e(err);
+    _iterator12.e(err);
   } finally {
-    _iterator10.f();
+    _iterator12.f();
   }
 
   _classPrivateMethodGet(this, _processUnconnectedFunctions, _processUnconnectedFunctions2).call(this);
@@ -616,21 +674,21 @@ function _checkVariablesWithSameNameAsUserDefinedFunctions2() {
     return _this.variables.has(name);
   });
 
-  var _iterator11 = _createForOfIteratorHelper(matchingVarNames),
-      _step11;
+  var _iterator13 = _createForOfIteratorHelper(matchingVarNames),
+      _step13;
 
   try {
-    for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-      var name = _step11.value;
+    for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+      var name = _step13.value;
       var func = this.userDefinedFunctions.get(name).getParent();
 
       if (func !== undefined) {
-        var _iterator12 = _createForOfIteratorHelper(this.variables.get(name)),
-            _step12;
+        var _iterator14 = _createForOfIteratorHelper(this.variables.get(name)),
+            _step14;
 
         try {
-          for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
-            var vInfo = _step12.value;
+          for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
+            var vInfo = _step14.value;
 
             if (vInfo.getUsages().length > 0) {
               var vExp = vInfo.getUsages()[0].getVariable();
@@ -643,16 +701,16 @@ function _checkVariablesWithSameNameAsUserDefinedFunctions2() {
             }
           }
         } catch (err) {
-          _iterator12.e(err);
+          _iterator14.e(err);
         } finally {
-          _iterator12.f();
+          _iterator14.f();
         }
       }
     }
   } catch (err) {
-    _iterator11.e(err);
+    _iterator13.e(err);
   } finally {
-    _iterator11.f();
+    _iterator13.f();
   }
 }
 
@@ -660,12 +718,12 @@ function _findFunctionWithSameNameAsBuiltIns2() {
   var funcNames = this.userDefinedFunctions.keys();
   var overrides = [];
 
-  var _iterator13 = _createForOfIteratorHelper(funcNames),
-      _step13;
+  var _iterator15 = _createForOfIteratorHelper(funcNames),
+      _step15;
 
   try {
-    for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
-      var name = _step13.value;
+    for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
+      var name = _step15.value;
       var knownEntity = (0, _utils.keywordLookup)(name);
 
       if (knownEntity.category === _enums.ExpressionCategory.BuiltInFunctions) {
@@ -673,9 +731,9 @@ function _findFunctionWithSameNameAsBuiltIns2() {
       }
     }
   } catch (err) {
-    _iterator13.e(err);
+    _iterator15.e(err);
   } finally {
-    _iterator13.f();
+    _iterator15.f();
   }
 
   return overrides;
@@ -686,20 +744,20 @@ function _convertBuiltIns2(functionNames) {
     var allScopeBlocks = _classPrivateMethodGet(this, _findAllScopeBlocks, _findAllScopeBlocks2).call(this); // find all calls, convert to userdefined function, change return type
 
 
-    var _iterator14 = _createForOfIteratorHelper(allScopeBlocks),
-        _step14;
+    var _iterator16 = _createForOfIteratorHelper(allScopeBlocks),
+        _step16;
 
     try {
-      for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
-        var block = _step14.value;
+      for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
+        var block = _step16.value;
         var statements = block.getStatements();
 
-        var _iterator15 = _createForOfIteratorHelper(statements),
-            _step15;
+        var _iterator17 = _createForOfIteratorHelper(statements),
+            _step17;
 
         try {
-          for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
-            var s = _step15.value;
+          for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
+            var s = _step17.value;
             var expressions = s.getExpressions();
             var funcCalls = expressions.flatMap(function (e) {
               return e.getExpressionsOfKind(_enums.ExpressionEntity.BuiltInFunctionCall);
@@ -707,33 +765,33 @@ function _convertBuiltIns2(functionNames) {
               return functionNames.includes(f.getFunctionName());
             });
 
-            var _iterator16 = _createForOfIteratorHelper(funcCalls),
-                _step16;
+            var _iterator18 = _createForOfIteratorHelper(funcCalls),
+                _step18;
 
             try {
-              for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
-                var f = _step16.value;
+              for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
+                var f = _step18.value;
 
                 if (functionNames.includes(f.getFunctionName())) {
                   f.convertToUserDefinedFunction(this.userDefinedFunctions.get(f.getFunctionName()));
                 }
               }
             } catch (err) {
-              _iterator16.e(err);
+              _iterator18.e(err);
             } finally {
-              _iterator16.f();
+              _iterator18.f();
             }
           }
         } catch (err) {
-          _iterator15.e(err);
+          _iterator17.e(err);
         } finally {
-          _iterator15.f();
+          _iterator17.f();
         }
       }
     } catch (err) {
-      _iterator14.e(err);
+      _iterator16.e(err);
     } finally {
-      _iterator14.f();
+      _iterator16.f();
     }
   }
 }
@@ -743,35 +801,35 @@ function _findAllFunctions2() {
 
   var allScopeBlocks = _classPrivateMethodGet(this, _findAllScopeBlocks, _findAllScopeBlocks2).call(this);
 
-  var _iterator17 = _createForOfIteratorHelper(allScopeBlocks),
-      _step17;
+  var _iterator19 = _createForOfIteratorHelper(allScopeBlocks),
+      _step19;
 
   try {
-    for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
-      var block = _step17.value;
+    for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
+      var block = _step19.value;
       var userFunctions = block.getUserDefinedFunctions();
 
-      var _iterator18 = _createForOfIteratorHelper(userFunctions),
-          _step18;
+      var _iterator20 = _createForOfIteratorHelper(userFunctions),
+          _step20;
 
       try {
-        for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
-          var _step18$value = _slicedToArray(_step18.value, 2),
-              name = _step18$value[0],
-              funcExp = _step18$value[1];
+        for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
+          var _step20$value = _slicedToArray(_step20.value, 2),
+              name = _step20$value[0],
+              funcExp = _step20$value[1];
 
           funcMap.set(name, funcExp);
         }
       } catch (err) {
-        _iterator18.e(err);
+        _iterator20.e(err);
       } finally {
-        _iterator18.f();
+        _iterator20.f();
       }
     }
   } catch (err) {
-    _iterator17.e(err);
+    _iterator19.e(err);
   } finally {
-    _iterator17.f();
+    _iterator19.f();
   }
 
   return funcMap;
@@ -780,27 +838,27 @@ function _findAllFunctions2() {
 function _processUnconnectedFunctions2() {
   var allScopeBlocks = _classPrivateMethodGet(this, _findAllScopeBlocks, _findAllScopeBlocks2).call(this);
 
-  var _iterator19 = _createForOfIteratorHelper(allScopeBlocks),
-      _step19;
+  var _iterator21 = _createForOfIteratorHelper(allScopeBlocks),
+      _step21;
 
   try {
-    for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
-      var block = _step19.value;
+    for (_iterator21.s(); !(_step21 = _iterator21.n()).done;) {
+      var block = _step21.value;
       var unconnectedCalls = block.getUnconnectedFunctionCalls();
 
-      var _iterator20 = _createForOfIteratorHelper(unconnectedCalls),
-          _step20;
+      var _iterator22 = _createForOfIteratorHelper(unconnectedCalls),
+          _step22;
 
       try {
-        for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
-          var func = _step20.value;
+        for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
+          var func = _step22.value;
 
-          var _iterator21 = _createForOfIteratorHelper(func[1]),
-              _step21;
+          var _iterator23 = _createForOfIteratorHelper(func[1]),
+              _step23;
 
           try {
-            for (_iterator21.s(); !(_step21 = _iterator21.n()).done;) {
-              var call = _step21.value;
+            for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
+              var call = _step23.value;
 
               if (this.userDefinedFunctions.has(func[0])) {
                 var f = this.userDefinedFunctions.get(func[0]);
@@ -815,48 +873,48 @@ function _processUnconnectedFunctions2() {
               }
             }
           } catch (err) {
-            _iterator21.e(err);
+            _iterator23.e(err);
           } finally {
-            _iterator21.f();
+            _iterator23.f();
           }
         }
       } catch (err) {
-        _iterator20.e(err);
+        _iterator22.e(err);
       } finally {
-        _iterator20.f();
+        _iterator22.f();
       }
     }
   } catch (err) {
-    _iterator19.e(err);
+    _iterator21.e(err);
   } finally {
-    _iterator19.f();
+    _iterator21.f();
   }
 }
 
 function _processUnconnectedMethods2() {
   var allScopeBlocks = _classPrivateMethodGet(this, _findAllScopeBlocks, _findAllScopeBlocks2).call(this);
 
-  var _iterator22 = _createForOfIteratorHelper(allScopeBlocks),
-      _step22;
+  var _iterator24 = _createForOfIteratorHelper(allScopeBlocks),
+      _step24;
 
   try {
-    for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
-      var block = _step22.value;
+    for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
+      var block = _step24.value;
       var unconnectedCalls = block.getUnconnectedMethodCalls();
 
-      var _iterator23 = _createForOfIteratorHelper(unconnectedCalls),
-          _step23;
+      var _iterator25 = _createForOfIteratorHelper(unconnectedCalls),
+          _step25;
 
       try {
-        for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
-          var func = _step23.value;
+        for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
+          var func = _step25.value;
 
-          var _iterator24 = _createForOfIteratorHelper(func[1]),
-              _step24;
+          var _iterator26 = _createForOfIteratorHelper(func[1]),
+              _step26;
 
           try {
-            for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
-              var call = _step24.value;
+            for (_iterator26.s(); !(_step26 = _iterator26.n()).done;) {
+              var call = _step26.value;
               var obj = call.getObject();
               var method = void 0;
 
@@ -865,12 +923,12 @@ function _processUnconnectedMethods2() {
                   method = obj.getDataType().methods.get(func[0]);
                 }
               } else {
-                var _iterator25 = _createForOfIteratorHelper(this.userDefinedClasses.values()),
-                    _step25;
+                var _iterator27 = _createForOfIteratorHelper(this.userDefinedClasses.values()),
+                    _step27;
 
                 try {
-                  for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
-                    var userClass = _step25.value;
+                  for (_iterator27.s(); !(_step27 = _iterator27.n()).done;) {
+                    var userClass = _step27.value;
 
                     if (userClass.methods.has(func[0])) {
                       method = userClass.methods.get(func[0]);
@@ -878,9 +936,9 @@ function _processUnconnectedMethods2() {
                     }
                   }
                 } catch (err) {
-                  _iterator25.e(err);
+                  _iterator27.e(err);
                 } finally {
-                  _iterator25.f();
+                  _iterator27.f();
                 }
               }
 
@@ -903,21 +961,21 @@ function _processUnconnectedMethods2() {
 
             }
           } catch (err) {
-            _iterator24.e(err);
+            _iterator26.e(err);
           } finally {
-            _iterator24.f();
+            _iterator26.f();
           }
         }
       } catch (err) {
-        _iterator23.e(err);
+        _iterator25.e(err);
       } finally {
-        _iterator23.f();
+        _iterator25.f();
       }
     }
   } catch (err) {
-    _iterator22.e(err);
+    _iterator24.e(err);
   } finally {
-    _iterator22.f();
+    _iterator24.f();
   }
 }
 
@@ -998,19 +1056,19 @@ function _updateBlock2(lastStatement, currentBlock) {
 }
 
 function _processListComprehensions2(listComprehensions, currentBlock) {
-  var _iterator26 = _createForOfIteratorHelper(listComprehensions),
-      _step26;
+  var _iterator28 = _createForOfIteratorHelper(listComprehensions),
+      _step28;
 
   try {
-    for (_iterator26.s(); !(_step26 = _iterator26.n()).done;) {
-      var comp = _step26.value;
+    for (_iterator28.s(); !(_step28 = _iterator28.n()).done;) {
+      var comp = _step28.value;
       var compBlock = new _block.ListComprehensionBlock(currentBlock, comp);
       currentBlock.addChildBlock(compBlock);
     }
   } catch (err) {
-    _iterator26.e(err);
+    _iterator28.e(err);
   } finally {
-    _iterator26.f();
+    _iterator28.f();
   }
 }
 
@@ -1029,32 +1087,32 @@ function _prepareListComprehensions2(statement) {
   var expressions = statement.getExpressions();
   var comprehensions = [];
 
-  var _iterator27 = _createForOfIteratorHelper(expressions),
-      _step27;
+  var _iterator29 = _createForOfIteratorHelper(expressions),
+      _step29;
 
   try {
-    for (_iterator27.s(); !(_step27 = _iterator27.n()).done;) {
-      var e = _step27.value;
+    for (_iterator29.s(); !(_step29 = _iterator29.n()).done;) {
+      var e = _step29.value;
       var foundComps = e.getExpressionsOfKind(_enums.ExpressionEntity.ListComprehension);
 
-      var _iterator28 = _createForOfIteratorHelper(foundComps),
-          _step28;
+      var _iterator30 = _createForOfIteratorHelper(foundComps),
+          _step30;
 
       try {
-        for (_iterator28.s(); !(_step28 = _iterator28.n()).done;) {
-          var found = _step28.value;
+        for (_iterator30.s(); !(_step30 = _iterator30.n()).done;) {
+          var found = _step30.value;
           comprehensions.push(found.copyAndConvertToPlaceholder());
         }
       } catch (err) {
-        _iterator28.e(err);
+        _iterator30.e(err);
       } finally {
-        _iterator28.f();
+        _iterator30.f();
       }
     }
   } catch (err) {
-    _iterator27.e(err);
+    _iterator29.e(err);
   } finally {
-    _iterator27.f();
+    _iterator29.f();
   }
 
   return comprehensions;
@@ -1082,19 +1140,19 @@ function _createNewBranchBlock2(currentBlock, lastStatement, statementIndent, bl
       if (isConditional && (lastBlockEntity === _enums.ExpressionEntity.IfDefinition || lastBlockEntity === _enums.ExpressionEntity.ElifDefinition) || isExcept && lastBlockEntity === _enums.ExpressionEntity.TryDefinition) {
         var lastBlockSiblings = lastBlock.getSiblingConditionalBranches();
 
-        var _iterator29 = _createForOfIteratorHelper(lastBlockSiblings),
-            _step29;
+        var _iterator31 = _createForOfIteratorHelper(lastBlockSiblings),
+            _step31;
 
         try {
-          for (_iterator29.s(); !(_step29 = _iterator29.n()).done;) {
-            var existing = _step29.value;
+          for (_iterator31.s(); !(_step31 = _iterator31.n()).done;) {
+            var existing = _step31.value;
             branchBlock.addSibling(existing);
             existing.addSibling(branchBlock);
           }
         } catch (err) {
-          _iterator29.e(err);
+          _iterator31.e(err);
         } finally {
-          _iterator29.f();
+          _iterator31.f();
         }
 
         lastBlock.addSibling(branchBlock);

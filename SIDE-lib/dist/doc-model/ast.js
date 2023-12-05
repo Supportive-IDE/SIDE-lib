@@ -209,6 +209,8 @@ var _blockId = /*#__PURE__*/new WeakMap();
 
 var _scopeId = /*#__PURE__*/new WeakMap();
 
+var _connectedTo = /*#__PURE__*/new WeakMap();
+
 var ExpressionNode = /*#__PURE__*/function (_TypeChangeObserverNo) {
   _inherits(ExpressionNode, _TypeChangeObserverNo);
 
@@ -243,6 +245,8 @@ var ExpressionNode = /*#__PURE__*/function (_TypeChangeObserverNo) {
   /** @type {String} */
 
   /** @type {String} */
+
+  /** @type {ExpressionNode[]} */
 
   /**
    * Creates an ExpressionNode
@@ -325,6 +329,11 @@ var ExpressionNode = /*#__PURE__*/function (_TypeChangeObserverNo) {
     _classPrivateFieldInitSpec(_assertThisInitialized(_this), _scopeId, {
       writable: true,
       value: "unknown"
+    });
+
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this), _connectedTo, {
+      writable: true,
+      value: []
     });
 
     if (documentEndIndex < documentStartIndex) {
@@ -504,6 +513,10 @@ var ExpressionNode = /*#__PURE__*/function (_TypeChangeObserverNo) {
   }, {
     key: "getBlockId",
     value: function getBlockId() {
+      if (_classPrivateFieldGet(this, _blockId) === "unknown" && _classPrivateFieldGet(this, _parent) !== undefined) {
+        return _classPrivateFieldGet(this, _parent).getBlockId();
+      }
+
       return _classPrivateFieldGet(this, _blockId);
     }
   }, {
@@ -563,6 +576,20 @@ var ExpressionNode = /*#__PURE__*/function (_TypeChangeObserverNo) {
       }
 
       return false;
+    }
+    /**
+     * Gets the context of use... the parent expression
+     * @returns {string}
+     */
+
+  }, {
+    key: "getContextOfUse",
+    value: function getContextOfUse() {
+      if (_classPrivateFieldGet(this, _parent) === undefined) {
+        return "none";
+      } else {
+        return _classPrivateFieldGet(this, _parent).getEntity().name;
+      }
     }
     /**
      * Checks if this expression is or contains the given expression
@@ -739,6 +766,16 @@ var ExpressionNode = /*#__PURE__*/function (_TypeChangeObserverNo) {
       return [];
     }
     /**
+     * Gets all ExpressionNodes nested within this node, including this node.
+     * @returns {ExpressionNode[]}
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      return [this];
+    }
+    /**
      * Checks any associated symptom rules and updates the symptom tracker
      */
 
@@ -746,6 +783,27 @@ var ExpressionNode = /*#__PURE__*/function (_TypeChangeObserverNo) {
     key: "checkForSymptoms",
     value: function checkForSymptoms() {
       this.checkRules(this);
+    }
+    /**
+     * Gets all nodes this node is connected to
+     * @returns {ExpressionNode[]}
+     */
+
+  }, {
+    key: "getConnectedTo",
+    value: function getConnectedTo() {
+      return _classPrivateFieldGet(this, _connectedTo);
+    }
+    /**
+     * Adds a new ExpressionNode to this node. Connections are directed so this node points 
+     * to the new node but not the other way around
+     * @param {ExpressionNode} node 
+     */
+
+  }, {
+    key: "addConnection",
+    value: function addConnection(node) {
+      _classPrivateFieldGet(this, _connectedTo).push(node);
     }
   }, {
     key: "toJSON",
@@ -1002,18 +1060,17 @@ var MultiPartExpressionNode = /*#__PURE__*/function (_ExpressionNode) {
      */
 
   }, {
-    key: "setBlockId",
-    value: function setBlockId(id) {
-      _get(_getPrototypeOf(MultiPartExpressionNode.prototype), "setBlockId", this).call(this, id); // NEED TO OVERRIDE BY TYPE...
-
+    key: "checkForConstructs",
+    value: function checkForConstructs(obj) {
+      _get(_getPrototypeOf(MultiPartExpressionNode.prototype), "checkForConstructs", this).call(this, this);
 
       var _iterator7 = _createForOfIteratorHelper(this.getChildren()),
           _step7;
 
       try {
         for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-          var exp = _step7.value;
-          exp.setBlockId(id);
+          var c = _step7.value;
+          c.checkForConstructs(c);
         }
       } catch (err) {
         _iterator7.e(err);
@@ -1026,9 +1083,10 @@ var MultiPartExpressionNode = /*#__PURE__*/function (_ExpressionNode) {
      */
 
   }, {
-    key: "setScopeId",
-    value: function setScopeId(id) {
-      _get(_getPrototypeOf(MultiPartExpressionNode.prototype), "setScopeId", this).call(this, id);
+    key: "setBlockId",
+    value: function setBlockId(id) {
+      _get(_getPrototypeOf(MultiPartExpressionNode.prototype), "setBlockId", this).call(this, id); // Multipart...should work for all or are children lost?
+
 
       var _iterator8 = _createForOfIteratorHelper(this.getChildren()),
           _step8;
@@ -1036,12 +1094,35 @@ var MultiPartExpressionNode = /*#__PURE__*/function (_ExpressionNode) {
       try {
         for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
           var exp = _step8.value;
-          exp.setScopeId(id);
+          exp.setBlockId(id);
         }
       } catch (err) {
         _iterator8.e(err);
       } finally {
         _iterator8.f();
+      }
+    }
+    /**
+     * @override
+     */
+
+  }, {
+    key: "setScopeId",
+    value: function setScopeId(id) {
+      _get(_getPrototypeOf(MultiPartExpressionNode.prototype), "setScopeId", this).call(this, id);
+
+      var _iterator9 = _createForOfIteratorHelper(this.getChildren()),
+          _step9;
+
+      try {
+        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+          var exp = _step9.value;
+          exp.setScopeId(id);
+        }
+      } catch (err) {
+        _iterator9.e(err);
+      } finally {
+        _iterator9.f();
       }
     } //#endregion - overrides
     //#region - extension methods
@@ -1097,18 +1178,18 @@ var MultiPartExpressionNode = /*#__PURE__*/function (_ExpressionNode) {
 exports.MultiPartExpressionNode = MultiPartExpressionNode;
 
 function _setParentOfChildren2(expressions) {
-  var _iterator93 = _createForOfIteratorHelper(expressions),
-      _step93;
+  var _iterator98 = _createForOfIteratorHelper(expressions),
+      _step98;
 
   try {
-    for (_iterator93.s(); !(_step93 = _iterator93.n()).done;) {
-      var e = _step93.value;
+    for (_iterator98.s(); !(_step98 = _iterator98.n()).done;) {
+      var e = _step98.value;
       e.setParent(this);
     }
   } catch (err) {
-    _iterator93.e(err);
+    _iterator98.e(err);
   } finally {
-    _iterator93.f();
+    _iterator98.f();
   }
 }
 
@@ -1198,19 +1279,19 @@ var CallableDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN) 
     value: function getVariableExpressions() {
       var variables = [];
 
-      var _iterator9 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _parameters)),
-          _step9;
+      var _iterator10 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _parameters)),
+          _step10;
 
       try {
-        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
-          var param = _step9.value;
+        for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+          var param = _step10.value;
 
-          var _iterator10 = _createForOfIteratorHelper(param),
-              _step10;
+          var _iterator11 = _createForOfIteratorHelper(param),
+              _step11;
 
           try {
-            for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
-              var item = _step10.value;
+            for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+              var item = _step11.value;
 
               if (item.is(_enums.ExpressionEntity.VariableName)) {
                 variables.push(item);
@@ -1219,15 +1300,15 @@ var CallableDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN) 
               }
             }
           } catch (err) {
-            _iterator10.e(err);
+            _iterator11.e(err);
           } finally {
-            _iterator10.f();
+            _iterator11.f();
           }
         }
       } catch (err) {
-        _iterator9.e(err);
+        _iterator10.e(err);
       } finally {
-        _iterator9.f();
+        _iterator10.f();
       }
 
       return variables;
@@ -1244,34 +1325,34 @@ var CallableDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN) 
     value: function getExpressionsOfKind(entity) {
       var matches = _get(_getPrototypeOf(CallableDefinitionStatement.prototype), "getExpressionsOfKind", this).call(this, entity);
 
-      var _iterator11 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _parameters)),
-          _step11;
+      var _iterator12 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _parameters)),
+          _step12;
 
       try {
-        for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-          var c = _step11.value;
+        for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
+          var c = _step12.value;
 
-          var _iterator12 = _createForOfIteratorHelper(c),
-              _step12;
+          var _iterator13 = _createForOfIteratorHelper(c),
+              _step13;
 
           try {
-            for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
-              var item = _step12.value;
+            for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+              var item = _step13.value;
 
               if (item.is(entity)) {
                 matches.push(item);
               } else matches = matches.concat(item.getExpressionsOfKind(entity));
             }
           } catch (err) {
-            _iterator12.e(err);
+            _iterator13.e(err);
           } finally {
-            _iterator12.f();
+            _iterator13.f();
           }
         }
       } catch (err) {
-        _iterator11.e(err);
+        _iterator12.e(err);
       } finally {
-        _iterator11.f();
+        _iterator12.f();
       }
 
       return matches;
@@ -1288,12 +1369,12 @@ var CallableDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN) 
       var match = _get(_getPrototypeOf(CallableDefinitionStatement.prototype), "getFirstExpressionOf", this).call(this, entities);
 
       if (match === undefined) {
-        var _iterator13 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _parameters)),
-            _step13;
+        var _iterator14 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _parameters)),
+            _step14;
 
         try {
-          for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
-            var c = _step13.value;
+          for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
+            var c = _step14.value;
 
             if (c.isOneOf(entities)) {
               return c;
@@ -1303,9 +1384,9 @@ var CallableDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN) 
             }
           }
         } catch (err) {
-          _iterator13.e(err);
+          _iterator14.e(err);
         } finally {
-          _iterator13.f();
+          _iterator14.f();
         }
       }
 
@@ -1320,52 +1401,47 @@ var CallableDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN) 
     value: function checkForSymptoms() {
       this.checkRules(this);
 
-      var _iterator14 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _parameters)),
-          _step14;
+      var _iterator15 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _parameters)),
+          _step15;
 
       try {
-        for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
-          var p = _step14.value;
+        for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
+          var p = _step15.value;
 
-          var _iterator15 = _createForOfIteratorHelper(p),
-              _step15;
+          var _iterator16 = _createForOfIteratorHelper(p),
+              _step16;
 
           try {
-            for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
-              var item = _step15.value;
+            for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
+              var item = _step16.value;
               item.checkForSymptoms();
             }
           } catch (err) {
-            _iterator15.e(err);
+            _iterator16.e(err);
           } finally {
-            _iterator15.f();
+            _iterator16.f();
           }
         }
       } catch (err) {
-        _iterator14.e(err);
+        _iterator15.e(err);
       } finally {
-        _iterator14.f();
+        _iterator15.f();
       }
     }
     /**
      * @override
      */
-
-  }, {
-    key: "setBlockId",
-    value: function setBlockId(id) {
-      _get(_getPrototypeOf(CallableDefinitionStatement.prototype), "setBlockId", this).call(this, id); // NEED TO OVERRIDE BY TYPE...
-
-      /*for (const exp of this.getChildren()) {
-          exp.setBlockId(id);
-      }*/
-
-      /*for (const item of this.#parameters) {
-          for (const p of item)
-              p.setBlockId(id);
-      }*/
-
-    } //#endregion - overrides
+    // setBlockId(id) {
+    //     super.setBlockId(id); // CallableDefinitionStatement
+    //     /*for (const exp of this.getChildren()) {
+    //         exp.setBlockId(id);
+    //     }*/
+    //     /*for (const item of this.#parameters) {
+    //         for (const p of item)
+    //             p.setBlockId(id);
+    //     }*/
+    // }
+    //#endregion - overrides
 
     /**
      * Gets the parameters
@@ -1467,12 +1543,12 @@ function _populateParameters2() {
       _classPrivateFieldGet(this, _parameters)[i] = parts[0];
     }
 
-    var _iterator94 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _parameters)[i]),
-        _step94;
+    var _iterator99 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _parameters)[i]),
+        _step99;
 
     try {
-      for (_iterator94.s(); !(_step94 = _iterator94.n()).done;) {
-        var p = _step94.value;
+      for (_iterator99.s(); !(_step99 = _iterator99.n()).done;) {
+        var p = _step99.value;
 
         if (p.is(_enums.ExpressionEntity.VariableName)) {
           p.setDataType(_enums.DataType.Unknown);
@@ -1484,27 +1560,27 @@ function _populateParameters2() {
           var optional = p.getVariableExpressions();
           _classPrivateFieldSet(this, _numOptional, (_this$numOptional = _classPrivateFieldGet(this, _numOptional), _this$numOptional2 = _this$numOptional++, _this$numOptional)), _this$numOptional2;
 
-          var _iterator95 = _createForOfIteratorHelper(optional),
-              _step95;
+          var _iterator100 = _createForOfIteratorHelper(optional),
+              _step100;
 
           try {
-            for (_iterator95.s(); !(_step95 = _iterator95.n()).done;) {
-              var o = _step95.value;
+            for (_iterator100.s(); !(_step100 = _iterator100.n()).done;) {
+              var o = _step100.value;
               o.setDataType(_enums.DataType.Unknown);
               o.setAssignedOrChanged();
               o.setIsParameter();
             }
           } catch (err) {
-            _iterator95.e(err);
+            _iterator100.e(err);
           } finally {
-            _iterator95.f();
+            _iterator100.f();
           }
         }
       }
     } catch (err) {
-      _iterator94.e(err);
+      _iterator99.e(err);
     } finally {
-      _iterator94.f();
+      _iterator99.f();
     }
   }
 }
@@ -1521,9 +1597,45 @@ var FunctionDefinitionStatement = /*#__PURE__*/function (_CallableDefinitionSt) 
    * @throws Throws an error if the list of children is empty
    */
   function FunctionDefinitionStatement(textValue, children) {
+    var _this4;
+
     _classCallCheck(this, FunctionDefinitionStatement);
 
-    return _super4.call(this, textValue, children, _enums.ExpressionEntity.FunctionDefinitionStatement, _enums.ExpressionCategory.BlockDefinitionStatement, _enums.DataType.NA);
+    _this4 = _super4.call(this, textValue, children, _enums.ExpressionEntity.FunctionDefinitionStatement, _enums.ExpressionCategory.BlockDefinitionStatement, _enums.DataType.NA);
+
+    _this4.addConnection(_this4.getFunctionNameExpression());
+
+    _this4.getFunctionNameExpression().addConnection(_assertThisInitialized(_this4));
+
+    var _iterator17 = _createForOfIteratorHelper(_this4.getParameters()),
+        _step17;
+
+    try {
+      for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
+        var paramList = _step17.value;
+
+        var _iterator18 = _createForOfIteratorHelper(paramList),
+            _step18;
+
+        try {
+          for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
+            var component = _step18.value;
+
+            _this4.getFunctionNameExpression().addConnection(component);
+          }
+        } catch (err) {
+          _iterator18.e(err);
+        } finally {
+          _iterator18.f();
+        }
+      }
+    } catch (err) {
+      _iterator17.e(err);
+    } finally {
+      _iterator17.f();
+    }
+
+    return _this4;
   } //#region - overrides
 
   /**
@@ -1547,6 +1659,43 @@ var FunctionDefinitionStatement = /*#__PURE__*/function (_CallableDefinitionSt) 
     key: "getFunctionNameExpression",
     value: function getFunctionNameExpression() {
       return this.getChildren()[1];
+    }
+    /**
+     * Gets all nodes this node is connected to
+     * @returns {ExpressionNode[]}
+     * @override
+     */
+
+  }, {
+    key: "getConnectedTo",
+    value: function getConnectedTo() {
+      return this.getFunctionNameExpression().getConnectedTo();
+    }
+    /**
+     * Adds a new ExpressionNode to this node. Connections are directed so this node points 
+     * to the new node but not the other way around
+     * @param {ExpressionNode} node 
+     * @override
+     */
+
+  }, {
+    key: "addConnection",
+    value: function addConnection(node) {
+      this.getFunctionNameExpression().addConnection(node);
+    }
+    /**
+     * @inheritdoc
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(FunctionDefinitionStatement.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(this.getFunctionNameExpression().getAllNestedExpressions()), _toConsumableArray(this.getParameters().flatMap(function (argList) {
+        return argList.flatMap(function (a) {
+          return a.getAllNestedExpressions();
+        });
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -1585,24 +1734,56 @@ var MethodDefinitionStatement = /*#__PURE__*/function (_CallableDefinitionSt2) {
    * @throws Throws an error if the list of children is empty
    */
   function MethodDefinitionStatement(textValue, children) {
-    var _thisSuper, _this4;
+    var _thisSuper, _this5;
 
     _classCallCheck(this, MethodDefinitionStatement);
 
-    _this4 = _super5.call(this, textValue, children, _enums.ExpressionEntity.MethodDefinitionStatement, _enums.ExpressionCategory.BlockDefinitionStatement, _enums.DataType.NA);
+    _this5 = _super5.call(this, textValue, children, _enums.ExpressionEntity.MethodDefinitionStatement, _enums.ExpressionCategory.BlockDefinitionStatement, _enums.DataType.NA);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this4), _classVar, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this5), _classVar, {
       writable: true,
       value: void 0
     });
 
-    var params = _get((_thisSuper = _assertThisInitialized(_this4), _getPrototypeOf(MethodDefinitionStatement.prototype)), "getParameters", _thisSuper).call(_thisSuper);
+    var params = _get((_thisSuper = _assertThisInitialized(_this5), _getPrototypeOf(MethodDefinitionStatement.prototype)), "getParameters", _thisSuper).call(_thisSuper);
 
     if (params.length > 0) {
-      _classPrivateFieldSet(_assertThisInitialized(_this4), _classVar, params[0][0]);
+      _classPrivateFieldSet(_assertThisInitialized(_this5), _classVar, params[0][0]);
     }
 
-    return _this4;
+    _this5.addConnection(_this5.getMethodNameExpression());
+
+    _this5.getMethodNameExpression().addConnection(_assertThisInitialized(_this5));
+
+    var _iterator19 = _createForOfIteratorHelper(_this5.getParameters()),
+        _step19;
+
+    try {
+      for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
+        var paramList = _step19.value;
+
+        var _iterator20 = _createForOfIteratorHelper(paramList),
+            _step20;
+
+        try {
+          for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
+            var component = _step20.value;
+
+            _this5.getMethodNameExpression().addConnection(component);
+          }
+        } catch (err) {
+          _iterator20.e(err);
+        } finally {
+          _iterator20.f();
+        }
+      }
+    } catch (err) {
+      _iterator19.e(err);
+    } finally {
+      _iterator19.f();
+    }
+
+    return _this5;
   } //#region - overrides
 
   /**
@@ -1641,6 +1822,43 @@ var MethodDefinitionStatement = /*#__PURE__*/function (_CallableDefinitionSt2) {
     key: "getClassVar",
     value: function getClassVar() {
       return _classPrivateFieldGet(this, _classVar);
+    }
+    /**
+     * Gets all nodes this node is connected to
+     * @returns {ExpressionNode[]}
+     * @override
+     */
+
+  }, {
+    key: "getConnectedTo",
+    value: function getConnectedTo() {
+      return this.getMethodNameExpression().getConnectedTo();
+    }
+    /**
+     * Adds a new ExpressionNode to this node. Connections are directed so this node points 
+     * to the new node but not the other way around
+     * @param {ExpressionNode} node 
+     * @override
+     */
+
+  }, {
+    key: "addConnection",
+    value: function addConnection(node) {
+      this.getMethodNameExpression().addConnection(node);
+    }
+    /**
+     * @inheritdoc
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(MethodDefinitionStatement.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(this.getMethodNameExpression().getAllNestedExpressions()), _toConsumableArray(this.getParameters().flatMap(function (argList) {
+        return argList.flatMap(function (a) {
+          return a.getAllNestedExpressions();
+        });
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -1689,6 +1907,16 @@ var ClassDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN2) {
     key: "isComplete",
     value: function isComplete() {
       return _get(_getPrototypeOf(ClassDefinitionStatement.prototype), "isComplete", this).call(this) && this.getChildren()[1].is(_enums.ExpressionEntity.ClassName);
+    }
+    /**
+     * @inheritdoc
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = _get(_getPrototypeOf(ClassDefinitionStatement.prototype), "getAllNestedExpressions", this).call(this) + [this.getChildren()[1]];
+      return nestedExpressions;
     } //#endregion - overrides
     //#region - extension
 
@@ -1721,6 +1949,8 @@ exports.ClassDefinitionStatement = ClassDefinitionStatement;
 
 var _arguments = /*#__PURE__*/new WeakMap();
 
+var _setConnections = /*#__PURE__*/new WeakSet();
+
 var _setArgsParent = /*#__PURE__*/new WeakSet();
 
 var _checkAndUpdateDataType = /*#__PURE__*/new WeakSet();
@@ -1743,58 +1973,58 @@ var FunctionCallNode = /*#__PURE__*/function (_MultiPartExpressionN3) {
    * @throws Throws an error if the list of children is empty
    */
   function FunctionCallNode(textValue, children, entity, category) {
-    var _this5;
+    var _this6;
 
     _classCallCheck(this, FunctionCallNode);
 
-    _this5 = _super7.call(this, textValue, children, entity, category);
+    _this6 = _super7.call(this, textValue, children, entity, category);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this5), _checkPassesNone);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this6), _checkPassesNone);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this5), _checkUnusedReturn);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this6), _checkUnusedReturn);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this5), _checkAndUpdateDataType);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this6), _checkAndUpdateDataType);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this5), _setArgsParent);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this6), _setArgsParent);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this5), _arguments, {
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this6), _setConnections);
+
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this6), _arguments, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateMethodGet(_assertThisInitialized(_this5), _checkAndUpdateDataType, _checkAndUpdateDataType2).call(_assertThisInitialized(_this5));
+    _classPrivateMethodGet(_assertThisInitialized(_this6), _checkAndUpdateDataType, _checkAndUpdateDataType2).call(_assertThisInitialized(_this6));
 
-    if (_this5.isComplete()) {
+    if (_this6.isComplete()) {
       var firstParamIndex = 2;
       var lastParamIndex = children.length - 2;
 
       if (lastParamIndex < firstParamIndex) {
-        _classPrivateFieldSet(_assertThisInitialized(_this5), _arguments, []); // no args
+        _classPrivateFieldSet(_assertThisInitialized(_this6), _arguments, []); // no args
 
       } else {
         var paramSegment = children.slice(firstParamIndex, lastParamIndex + 1);
 
-        _classPrivateFieldSet(_assertThisInitialized(_this5), _arguments, _rawtextprocessing.StatementProcessor.checkForListComp(paramSegment)); // iterate and convert to tree
+        _classPrivateFieldSet(_assertThisInitialized(_this6), _arguments, _rawtextprocessing.StatementProcessor.checkForListComp(paramSegment)); // iterate and convert to tree
 
 
-        for (var i = 0; i < _classPrivateFieldGet(_assertThisInitialized(_this5), _arguments).length; i++) {
-          if (_classPrivateFieldGet(_assertThisInitialized(_this5), _arguments)[i].length > 1) {
-            _classPrivateFieldGet(_assertThisInitialized(_this5), _arguments)[i] = _rawtextprocessing.StatementProcessor.createTree(_classPrivateFieldGet(_assertThisInitialized(_this5), _arguments)[i]);
+        for (var i = 0; i < _classPrivateFieldGet(_assertThisInitialized(_this6), _arguments).length; i++) {
+          if (_classPrivateFieldGet(_assertThisInitialized(_this6), _arguments)[i].length > 1) {
+            _classPrivateFieldGet(_assertThisInitialized(_this6), _arguments)[i] = _rawtextprocessing.StatementProcessor.createTree(_classPrivateFieldGet(_assertThisInitialized(_this6), _arguments)[i]);
           }
         }
       }
-    } else _classPrivateFieldSet(_assertThisInitialized(_this5), _arguments, []);
+    } else _classPrivateFieldSet(_assertThisInitialized(_this6), _arguments, []);
 
-    _classPrivateMethodGet(_assertThisInitialized(_this5), _setArgsParent, _setArgsParent2).call(_assertThisInitialized(_this5));
+    _classPrivateMethodGet(_assertThisInitialized(_this6), _setArgsParent, _setArgsParent2).call(_assertThisInitialized(_this6));
 
-    _this5.addRules([_classPrivateMethodGet(_assertThisInitialized(_this5), _checkPassesNone, _checkPassesNone2), _classPrivateMethodGet(_assertThisInitialized(_this5), _checkUnusedReturn, _checkUnusedReturn2)]);
+    _this6.addRules([_classPrivateMethodGet(_assertThisInitialized(_this6), _checkPassesNone, _checkPassesNone2), _classPrivateMethodGet(_assertThisInitialized(_this6), _checkUnusedReturn, _checkUnusedReturn2)]);
 
-    return _this5;
+    _classPrivateMethodGet(_assertThisInitialized(_this6), _setConnections, _setConnections2).call(_assertThisInitialized(_this6));
+
+    return _this6;
   }
-  /**
-   * Helper method that sets this as the parent of all arguments in a function call.
-   */
-
 
   _createClass(FunctionCallNode, [{
     key: "isComplete",
@@ -1838,19 +2068,19 @@ var FunctionCallNode = /*#__PURE__*/function (_MultiPartExpressionN3) {
     value: function getVariableExpressions() {
       var variables = [];
 
-      var _iterator16 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments)),
-          _step16;
+      var _iterator21 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments)),
+          _step21;
 
       try {
-        for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
-          var arg = _step16.value;
+        for (_iterator21.s(); !(_step21 = _iterator21.n()).done;) {
+          var arg = _step21.value;
 
-          var _iterator17 = _createForOfIteratorHelper(arg),
-              _step17;
+          var _iterator22 = _createForOfIteratorHelper(arg),
+              _step22;
 
           try {
-            for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
-              var item = _step17.value;
+            for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
+              var item = _step22.value;
 
               if (item.is(_enums.ExpressionEntity.VariableName)) {
                 variables.push(item);
@@ -1859,15 +2089,15 @@ var FunctionCallNode = /*#__PURE__*/function (_MultiPartExpressionN3) {
               }
             }
           } catch (err) {
-            _iterator17.e(err);
+            _iterator22.e(err);
           } finally {
-            _iterator17.f();
+            _iterator22.f();
           }
         }
       } catch (err) {
-        _iterator16.e(err);
+        _iterator21.e(err);
       } finally {
-        _iterator16.f();
+        _iterator21.f();
       }
 
       return variables;
@@ -1888,19 +2118,19 @@ var FunctionCallNode = /*#__PURE__*/function (_MultiPartExpressionN3) {
         return [this.getChildren()[0]];
       }
 
-      var _iterator18 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments)),
-          _step18;
+      var _iterator23 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments)),
+          _step23;
 
       try {
-        for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
-          var c = _step18.value;
+        for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
+          var c = _step23.value;
 
-          var _iterator19 = _createForOfIteratorHelper(c),
-              _step19;
+          var _iterator24 = _createForOfIteratorHelper(c),
+              _step24;
 
           try {
-            for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
-              var item = _step19.value;
+            for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
+              var item = _step24.value;
 
               if (item.is(entity)) {
                 matches.push(item);
@@ -1909,15 +2139,15 @@ var FunctionCallNode = /*#__PURE__*/function (_MultiPartExpressionN3) {
               }
             }
           } catch (err) {
-            _iterator19.e(err);
+            _iterator24.e(err);
           } finally {
-            _iterator19.f();
+            _iterator24.f();
           }
         }
       } catch (err) {
-        _iterator18.e(err);
+        _iterator23.e(err);
       } finally {
-        _iterator18.f();
+        _iterator23.f();
       }
 
       return matches;
@@ -1938,12 +2168,12 @@ var FunctionCallNode = /*#__PURE__*/function (_MultiPartExpressionN3) {
       }
 
       if (match === undefined) {
-        var _iterator20 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments)),
-            _step20;
+        var _iterator25 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments)),
+            _step25;
 
         try {
-          for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
-            var c = _step20.value;
+          for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
+            var c = _step25.value;
 
             if (c.isOneOf(entities)) {
               return c;
@@ -1953,9 +2183,9 @@ var FunctionCallNode = /*#__PURE__*/function (_MultiPartExpressionN3) {
             }
           }
         } catch (err) {
-          _iterator20.e(err);
+          _iterator25.e(err);
         } finally {
-          _iterator20.f();
+          _iterator25.f();
         }
       }
 
@@ -1970,31 +2200,31 @@ var FunctionCallNode = /*#__PURE__*/function (_MultiPartExpressionN3) {
     value: function checkForSymptoms() {
       this.checkRules(this);
 
-      var _iterator21 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments)),
-          _step21;
+      var _iterator26 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments)),
+          _step26;
 
       try {
-        for (_iterator21.s(); !(_step21 = _iterator21.n()).done;) {
-          var a = _step21.value;
+        for (_iterator26.s(); !(_step26 = _iterator26.n()).done;) {
+          var a = _step26.value;
 
-          var _iterator22 = _createForOfIteratorHelper(a),
-              _step22;
+          var _iterator27 = _createForOfIteratorHelper(a),
+              _step27;
 
           try {
-            for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
-              var item = _step22.value;
+            for (_iterator27.s(); !(_step27 = _iterator27.n()).done;) {
+              var item = _step27.value;
               item.checkForSymptoms();
             }
           } catch (err) {
-            _iterator22.e(err);
+            _iterator27.e(err);
           } finally {
-            _iterator22.f();
+            _iterator27.f();
           }
         }
       } catch (err) {
-        _iterator21.e(err);
+        _iterator26.e(err);
       } finally {
-        _iterator21.f();
+        _iterator26.f();
       }
     }
     /**
@@ -2014,22 +2244,31 @@ var FunctionCallNode = /*#__PURE__*/function (_MultiPartExpressionN3) {
     /**
      * @override
      */
+    // setBlockId(id) {
+    //     super.setBlockId(id); // NEED TO OVERRIDE BY TYPE...
+    //     /*for (const exp of this.getChildren()) {
+    //         exp.setBlockId(id);
+    //     }*/
+    //     /*for (const item of this.#arguments) {
+    //         for (const a of item) {
+    //             a.setBlockId(id);
+    //         }
+    //     }*/
+    // }
+
+    /**
+     * @inheritdoc
+     */
 
   }, {
-    key: "setBlockId",
-    value: function setBlockId(id) {
-      _get(_getPrototypeOf(FunctionCallNode.prototype), "setBlockId", this).call(this, id); // NEED TO OVERRIDE BY TYPE...
-
-      /*for (const exp of this.getChildren()) {
-          exp.setBlockId(id);
-      }*/
-
-      /*for (const item of this.#arguments) {
-          for (const a of item) {
-              a.setBlockId(id);
-          }
-      }*/
-
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(FunctionCallNode.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(this.getFunctionExpression().getAllNestedExpressions()), _toConsumableArray(_classPrivateFieldGet(this, _arguments).flatMap(function (argList) {
+        return argList.flatMap(function (a) {
+          return a.getAllNestedExpressions();
+        });
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -2097,32 +2336,65 @@ var FunctionCallNode = /*#__PURE__*/function (_MultiPartExpressionN3) {
   return FunctionCallNode;
 }(MultiPartExpressionNode);
 
-function _setArgsParent2() {
-  var _iterator96 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments)),
-      _step96;
+function _setConnections2() {
+  // Connect to all arguments
+  var _iterator101 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments)),
+      _step101;
 
   try {
-    for (_iterator96.s(); !(_step96 = _iterator96.n()).done;) {
-      var a = _step96.value;
+    for (_iterator101.s(); !(_step101 = _iterator101.n()).done;) {
+      var arg = _step101.value;
 
-      var _iterator97 = _createForOfIteratorHelper(a),
-          _step97;
+      var _iterator102 = _createForOfIteratorHelper(arg),
+          _step102;
 
       try {
-        for (_iterator97.s(); !(_step97 = _iterator97.n()).done;) {
-          var part = _step97.value;
+        for (_iterator102.s(); !(_step102 = _iterator102.n()).done;) {
+          var component = _step102.value;
+          component.addConnection(this);
+        }
+      } catch (err) {
+        _iterator102.e(err);
+      } finally {
+        _iterator102.f();
+      }
+    } // Connect to function expression itself.
+
+  } catch (err) {
+    _iterator101.e(err);
+  } finally {
+    _iterator101.f();
+  }
+
+  this.addConnection(this.getFunctionExpression());
+}
+
+function _setArgsParent2() {
+  var _iterator103 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments)),
+      _step103;
+
+  try {
+    for (_iterator103.s(); !(_step103 = _iterator103.n()).done;) {
+      var a = _step103.value;
+
+      var _iterator104 = _createForOfIteratorHelper(a),
+          _step104;
+
+      try {
+        for (_iterator104.s(); !(_step104 = _iterator104.n()).done;) {
+          var part = _step104.value;
           part.setParent(this);
         }
       } catch (err) {
-        _iterator97.e(err);
+        _iterator104.e(err);
       } finally {
-        _iterator97.f();
+        _iterator104.f();
       }
     }
   } catch (err) {
-    _iterator96.e(err);
+    _iterator103.e(err);
   } finally {
-    _iterator96.f();
+    _iterator103.f();
   }
 }
 
@@ -2153,12 +2425,12 @@ function _checkPassesNone2(exp) {
   var symptoms = [];
   var values = exp.getArguments();
 
-  var _iterator98 = _createForOfIteratorHelper(values),
-      _step98;
+  var _iterator105 = _createForOfIteratorHelper(values),
+      _step105;
 
   try {
-    for (_iterator98.s(); !(_step98 = _iterator98.n()).done;) {
-      var arg = _step98.value;
+    for (_iterator105.s(); !(_step105 = _iterator105.n()).done;) {
+      var arg = _step105.value;
       var expandGroups = arg.flatMap(function (val) {
         return !val.is(_enums.ExpressionEntity.GroupStatement) ? val : val.getContents();
       });
@@ -2176,9 +2448,9 @@ function _checkPassesNone2(exp) {
       }
     }
   } catch (err) {
-    _iterator98.e(err);
+    _iterator105.e(err);
   } finally {
-    _iterator98.f();
+    _iterator105.f();
   }
 
   return symptoms;
@@ -2198,19 +2470,19 @@ var BuiltInFunctionCall = /*#__PURE__*/function (_FunctionCallNode) {
    * @throws Throws an error if the list of children is empty
    */
   function BuiltInFunctionCall(textValue, _children2) {
-    var _this6;
+    var _this7;
 
     _classCallCheck(this, BuiltInFunctionCall);
 
-    _this6 = _super8.call(this, textValue, _children2, _enums.ExpressionEntity.BuiltInFunctionCall, _enums.ExpressionCategory.FunctionCall);
+    _this7 = _super8.call(this, textValue, _children2, _enums.ExpressionEntity.BuiltInFunctionCall, _enums.ExpressionCategory.FunctionCall);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this6), _checkUnnecessaryTypeConversion);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this7), _checkUnnecessaryTypeConversion);
 
     if (_children2.length > 0 && _children2[0].isOneOf([_enums.ExpressionEntity.StrFunction, _enums.ExpressionEntity.IntFunction, _enums.ExpressionEntity.FloatFunction, _enums.ExpressionEntity.BoolFunction, _enums.ExpressionEntity.ListFunction, _enums.ExpressionEntity.TupleFunction, _enums.ExpressionEntity.SetFunction, _enums.ExpressionEntity.DictFunction])) {
-      _this6.addRule(_classPrivateMethodGet(_assertThisInitialized(_this6), _checkUnnecessaryTypeConversion, _checkUnnecessaryTypeConversion2));
+      _this7.addRule(_classPrivateMethodGet(_assertThisInitialized(_this7), _checkUnnecessaryTypeConversion, _checkUnnecessaryTypeConversion2));
     }
 
-    return _this6;
+    return _this7;
   } //#region - overrides    
 
   /**
@@ -2299,9 +2571,27 @@ var UserDefinedFunctionCall = /*#__PURE__*/function (_FunctionCallNode2) {
    * @throws Throws an error if the list of children is empty
    */
   function UserDefinedFunctionCall(textValue, children) {
+    var _this8;
+
     _classCallCheck(this, UserDefinedFunctionCall);
 
-    return _super9.call(this, textValue, children, _enums.ExpressionEntity.UserDefinedFunctionCall, _enums.ExpressionCategory.FunctionCall);
+    _this8 = _super9.call(this, textValue, children, _enums.ExpressionEntity.UserDefinedFunctionCall, _enums.ExpressionCategory.FunctionCall);
+
+    var functionExp = _this8.getFunctionExpression(); // if this has arguments, get function exp paramenters
+
+
+    var args = _this8.getArguments();
+
+    if (args.length > 0 && functionExp.getParent().is(_enums.ExpressionCategory.FunctionCall) && args.length <= functionExp.getParent().getArguments().length) {
+      var params = functionExp.getParent().getArguments();
+
+      for (var i = 0; i < args.length; i++) {
+        args[i][0].addConnection(params[i][0]);
+      }
+    } // if function exp has returns, connect them to this
+
+
+    return _this8;
   } //#region - overrides    
 
   /**
@@ -2361,6 +2651,15 @@ var ExceptionCall = /*#__PURE__*/function (_MultiPartExpressionN4) {
     key: "isComplete",
     value: function isComplete() {
       return _get(_getPrototypeOf(ExceptionCall.prototype), "isComplete", this).call(this) && this.getChildren()[0].is(_enums.ExpressionCategory.BuiltInExceptions);
+    }
+    /**
+     * @inheritdoc
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      return this.getChildren()[0].getAllNestedExpressions();
     } //#endregion - overrides
 
   }]);
@@ -2371,6 +2670,8 @@ var ExceptionCall = /*#__PURE__*/function (_MultiPartExpressionN4) {
 exports.ExceptionCall = ExceptionCall;
 
 var _arguments2 = /*#__PURE__*/new WeakMap();
+
+var _setConnections3 = /*#__PURE__*/new WeakSet();
 
 var _setArgsParent3 = /*#__PURE__*/new WeakSet();
 
@@ -2394,57 +2695,57 @@ var MethodCallNode = /*#__PURE__*/function (_MultiPartExpressionN5) {
    * @throws Throws an error if the list of children is empty
    */
   function MethodCallNode(textValue, children, entity, category) {
-    var _this7;
+    var _this9;
 
     _classCallCheck(this, MethodCallNode);
 
-    _this7 = _super11.call(this, textValue, children, entity, category);
+    _this9 = _super11.call(this, textValue, children, entity, category);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this7), _checkPassesNone3);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this9), _checkPassesNone3);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this7), _checkUnusedReturn3);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this9), _checkUnusedReturn3);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this7), _checkAndUpdateDataType3);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this9), _checkAndUpdateDataType3);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this7), _setArgsParent3);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this9), _setArgsParent3);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this7), _arguments2, {
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this9), _setConnections3);
+
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this9), _arguments2, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateMethodGet(_assertThisInitialized(_this7), _checkAndUpdateDataType3, _checkAndUpdateDataType4).call(_assertThisInitialized(_this7));
+    _classPrivateMethodGet(_assertThisInitialized(_this9), _checkAndUpdateDataType3, _checkAndUpdateDataType4).call(_assertThisInitialized(_this9));
 
-    if (_this7.isComplete()) {
+    if (_this9.isComplete()) {
       var firstParamIndex = 4;
       var lastParamIndex = children.length - 2;
 
       if (lastParamIndex < firstParamIndex) {
-        _classPrivateFieldSet(_assertThisInitialized(_this7), _arguments2, []); // no args
+        _classPrivateFieldSet(_assertThisInitialized(_this9), _arguments2, []); // no args
 
       } else {
         var paramSegment = children.slice(firstParamIndex, lastParamIndex + 1);
 
-        _classPrivateFieldSet(_assertThisInitialized(_this7), _arguments2, _rawtextprocessing.StatementProcessor.checkForListComp(paramSegment));
+        _classPrivateFieldSet(_assertThisInitialized(_this9), _arguments2, _rawtextprocessing.StatementProcessor.checkForListComp(paramSegment));
 
-        for (var i = 0; i < _classPrivateFieldGet(_assertThisInitialized(_this7), _arguments2).length; i++) {
-          if (_classPrivateFieldGet(_assertThisInitialized(_this7), _arguments2)[i].length > 1) {
-            _classPrivateFieldGet(_assertThisInitialized(_this7), _arguments2)[i] = _rawtextprocessing.StatementProcessor.createTree(_classPrivateFieldGet(_assertThisInitialized(_this7), _arguments2)[i]);
+        for (var i = 0; i < _classPrivateFieldGet(_assertThisInitialized(_this9), _arguments2).length; i++) {
+          if (_classPrivateFieldGet(_assertThisInitialized(_this9), _arguments2)[i].length > 1) {
+            _classPrivateFieldGet(_assertThisInitialized(_this9), _arguments2)[i] = _rawtextprocessing.StatementProcessor.createTree(_classPrivateFieldGet(_assertThisInitialized(_this9), _arguments2)[i]);
           }
         }
       }
-    } else _classPrivateFieldSet(_assertThisInitialized(_this7), _arguments2, []);
+    } else _classPrivateFieldSet(_assertThisInitialized(_this9), _arguments2, []);
 
-    _classPrivateMethodGet(_assertThisInitialized(_this7), _setArgsParent3, _setArgsParent4).call(_assertThisInitialized(_this7));
+    _classPrivateMethodGet(_assertThisInitialized(_this9), _setArgsParent3, _setArgsParent4).call(_assertThisInitialized(_this9));
 
-    _this7.addRules([_classPrivateMethodGet(_assertThisInitialized(_this7), _checkPassesNone3, _checkPassesNone4), _classPrivateMethodGet(_assertThisInitialized(_this7), _checkUnusedReturn3, _checkUnusedReturn4)]);
+    _classPrivateMethodGet(_assertThisInitialized(_this9), _setConnections3, _setConnections4).call(_assertThisInitialized(_this9));
 
-    return _this7;
+    _this9.addRules([_classPrivateMethodGet(_assertThisInitialized(_this9), _checkPassesNone3, _checkPassesNone4), _classPrivateMethodGet(_assertThisInitialized(_this9), _checkUnusedReturn3, _checkUnusedReturn4)]);
+
+    return _this9;
   }
-  /**
-   * Helper method that sets this as the parent of all arguments in a function call.
-   */
-
 
   _createClass(MethodCallNode, [{
     key: "isComplete",
@@ -2490,12 +2791,12 @@ var MethodCallNode = /*#__PURE__*/function (_MultiPartExpressionN5) {
     value: function getVariableExpressions() {
       var variables = [];
 
-      var _iterator23 = _createForOfIteratorHelper(this.getChildren()),
-          _step23;
+      var _iterator28 = _createForOfIteratorHelper(this.getChildren()),
+          _step28;
 
       try {
-        for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
-          var child = _step23.value;
+        for (_iterator28.s(); !(_step28 = _iterator28.n()).done;) {
+          var child = _step28.value;
 
           if (child.is(_enums.ExpressionEntity.Dot)) {
             break;
@@ -2506,24 +2807,24 @@ var MethodCallNode = /*#__PURE__*/function (_MultiPartExpressionN5) {
           }
         }
       } catch (err) {
-        _iterator23.e(err);
+        _iterator28.e(err);
       } finally {
-        _iterator23.f();
+        _iterator28.f();
       }
 
-      var _iterator24 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments2)),
-          _step24;
+      var _iterator29 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments2)),
+          _step29;
 
       try {
-        for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
-          var arg = _step24.value;
+        for (_iterator29.s(); !(_step29 = _iterator29.n()).done;) {
+          var arg = _step29.value;
 
-          var _iterator25 = _createForOfIteratorHelper(arg),
-              _step25;
+          var _iterator30 = _createForOfIteratorHelper(arg),
+              _step30;
 
           try {
-            for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
-              var item = _step25.value;
+            for (_iterator30.s(); !(_step30 = _iterator30.n()).done;) {
+              var item = _step30.value;
 
               if (item.is(_enums.ExpressionEntity.VariableName)) {
                 variables.push(item);
@@ -2532,15 +2833,15 @@ var MethodCallNode = /*#__PURE__*/function (_MultiPartExpressionN5) {
               }
             }
           } catch (err) {
-            _iterator25.e(err);
+            _iterator30.e(err);
           } finally {
-            _iterator25.f();
+            _iterator30.f();
           }
         }
       } catch (err) {
-        _iterator24.e(err);
+        _iterator29.e(err);
       } finally {
-        _iterator24.f();
+        _iterator29.f();
       }
 
       return variables;
@@ -2557,19 +2858,19 @@ var MethodCallNode = /*#__PURE__*/function (_MultiPartExpressionN5) {
     value: function getExpressionsOfKind(entity) {
       var matches = _get(_getPrototypeOf(MethodCallNode.prototype), "getExpressionsOfKind", this).call(this, entity);
 
-      var _iterator26 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments2)),
-          _step26;
+      var _iterator31 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments2)),
+          _step31;
 
       try {
-        for (_iterator26.s(); !(_step26 = _iterator26.n()).done;) {
-          var c = _step26.value;
+        for (_iterator31.s(); !(_step31 = _iterator31.n()).done;) {
+          var c = _step31.value;
 
-          var _iterator27 = _createForOfIteratorHelper(c),
-              _step27;
+          var _iterator32 = _createForOfIteratorHelper(c),
+              _step32;
 
           try {
-            for (_iterator27.s(); !(_step27 = _iterator27.n()).done;) {
-              var item = _step27.value;
+            for (_iterator32.s(); !(_step32 = _iterator32.n()).done;) {
+              var item = _step32.value;
 
               if (item.is(entity)) {
                 matches.push(item);
@@ -2578,15 +2879,15 @@ var MethodCallNode = /*#__PURE__*/function (_MultiPartExpressionN5) {
               }
             }
           } catch (err) {
-            _iterator27.e(err);
+            _iterator32.e(err);
           } finally {
-            _iterator27.f();
+            _iterator32.f();
           }
         }
       } catch (err) {
-        _iterator26.e(err);
+        _iterator31.e(err);
       } finally {
-        _iterator26.f();
+        _iterator31.f();
       }
 
       return matches;
@@ -2603,12 +2904,12 @@ var MethodCallNode = /*#__PURE__*/function (_MultiPartExpressionN5) {
       var match = _get(_getPrototypeOf(MethodCallNode.prototype), "getFirstExpressionOf", this).call(this, entities);
 
       if (match === undefined) {
-        var _iterator28 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments2)),
-            _step28;
+        var _iterator33 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments2)),
+            _step33;
 
         try {
-          for (_iterator28.s(); !(_step28 = _iterator28.n()).done;) {
-            var c = _step28.value;
+          for (_iterator33.s(); !(_step33 = _iterator33.n()).done;) {
+            var c = _step33.value;
 
             if (c.isOneOf(entities)) {
               return c;
@@ -2618,9 +2919,9 @@ var MethodCallNode = /*#__PURE__*/function (_MultiPartExpressionN5) {
             }
           }
         } catch (err) {
-          _iterator28.e(err);
+          _iterator33.e(err);
         } finally {
-          _iterator28.f();
+          _iterator33.f();
         }
       }
 
@@ -2639,31 +2940,31 @@ var MethodCallNode = /*#__PURE__*/function (_MultiPartExpressionN5) {
         this.getChildren()[0].checkForSymptoms();
       }
 
-      var _iterator29 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments2)),
-          _step29;
+      var _iterator34 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments2)),
+          _step34;
 
       try {
-        for (_iterator29.s(); !(_step29 = _iterator29.n()).done;) {
-          var a = _step29.value;
+        for (_iterator34.s(); !(_step34 = _iterator34.n()).done;) {
+          var a = _step34.value;
 
-          var _iterator30 = _createForOfIteratorHelper(a),
-              _step30;
+          var _iterator35 = _createForOfIteratorHelper(a),
+              _step35;
 
           try {
-            for (_iterator30.s(); !(_step30 = _iterator30.n()).done;) {
-              var item = _step30.value;
+            for (_iterator35.s(); !(_step35 = _iterator35.n()).done;) {
+              var item = _step35.value;
               item.checkForSymptoms();
             }
           } catch (err) {
-            _iterator30.e(err);
+            _iterator35.e(err);
           } finally {
-            _iterator30.f();
+            _iterator35.f();
           }
         }
       } catch (err) {
-        _iterator29.e(err);
+        _iterator34.e(err);
       } finally {
-        _iterator29.f();
+        _iterator34.f();
       }
     }
     /**
@@ -2679,6 +2980,20 @@ var MethodCallNode = /*#__PURE__*/function (_MultiPartExpressionN5) {
     key: "matchesPattern",
     value: function matchesPattern(node) {
       return _get(_getPrototypeOf(MethodCallNode.prototype), "matchesPattern", this).call(this, node) && this.getMethodName() === node.getMethodName();
+    }
+    /**
+     * @inheritdoc
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(MethodCallNode.prototype), "getAllNestedExpressions", this).call(this)), [this.getMethodExpression()], _toConsumableArray(_classPrivateFieldGet(this, _arguments2).flatMap(function (argList) {
+        return argList.flatMap(function (a) {
+          return a.getAllNestedExpressions();
+        });
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -2718,23 +3033,18 @@ var MethodCallNode = /*#__PURE__*/function (_MultiPartExpressionN5) {
     /**
      * @override
      */
+    // setBlockId(id) {
+    //     super.setBlockId(id); // NEED TO OVERRIDE BY TYPE...
+    //     /*for (const exp of this.getChildren()) {
+    //         exp.setBlockId(id);
+    //     }*/
+    //     /*for (const item of this.#arguments) {
+    //         for (const a of item) {
+    //             a.setBlockId(id);
+    //         }
+    //     }*/
+    // }
 
-  }, {
-    key: "setBlockId",
-    value: function setBlockId(id) {
-      _get(_getPrototypeOf(MethodCallNode.prototype), "setBlockId", this).call(this, id); // NEED TO OVERRIDE BY TYPE...
-
-      /*for (const exp of this.getChildren()) {
-          exp.setBlockId(id);
-      }*/
-
-      /*for (const item of this.#arguments) {
-          for (const a of item) {
-              a.setBlockId(id);
-          }
-      }*/
-
-    }
     /**
      * Gets the name of the method that was called
      * @returns {String}
@@ -2786,32 +3096,65 @@ var MethodCallNode = /*#__PURE__*/function (_MultiPartExpressionN5) {
   return MethodCallNode;
 }(MultiPartExpressionNode);
 
-function _setArgsParent4() {
-  var _iterator99 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments2)),
-      _step99;
+function _setConnections4() {
+  // Connect to all arguments
+  var _iterator106 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments2)),
+      _step106;
 
   try {
-    for (_iterator99.s(); !(_step99 = _iterator99.n()).done;) {
-      var a = _step99.value;
+    for (_iterator106.s(); !(_step106 = _iterator106.n()).done;) {
+      var arg = _step106.value;
 
-      var _iterator100 = _createForOfIteratorHelper(a),
-          _step100;
+      var _iterator107 = _createForOfIteratorHelper(arg),
+          _step107;
 
       try {
-        for (_iterator100.s(); !(_step100 = _iterator100.n()).done;) {
-          var part = _step100.value;
+        for (_iterator107.s(); !(_step107 = _iterator107.n()).done;) {
+          var component = _step107.value;
+          component.addConnection(this);
+        }
+      } catch (err) {
+        _iterator107.e(err);
+      } finally {
+        _iterator107.f();
+      }
+    } // Connect to function expression itself.
+
+  } catch (err) {
+    _iterator106.e(err);
+  } finally {
+    _iterator106.f();
+  }
+
+  this.addConnection(this.getMethodExpression());
+}
+
+function _setArgsParent4() {
+  var _iterator108 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _arguments2)),
+      _step108;
+
+  try {
+    for (_iterator108.s(); !(_step108 = _iterator108.n()).done;) {
+      var a = _step108.value;
+
+      var _iterator109 = _createForOfIteratorHelper(a),
+          _step109;
+
+      try {
+        for (_iterator109.s(); !(_step109 = _iterator109.n()).done;) {
+          var part = _step109.value;
           part.setParent(this);
         }
       } catch (err) {
-        _iterator100.e(err);
+        _iterator109.e(err);
       } finally {
-        _iterator100.f();
+        _iterator109.f();
       }
     }
   } catch (err) {
-    _iterator99.e(err);
+    _iterator108.e(err);
   } finally {
-    _iterator99.f();
+    _iterator108.f();
   }
 }
 
@@ -2840,12 +3183,12 @@ function _checkPassesNone4(exp) {
   var symptoms = [];
   var values = exp.getArguments();
 
-  var _iterator101 = _createForOfIteratorHelper(values),
-      _step101;
+  var _iterator110 = _createForOfIteratorHelper(values),
+      _step110;
 
   try {
-    for (_iterator101.s(); !(_step101 = _iterator101.n()).done;) {
-      var arg = _step101.value;
+    for (_iterator110.s(); !(_step110 = _iterator110.n()).done;) {
+      var arg = _step110.value;
       var expandGroups = arg.flatMap(function (val) {
         return !val.is(_enums.ExpressionEntity.GroupStatement) ? val : val.getContents();
       });
@@ -2863,9 +3206,9 @@ function _checkPassesNone4(exp) {
       }
     }
   } catch (err) {
-    _iterator101.e(err);
+    _iterator110.e(err);
   } finally {
-    _iterator101.f();
+    _iterator110.f();
   }
 
   return symptoms;
@@ -2887,21 +3230,21 @@ var BuiltInMethodCall = /*#__PURE__*/function (_MethodCallNode) {
    * @throws Throws an error if the list of children is empty
    */
   function BuiltInMethodCall(textValue, children) {
-    var _this8;
+    var _this10;
 
     _classCallCheck(this, BuiltInMethodCall);
 
-    _this8 = _super12.call(this, textValue, children, _enums.ExpressionEntity.BuiltInMethodCall, _enums.ExpressionCategory.MethodCall);
+    _this10 = _super12.call(this, textValue, children, _enums.ExpressionEntity.BuiltInMethodCall, _enums.ExpressionCategory.MethodCall);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this8), _checkIsValidMethod);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this10), _checkIsValidMethod);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this8), _processVariableModification);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this10), _processVariableModification);
 
-    _classPrivateMethodGet(_assertThisInitialized(_this8), _processVariableModification, _processVariableModification2).call(_assertThisInitialized(_this8));
+    _classPrivateMethodGet(_assertThisInitialized(_this10), _processVariableModification, _processVariableModification2).call(_assertThisInitialized(_this10));
 
-    _this8.addRule(_classPrivateMethodGet(_assertThisInitialized(_this8), _checkIsValidMethod, _checkIsValidMethod2));
+    _this10.addRule(_classPrivateMethodGet(_assertThisInitialized(_this10), _checkIsValidMethod, _checkIsValidMethod2));
 
-    return _this8;
+    return _this10;
   } // If the method called is a known modifier e.g. list remove, mark the variable it was called on as modified
 
 
@@ -2999,17 +3342,17 @@ var UserDefinedMethodCall = /*#__PURE__*/function (_MethodCallNode2) {
    * @throws Throws an error if the list of children is empty
    */
   function UserDefinedMethodCall(textValue, children) {
-    var _this9;
+    var _this11;
 
     _classCallCheck(this, UserDefinedMethodCall);
 
-    _this9 = _super13.call(this, textValue, children, _enums.ExpressionEntity.UserDefinedMethodCall, _enums.ExpressionCategory.MethodCall);
+    _this11 = _super13.call(this, textValue, children, _enums.ExpressionEntity.UserDefinedMethodCall, _enums.ExpressionCategory.MethodCall);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this9), _checkIsValidMethod3);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this11), _checkIsValidMethod3);
 
-    _this9.addRule(_classPrivateMethodGet(_assertThisInitialized(_this9), _checkIsValidMethod3, _checkIsValidMethod4));
+    _this11.addRule(_classPrivateMethodGet(_assertThisInitialized(_this11), _checkIsValidMethod3, _checkIsValidMethod4));
 
-    return _this9;
+    return _this11;
   } //#region - overrides    
 
   /**
@@ -3075,37 +3418,37 @@ var PropertyCallNode = /*#__PURE__*/function (_MultiPartExpressionN6) {
    * @throws Throws an error if the list of children is empty
    */
   function PropertyCallNode(textValue, children, entity, category) {
-    var _this10;
+    var _this12;
 
     _classCallCheck(this, PropertyCallNode);
 
-    _this10 = _super14.call(this, textValue, children, entity, category);
+    _this12 = _super14.call(this, textValue, children, entity, category);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this10), _checkAndUpdateDataType5);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this12), _checkAndUpdateDataType5);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this10), _checkUnused);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this12), _checkUnused);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this10), _object, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this12), _object, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this10), _property, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this12), _property, {
       writable: true,
       value: void 0
     });
 
-    if (_this10.isComplete()) {
-      _classPrivateFieldSet(_assertThisInitialized(_this10), _object, children[0]);
+    if (_this12.isComplete()) {
+      _classPrivateFieldSet(_assertThisInitialized(_this12), _object, children[0]);
 
-      _classPrivateFieldSet(_assertThisInitialized(_this10), _property, children[2]);
+      _classPrivateFieldSet(_assertThisInitialized(_this12), _property, children[2]);
     }
 
-    _classPrivateMethodGet(_assertThisInitialized(_this10), _checkAndUpdateDataType5, _checkAndUpdateDataType6).call(_assertThisInitialized(_this10));
+    _classPrivateMethodGet(_assertThisInitialized(_this12), _checkAndUpdateDataType5, _checkAndUpdateDataType6).call(_assertThisInitialized(_this12));
 
-    _this10.addRule(_classPrivateMethodGet(_assertThisInitialized(_this10), _checkUnused, _checkUnused2));
+    _this12.addRule(_classPrivateMethodGet(_assertThisInitialized(_this12), _checkUnused, _checkUnused2));
 
-    return _this10;
+    return _this12;
   } //#region - overrides
 
   /**
@@ -3148,12 +3491,12 @@ var PropertyCallNode = /*#__PURE__*/function (_MultiPartExpressionN6) {
     value: function getExpressionsOfKind(entity) {
       var matches = _get(_getPrototypeOf(PropertyCallNode.prototype), "getExpressionsOfKind", this).call(this, entity);
 
-      var _iterator31 = _createForOfIteratorHelper(this.getChildren()),
-          _step31;
+      var _iterator36 = _createForOfIteratorHelper(this.getChildren()),
+          _step36;
 
       try {
-        for (_iterator31.s(); !(_step31 = _iterator31.n()).done;) {
-          var item = _step31.value;
+        for (_iterator36.s(); !(_step36 = _iterator36.n()).done;) {
+          var item = _step36.value;
 
           if (item.is(entity)) {
             matches.push(item);
@@ -3162,9 +3505,9 @@ var PropertyCallNode = /*#__PURE__*/function (_MultiPartExpressionN6) {
           }
         }
       } catch (err) {
-        _iterator31.e(err);
+        _iterator36.e(err);
       } finally {
-        _iterator31.f();
+        _iterator36.f();
       }
 
       return matches;
@@ -3181,12 +3524,12 @@ var PropertyCallNode = /*#__PURE__*/function (_MultiPartExpressionN6) {
       var match = _get(_getPrototypeOf(PropertyCallNode.prototype), "getFirstExpressionOf", this).call(this, entities);
 
       if (match === undefined) {
-        var _iterator32 = _createForOfIteratorHelper(this.getChildren()),
-            _step32;
+        var _iterator37 = _createForOfIteratorHelper(this.getChildren()),
+            _step37;
 
         try {
-          for (_iterator32.s(); !(_step32 = _iterator32.n()).done;) {
-            var c = _step32.value;
+          for (_iterator37.s(); !(_step37 = _iterator37.n()).done;) {
+            var c = _step37.value;
 
             if (c.isOneOf(entities)) {
               return c;
@@ -3196,9 +3539,9 @@ var PropertyCallNode = /*#__PURE__*/function (_MultiPartExpressionN6) {
             }
           }
         } catch (err) {
-          _iterator32.e(err);
+          _iterator37.e(err);
         } finally {
-          _iterator32.f();
+          _iterator37.f();
         }
       }
 
@@ -3226,6 +3569,15 @@ var PropertyCallNode = /*#__PURE__*/function (_MultiPartExpressionN6) {
 
         if (!_classPrivateFieldGet(this, _property).is(_enums.ExpressionCategory.ModuleProperties)) _classPrivateFieldGet(this, _property).setDataType(dataType);
       }
+    }
+    /**
+     * @inheritdoc
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      return [].concat(_toConsumableArray(_get(_getPrototypeOf(PropertyCallNode.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(_classPrivateFieldGet(this, _object).getAllNestedExpressions()), _toConsumableArray(_classPrivateFieldGet(this, _property).getAllNestedExpressions()));
     }
   }, {
     key: "toJSON",
@@ -3343,20 +3695,20 @@ var StringLiteralExpression = /*#__PURE__*/function (_SubscriptableNode) {
    * @param {Number} endLineNumber 
    */
   function StringLiteralExpression(textValue, startLineNumber, documentStartIndex, indexOnLine) {
-    var _this11;
+    var _this13;
 
     var documentEndIndex = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : documentStartIndex + textValue.length;
     var endLineNumber = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : startLineNumber;
 
     _classCallCheck(this, StringLiteralExpression);
 
-    _this11 = _super16.call(this, textValue, _enums.ExpressionEntity.StringLiteral, _enums.ExpressionCategory.Literals, startLineNumber, documentStartIndex, indexOnLine, _enums.DataType.String, documentEndIndex, endLineNumber);
+    _this13 = _super16.call(this, textValue, _enums.ExpressionEntity.StringLiteral, _enums.ExpressionCategory.Literals, startLineNumber, documentStartIndex, indexOnLine, _enums.DataType.String, documentEndIndex, endLineNumber);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this11), _checkUnused3);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this13), _checkUnused3);
 
-    _this11.addRule(_classPrivateMethodGet(_assertThisInitialized(_this11), _checkUnused3, _checkUnused4));
+    _this13.addRule(_classPrivateMethodGet(_assertThisInitialized(_this13), _checkUnused3, _checkUnused4));
 
-    return _this11;
+    return _this13;
   }
   /**
    * @override
@@ -3446,18 +3798,18 @@ var NumberLiteral = /*#__PURE__*/function (_ExpressionNode3) {
    * @param {Number} indexOnLine
    */
   function NumberLiteral(textValue, startLineNumber, documentStartIndex, indexOnLine) {
-    var _this12;
+    var _this14;
 
     _classCallCheck(this, NumberLiteral);
 
     var numberEntity = textValue.indexOf(".") >= 0 ? _enums.ExpressionEntity.FloatLiteral : _enums.ExpressionEntity.IntLiteral;
-    _this12 = _super17.call(this, textValue, numberEntity, _enums.ExpressionCategory.Literals, startLineNumber, documentStartIndex, indexOnLine, numberEntity === _enums.ExpressionEntity.FloatLiteral ? _enums.DataType.Float : _enums.DataType.Int);
+    _this14 = _super17.call(this, textValue, numberEntity, _enums.ExpressionCategory.Literals, startLineNumber, documentStartIndex, indexOnLine, numberEntity === _enums.ExpressionEntity.FloatLiteral ? _enums.DataType.Float : _enums.DataType.Int);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this12), _checkUnused5);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this14), _checkUnused5);
 
-    _this12.addRule(_classPrivateMethodGet(_assertThisInitialized(_this12), _checkUnused5, _checkUnused6));
+    _this14.addRule(_classPrivateMethodGet(_assertThisInitialized(_this14), _checkUnused5, _checkUnused6));
 
-    return _this12;
+    return _this14;
   }
   /**
    * Inherited method. Overridden to do nothing. DataType of a literal should not be changed.
@@ -3530,53 +3882,56 @@ var FStringExpression = /*#__PURE__*/function (_MultiPartExpressionN7) {
    * @throws Throws an error if the list of children is empty
    */
   function FStringExpression(textValue, children) {
-    var _this13;
+    var _this15;
 
     _classCallCheck(this, FStringExpression);
 
-    _this13 = _super18.call(this, textValue, children, _enums.ExpressionEntity.FString, _enums.ExpressionCategory.Literals, _enums.DataType.String);
+    _this15 = _super18.call(this, textValue, children, _enums.ExpressionEntity.FString, _enums.ExpressionCategory.Literals, _enums.DataType.String);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this13), _checkUnused7);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this15), _checkUnused7);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this13), _parseValues);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this15), _parseValues);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this13), _values, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this15), _values, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldSet(_assertThisInitialized(_this13), _values, _classPrivateMethodGet(_assertThisInitialized(_this13), _parseValues, _parseValues2).call(_assertThisInitialized(_this13)));
+    _classPrivateFieldSet(_assertThisInitialized(_this15), _values, _classPrivateMethodGet(_assertThisInitialized(_this15), _parseValues, _parseValues2).call(_assertThisInitialized(_this15)));
 
-    var _iterator33 = _createForOfIteratorHelper(_classPrivateFieldGet(_assertThisInitialized(_this13), _values)),
-        _step33;
+    var _iterator38 = _createForOfIteratorHelper(_classPrivateFieldGet(_assertThisInitialized(_this15), _values)),
+        _step38;
 
     try {
-      for (_iterator33.s(); !(_step33 = _iterator33.n()).done;) {
-        var v = _step33.value;
+      for (_iterator38.s(); !(_step38 = _iterator38.n()).done;) {
+        var v = _step38.value;
 
-        var _iterator34 = _createForOfIteratorHelper(v),
-            _step34;
+        var _iterator39 = _createForOfIteratorHelper(v),
+            _step39;
 
         try {
-          for (_iterator34.s(); !(_step34 = _iterator34.n()).done;) {
-            var e = _step34.value;
-            e.setParent(_assertThisInitialized(_this13));
+          for (_iterator39.s(); !(_step39 = _iterator39.n()).done;) {
+            var e = _step39.value;
+            e.setParent(_assertThisInitialized(_this15));
+
+            _this15.addConnection(e); // e.addConnection(this);
+
           }
         } catch (err) {
-          _iterator34.e(err);
+          _iterator39.e(err);
         } finally {
-          _iterator34.f();
+          _iterator39.f();
         }
       }
     } catch (err) {
-      _iterator33.e(err);
+      _iterator38.e(err);
     } finally {
-      _iterator33.f();
+      _iterator38.f();
     }
 
-    _this13.addRule(_classPrivateMethodGet(_assertThisInitialized(_this13), _checkUnused7, _checkUnused8));
+    _this15.addRule(_classPrivateMethodGet(_assertThisInitialized(_this15), _checkUnused7, _checkUnused8));
 
-    return _this13;
+    return _this15;
   } //#region - overrides
 
   /**
@@ -3612,19 +3967,19 @@ var FStringExpression = /*#__PURE__*/function (_MultiPartExpressionN7) {
     value: function getVariableExpressions() {
       var variables = [];
 
-      var _iterator35 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _values)),
-          _step35;
+      var _iterator40 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _values)),
+          _step40;
 
       try {
-        for (_iterator35.s(); !(_step35 = _iterator35.n()).done;) {
-          var v = _step35.value;
+        for (_iterator40.s(); !(_step40 = _iterator40.n()).done;) {
+          var v = _step40.value;
 
-          var _iterator36 = _createForOfIteratorHelper(v),
-              _step36;
+          var _iterator41 = _createForOfIteratorHelper(v),
+              _step41;
 
           try {
-            for (_iterator36.s(); !(_step36 = _iterator36.n()).done;) {
-              var item = _step36.value;
+            for (_iterator41.s(); !(_step41 = _iterator41.n()).done;) {
+              var item = _step41.value;
 
               if (item.is(_enums.ExpressionEntity.VariableName)) {
                 variables.push(item);
@@ -3633,15 +3988,15 @@ var FStringExpression = /*#__PURE__*/function (_MultiPartExpressionN7) {
               }
             }
           } catch (err) {
-            _iterator36.e(err);
+            _iterator41.e(err);
           } finally {
-            _iterator36.f();
+            _iterator41.f();
           }
         }
       } catch (err) {
-        _iterator35.e(err);
+        _iterator40.e(err);
       } finally {
-        _iterator35.f();
+        _iterator40.f();
       }
 
       return variables;
@@ -3655,51 +4010,59 @@ var FStringExpression = /*#__PURE__*/function (_MultiPartExpressionN7) {
     value: function checkForSymptoms() {
       this.checkRules(this);
 
-      var _iterator37 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _values)),
-          _step37;
+      var _iterator42 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _values)),
+          _step42;
 
       try {
-        for (_iterator37.s(); !(_step37 = _iterator37.n()).done;) {
-          var v = _step37.value;
+        for (_iterator42.s(); !(_step42 = _iterator42.n()).done;) {
+          var v = _step42.value;
 
-          var _iterator38 = _createForOfIteratorHelper(v),
-              _step38;
+          var _iterator43 = _createForOfIteratorHelper(v),
+              _step43;
 
           try {
-            for (_iterator38.s(); !(_step38 = _iterator38.n()).done;) {
-              var item = _step38.value;
+            for (_iterator43.s(); !(_step43 = _iterator43.n()).done;) {
+              var item = _step43.value;
               item.checkForSymptoms();
             }
           } catch (err) {
-            _iterator38.e(err);
+            _iterator43.e(err);
           } finally {
-            _iterator38.f();
+            _iterator43.f();
           }
         }
       } catch (err) {
-        _iterator37.e(err);
+        _iterator42.e(err);
       } finally {
-        _iterator37.f();
+        _iterator42.f();
       }
     }
     /**
      * @override
      */
+    // setBlockId(id) {
+    //     super.setBlockId(id); // NEED TO OVERRIDE BY TYPE...
+    //     /*for (const exp of this.getChildren()) {
+    //         exp.setBlockId(id);
+    //     }*/
+    //     /*for (const item of this.#values) {
+    //         for (const v of item)
+    //             v.setBlockId(id);
+    //     }*/
+    // }
+
+    /**
+     * @inheritdoc
+     */
 
   }, {
-    key: "setBlockId",
-    value: function setBlockId(id) {
-      _get(_getPrototypeOf(FStringExpression.prototype), "setBlockId", this).call(this, id); // NEED TO OVERRIDE BY TYPE...
-
-      /*for (const exp of this.getChildren()) {
-          exp.setBlockId(id);
-      }*/
-
-      /*for (const item of this.#values) {
-          for (const v of item)
-              v.setBlockId(id);
-      }*/
-
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      return [].concat(_toConsumableArray(_get(_getPrototypeOf(FStringExpression.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(_classPrivateFieldGet(this, _values).flatMap(function (vList) {
+        return vList.flatMap(function (v) {
+          return v.getAllNestedExpressions();
+        });
+      })));
     }
   }, {
     key: "toJSON",
@@ -3801,17 +4164,17 @@ var CombinedStringLiteral = /*#__PURE__*/function (_MultiPartExpressionN8) {
    * @throws Throws an error if the list of children is empty
    */
   function CombinedStringLiteral(textValue, children) {
-    var _this14;
+    var _this16;
 
     _classCallCheck(this, CombinedStringLiteral);
 
-    _this14 = _super19.call(this, textValue, children, _enums.ExpressionEntity.CombinedStringLiteral, _enums.ExpressionCategory.Literals, _enums.DataType.String);
+    _this16 = _super19.call(this, textValue, children, _enums.ExpressionEntity.CombinedStringLiteral, _enums.ExpressionCategory.Literals, _enums.DataType.String);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this14), _checkUnused9);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _checkUnused9);
 
-    _this14.addRule(_classPrivateMethodGet(_assertThisInitialized(_this14), _checkUnused9, _checkUnused10));
+    _this16.addRule(_classPrivateMethodGet(_assertThisInitialized(_this16), _checkUnused9, _checkUnused10));
 
-    return _this14;
+    return _this16;
   } //#region - overrides
 
 
@@ -3843,19 +4206,19 @@ var CombinedStringLiteral = /*#__PURE__*/function (_MultiPartExpressionN8) {
     value: function getVariableExpressions() {
       var variables = [];
 
-      var _iterator39 = _createForOfIteratorHelper(this.getChildren()),
-          _step39;
+      var _iterator44 = _createForOfIteratorHelper(this.getChildren()),
+          _step44;
 
       try {
-        for (_iterator39.s(); !(_step39 = _iterator39.n()).done;) {
-          var child = _step39.value;
+        for (_iterator44.s(); !(_step44 = _iterator44.n()).done;) {
+          var child = _step44.value;
           //if (child.is(ExpressionEntity.FString)) {
           variables = variables.concat(child.getVariableExpressions()); //}
         }
       } catch (err) {
-        _iterator39.e(err);
+        _iterator44.e(err);
       } finally {
-        _iterator39.f();
+        _iterator44.f();
       }
 
       return variables;
@@ -3978,21 +4341,21 @@ var ModuleExpression = /*#__PURE__*/function (_ExpressionNode5) {
    * @param {Number} indexOnLine
    */
   function ModuleExpression(textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine) {
-    var _this15;
+    var _this17;
 
     _classCallCheck(this, ModuleExpression);
 
-    _this15 = _super21.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, (0, _utils.typeByEntity)(entity));
+    _this17 = _super21.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, (0, _utils.typeByEntity)(entity));
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this15), _moduleName, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this17), _moduleName, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldSet(_assertThisInitialized(_this15), _moduleName, textValue); // default
+    _classPrivateFieldSet(_assertThisInitialized(_this17), _moduleName, textValue); // default
 
 
-    return _this15;
+    return _this17;
   }
   /**
    * Checks whether this module has been given an alias
@@ -4088,6 +4451,8 @@ var _isParameter = /*#__PURE__*/new WeakMap();
 
 var _getTypeOfPriorUsages = /*#__PURE__*/new WeakSet();
 
+var _checkBooleanCompares = /*#__PURE__*/new WeakSet();
+
 var _checkUnused11 = /*#__PURE__*/new WeakSet();
 
 var _checkOverwrites = /*#__PURE__*/new WeakSet();
@@ -4132,117 +4497,123 @@ var VariableExpression = /*#__PURE__*/function (_ExpressionNode6) {
    * @param {Boolean} proxy Optional. Used to indicate that is a "proxy" variable used to support an operation rather than a "real" instance of a variable in the source code
    */
   function VariableExpression(textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine) {
-    var _this16;
+    var _this18;
 
     var proxy = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : false;
 
     _classCallCheck(this, VariableExpression);
 
     if (category === _enums.ExpressionCategory.Identifiers) {
-      _this16 = _super22.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine);
+      _this18 = _super22.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _getAssignedValue);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _getAssignedValue);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _getLoopVarValue);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _getLoopVarValue);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _compareAllUsages);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _compareAllUsages);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _assignedWithSelf);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _assignedWithSelf);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _checkOverwrites);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _checkOverwrites);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _checkUnused11);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _checkUnused11);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _getTypeOfPriorUsages);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _checkBooleanCompares);
 
-      _classPrivateFieldInitSpec(_assertThisInitialized(_this16), _lastUsages, {
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _getTypeOfPriorUsages);
+
+      _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _lastUsages, {
         writable: true,
         value: []
       });
 
-      _classPrivateFieldInitSpec(_assertThisInitialized(_this16), _isAssignedOrChanged, {
+      _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _isAssignedOrChanged, {
         writable: true,
         value: false
       });
 
-      _classPrivateFieldInitSpec(_assertThisInitialized(_this16), _proxy, {
+      _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _proxy, {
         writable: true,
         value: void 0
       });
 
-      _classPrivateFieldInitSpec(_assertThisInitialized(_this16), _isParameter, {
+      _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _isParameter, {
         writable: true,
         value: false
       });
     } else if (category === _enums.ExpressionCategory.SpecialVariables) {
-      _this16 = _super22.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, (0, _utils.typeByEntity)(entity));
+      _this18 = _super22.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, (0, _utils.typeByEntity)(entity));
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _getAssignedValue);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _getAssignedValue);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _getLoopVarValue);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _getLoopVarValue);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _compareAllUsages);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _compareAllUsages);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _assignedWithSelf);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _assignedWithSelf);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _checkOverwrites);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _checkOverwrites);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _checkUnused11);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _checkUnused11);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _getTypeOfPriorUsages);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _checkBooleanCompares);
 
-      _classPrivateFieldInitSpec(_assertThisInitialized(_this16), _lastUsages, {
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _getTypeOfPriorUsages);
+
+      _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _lastUsages, {
         writable: true,
         value: []
       });
 
-      _classPrivateFieldInitSpec(_assertThisInitialized(_this16), _isAssignedOrChanged, {
+      _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _isAssignedOrChanged, {
         writable: true,
         value: false
       });
 
-      _classPrivateFieldInitSpec(_assertThisInitialized(_this16), _proxy, {
+      _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _proxy, {
         writable: true,
         value: void 0
       });
 
-      _classPrivateFieldInitSpec(_assertThisInitialized(_this16), _isParameter, {
+      _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _isParameter, {
         writable: true,
         value: false
       });
     } else if (category === _enums.ExpressionCategory.ModuleProperties) {
-      _this16 = _super22.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, _utils.builtInReturnLookup.has(entity) ? _utils.builtInReturnLookup.get(entity) : _enums.DataType.Unknown);
+      _this18 = _super22.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, _utils.builtInReturnLookup.has(entity) ? _utils.builtInReturnLookup.get(entity) : _enums.DataType.Unknown);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _getAssignedValue);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _getAssignedValue);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _getLoopVarValue);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _getLoopVarValue);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _compareAllUsages);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _compareAllUsages);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _assignedWithSelf);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _assignedWithSelf);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _checkOverwrites);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _checkOverwrites);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _checkUnused11);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _checkUnused11);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this16), _getTypeOfPriorUsages);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _checkBooleanCompares);
 
-      _classPrivateFieldInitSpec(_assertThisInitialized(_this16), _lastUsages, {
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this18), _getTypeOfPriorUsages);
+
+      _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _lastUsages, {
         writable: true,
         value: []
       });
 
-      _classPrivateFieldInitSpec(_assertThisInitialized(_this16), _isAssignedOrChanged, {
+      _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _isAssignedOrChanged, {
         writable: true,
         value: false
       });
 
-      _classPrivateFieldInitSpec(_assertThisInitialized(_this16), _proxy, {
+      _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _proxy, {
         writable: true,
         value: void 0
       });
 
-      _classPrivateFieldInitSpec(_assertThisInitialized(_this16), _isParameter, {
+      _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _isParameter, {
         writable: true,
         value: false
       });
@@ -4250,11 +4621,13 @@ var VariableExpression = /*#__PURE__*/function (_ExpressionNode6) {
       throw new Error("No constructor for VariableExpression with ".concat(entity.name));
     }
 
-    _classPrivateFieldSet(_assertThisInitialized(_this16), _proxy, proxy);
+    _classPrivateFieldSet(_assertThisInitialized(_this18), _proxy, proxy);
 
-    _this16.addRules([_classPrivateMethodGet(_assertThisInitialized(_this16), _checkOverwrites, _checkOverwrites2), _classPrivateMethodGet(_assertThisInitialized(_this16), _checkUnused11, _checkUnused12)]);
+    _this18.addRules([_classPrivateMethodGet(_assertThisInitialized(_this18), _checkOverwrites, _checkOverwrites2), _classPrivateMethodGet(_assertThisInitialized(_this18), _checkUnused11, _checkUnused12)]);
 
-    return _possibleConstructorReturn(_this16);
+    _this18.addConstructRule(_classPrivateMethodGet(_assertThisInitialized(_this18), _checkBooleanCompares, _checkBooleanCompares2));
+
+    return _possibleConstructorReturn(_this18);
   } //#region - overrides
 
   /**
@@ -4355,6 +4728,8 @@ var VariableExpression = /*#__PURE__*/function (_ExpressionNode6) {
     value: function addLastUsage(varExpression) {
       _classPrivateFieldGet(this, _lastUsages).push(varExpression);
 
+      varExpression.addConnection(this);
+
       if (!this.isAssignedOrChanged() || this.isObjectOfMethodCall() || this.isSubscripted()) {
         this.setDataType(_classPrivateMethodGet(this, _getTypeOfPriorUsages, _getTypeOfPriorUsages2).call(this));
         varExpression.addObserver(this);
@@ -4386,18 +4761,19 @@ var VariableExpression = /*#__PURE__*/function (_ExpressionNode6) {
 
       this.setDataType(_classPrivateMethodGet(this, _getTypeOfPriorUsages, _getTypeOfPriorUsages2).call(this));
 
-      var _iterator40 = _createForOfIteratorHelper(usages),
-          _step40;
+      var _iterator45 = _createForOfIteratorHelper(usages),
+          _step45;
 
       try {
-        for (_iterator40.s(); !(_step40 = _iterator40.n()).done;) {
-          var usage = _step40.value;
+        for (_iterator45.s(); !(_step45 = _iterator45.n()).done;) {
+          var usage = _step45.value;
           usage.addObserver(this);
+          usage.addConnection(this);
         }
       } catch (err) {
-        _iterator40.e(err);
+        _iterator45.e(err);
       } finally {
-        _iterator40.f();
+        _iterator45.f();
       }
     }
     /**
@@ -4431,7 +4807,8 @@ var VariableExpression = /*#__PURE__*/function (_ExpressionNode6) {
       return _classPrivateFieldGet(this, _proxy);
     }
     /**
-     * Rule function. Checks if the property is unused
+     * Construct function. Checks if the variable is a BooleanCompares 
+     * - a variable with Bool data type that is used as a standalone Boolean expression or part of a check for equality e.g. if var:, if var == True:
      * @param {VariableExpression} exp 
      * @returns {Symptom[]}
      */
@@ -4478,6 +4855,16 @@ function _getTypeOfPriorUsages2() {
   }));
 }
 
+function _checkBooleanCompares2(exp) {
+  var constructs = [];
+
+  if (exp.getDataType() === _enums.DataType.Bool) {
+    _symptom.SymptomFinder.checkBooleanCompare(exp);
+  }
+
+  return constructs;
+}
+
 function _checkUnused12(exp) {
   var symptoms = [];
 
@@ -4501,12 +4888,12 @@ function _checkOverwrites2(varExp) {
     var allAssigned = true;
     var currentBlockType = varExp.getBlockId().split("-")[1];
 
-    var _iterator102 = _createForOfIteratorHelper(lastUsages),
-        _step102;
+    var _iterator111 = _createForOfIteratorHelper(lastUsages),
+        _step111;
 
     try {
-      for (_iterator102.s(); !(_step102 = _iterator102.n()).done;) {
-        var usage = _step102.value;
+      for (_iterator111.s(); !(_step111 = _iterator111.n()).done;) {
+        var usage = _step111.value;
 
         if (usage.getScopeId() !== varExp.getScopeId()) {
           continue; // ignore if not in same scope
@@ -4519,9 +4906,9 @@ function _checkOverwrites2(varExp) {
         }
       }
     } catch (err) {
-      _iterator102.e(err);
+      _iterator111.e(err);
     } finally {
-      _iterator102.f();
+      _iterator111.f();
     }
 
     if (allAssigned) {
@@ -4546,12 +4933,12 @@ function _checkOverwrites2(varExp) {
 function _assignedWithSelf2(varName, assignmentExp) {
   var values = assignmentExp.getAssignedValues();
 
-  var _iterator103 = _createForOfIteratorHelper(values),
-      _step103;
+  var _iterator112 = _createForOfIteratorHelper(values),
+      _step112;
 
   try {
-    for (_iterator103.s(); !(_step103 = _iterator103.n()).done;) {
-      var v = _step103.value;
+    for (_iterator112.s(); !(_step112 = _iterator112.n()).done;) {
+      var v = _step112.value;
       var matches = v.getExpressionsOfKind(varName);
 
       if (matches.length > 0) {
@@ -4559,9 +4946,9 @@ function _assignedWithSelf2(varName, assignmentExp) {
       }
     }
   } catch (err) {
-    _iterator103.e(err);
+    _iterator112.e(err);
   } finally {
-    _iterator103.f();
+    _iterator112.f();
   }
 
   return false;
@@ -4571,12 +4958,12 @@ function _compareAllUsages2(assignedValue, lastUsages) {
   var comparisonResults = new Set();
 
   if (assignedValue !== undefined && assignedValue.isOneOf([_enums.ExpressionCategory.Literals, _enums.ExpressionCategory.Types])) {
-    var _iterator104 = _createForOfIteratorHelper(lastUsages),
-        _step104;
+    var _iterator113 = _createForOfIteratorHelper(lastUsages),
+        _step113;
 
     try {
-      for (_iterator104.s(); !(_step104 = _iterator104.n()).done;) {
-        var usage = _step104.value;
+      for (_iterator113.s(); !(_step113 = _iterator113.n()).done;) {
+        var usage = _step113.value;
 
         if (usage.getParent() !== undefined && usage.getParent().is(_enums.ExpressionEntity.AssignmentStatement)) {
           var usageValue = _classPrivateMethodGet(this, _getAssignedValue, _getAssignedValue2).call(this, usage);
@@ -4591,9 +4978,9 @@ function _compareAllUsages2(assignedValue, lastUsages) {
         }
       }
     } catch (err) {
-      _iterator104.e(err);
+      _iterator113.e(err);
     } finally {
-      _iterator104.f();
+      _iterator113.f();
     }
   }
 
@@ -4667,18 +5054,18 @@ var PropertyExpression = /*#__PURE__*/function (_VariableExpression) {
    * @param {Number} indexOnLine
    */
   function PropertyExpression(textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine) {
-    var _this17;
+    var _this19;
 
     _classCallCheck(this, PropertyExpression);
 
-    _this17 = _super23.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine);
+    _this19 = _super23.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this17), _ownerType, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this19), _ownerType, {
       writable: true,
       value: void 0
     });
 
-    return _this17;
+    return _this19;
   } //#region - overrides
 
   /**
@@ -4843,30 +5230,30 @@ var ClassNode = /*#__PURE__*/function (_ExpressionNode8) {
    * @param {DataType} dataType Optional. The data type of the individual expression. NotParsed by default.
    */
   function ClassNode(textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine) {
-    var _this18;
+    var _this20;
 
     var dataType = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : _enums.DataType.Class;
 
     _classCallCheck(this, ClassNode);
 
-    _this18 = _super25.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, dataType);
+    _this20 = _super25.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, dataType);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _attributes, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this20), _attributes, {
       writable: true,
       value: []
     });
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _init, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this20), _init, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this18), _methods, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this20), _methods, {
       writable: true,
       value: []
     });
 
-    return _this18;
+    return _this20;
   } //#region - overrides
 
   /**
@@ -4934,20 +5321,20 @@ var UserDefinedFunctionExpression = /*#__PURE__*/function (_FunctionNode) {
    * @param {Number} indexOnLine
    */
   function UserDefinedFunctionExpression(textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine) {
-    var _this19;
+    var _this21;
 
     _classCallCheck(this, UserDefinedFunctionExpression);
 
-    _this19 = _super26.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, _enums.DataType.NotParsed);
+    _this21 = _super26.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, _enums.DataType.NotParsed);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this19), _addProxyReturn);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this21), _addProxyReturn);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this19), _returnExpressions, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this21), _returnExpressions, {
       writable: true,
       value: []
     });
 
-    return _this19;
+    return _this21;
   }
   /**
    * @override
@@ -4962,7 +5349,8 @@ var UserDefinedFunctionExpression = /*#__PURE__*/function (_FunctionNode) {
       });
 
       _get(_getPrototypeOf(UserDefinedFunctionExpression.prototype), "setDataType", this).call(this, (0, _utils.getAggregateType)(returnTypes));
-    }
+    } // NEED TO ADD RETURN - CALL CONNECTIONS AT END - toGraph?
+
   }, {
     key: "toJSON",
     value: function toJSON() {
@@ -5009,33 +5397,35 @@ var UserDefinedFunctionExpression = /*#__PURE__*/function (_FunctionNode) {
     value: function addReturns(statements) {
       var addProxy = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
-      var _iterator41 = _createForOfIteratorHelper(statements),
-          _step41;
+      var _iterator46 = _createForOfIteratorHelper(statements),
+          _step46;
 
       try {
-        for (_iterator41.s(); !(_step41 = _iterator41.n()).done;) {
-          var s = _step41.value;
+        for (_iterator46.s(); !(_step46 = _iterator46.n()).done;) {
+          var s = _step46.value;
 
           if (s.getFirstExpression().is(_enums.ExpressionEntity.ReturnStatement)) {
             var retExp = s.getFirstExpression();
 
             _classPrivateFieldGet(this, _returnExpressions).push(retExp);
 
-            var _iterator42 = _createForOfIteratorHelper(this.getObservers()),
-                _step42;
+            var _iterator47 = _createForOfIteratorHelper(this.getObservers()),
+                _step47;
 
             try {
-              for (_iterator42.s(); !(_step42 = _iterator42.n()).done;) {
-                var obs = _step42.value;
+              for (_iterator47.s(); !(_step47 = _iterator47.n()).done;) {
+                var obs = _step47.value;
 
                 if (obs.is(_enums.ExpressionEntity.UserDefinedFunctionCall)) {
                   _classPrivateFieldGet(obs.getFunctionExpression(), _returnExpressions).push(retExp);
+
+                  retExp.addConnection(obs);
                 }
               }
             } catch (err) {
-              _iterator42.e(err);
+              _iterator47.e(err);
             } finally {
-              _iterator42.f();
+              _iterator47.f();
             }
 
             retExp.addObserver(this);
@@ -5044,9 +5434,9 @@ var UserDefinedFunctionExpression = /*#__PURE__*/function (_FunctionNode) {
           }
         }
       } catch (err) {
-        _iterator41.e(err);
+        _iterator46.e(err);
       } finally {
-        _iterator41.f();
+        _iterator46.f();
       }
 
       if (addProxy) {
@@ -5094,7 +5484,7 @@ var UserDefinedMethodExpression = /*#__PURE__*/function (_UserDefinedFunctionE) 
   var _super27 = _createSuper(UserDefinedMethodExpression);
 
   function UserDefinedMethodExpression() {
-    var _this20;
+    var _this22;
 
     _classCallCheck(this, UserDefinedMethodExpression);
 
@@ -5102,14 +5492,14 @@ var UserDefinedMethodExpression = /*#__PURE__*/function (_UserDefinedFunctionE) 
       args[_key] = arguments[_key];
     }
 
-    _this20 = _super27.call.apply(_super27, [this].concat(args));
+    _this22 = _super27.call.apply(_super27, [this].concat(args));
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this20), _containingClass, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this22), _containingClass, {
       writable: true,
       value: _enums.DataType.Class
     });
 
-    return _this20;
+    return _this22;
   }
 
   _createClass(UserDefinedMethodExpression, [{
@@ -5213,23 +5603,23 @@ var TypeValueExpression = /*#__PURE__*/function (_ExpressionNode9) {
    * @param {Number} indexOnLine
    */
   function TypeValueExpression(textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine) {
-    var _this21;
+    var _this23;
 
     _classCallCheck(this, TypeValueExpression);
 
     if (entity === _enums.ExpressionEntity.TrueType || entity === _enums.ExpressionEntity.FalseType) {
-      _this21 = _super29.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, _enums.DataType.Bool);
+      _this23 = _super29.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, _enums.DataType.Bool);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this21), _checkUnused13);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this23), _checkUnused13);
     } else if (entity === _enums.ExpressionEntity.NoneType) {
-      _this21 = _super29.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, _enums.DataType.None);
+      _this23 = _super29.call(this, textValue, entity, category, startLineNumber, documentStartIndex, indexOnLine, _enums.DataType.None);
 
-      _classPrivateMethodInitSpec(_assertThisInitialized(_this21), _checkUnused13);
+      _classPrivateMethodInitSpec(_assertThisInitialized(_this23), _checkUnused13);
     } else throw new Error("Not a valid type value: ".concat(entity.name));
 
-    _this21.addRule(_classPrivateMethodGet(_assertThisInitialized(_this21), _checkUnused13, _checkUnused14));
+    _this23.addRule(_classPrivateMethodGet(_assertThisInitialized(_this23), _checkUnused13, _checkUnused14));
 
-    return _possibleConstructorReturn(_this21);
+    return _possibleConstructorReturn(_this23);
   } //#region - overrides
 
   /**
@@ -5491,69 +5881,75 @@ var CompoundTypeExpression = /*#__PURE__*/function (_MultiPartExpressionN9) {
    * @throws Throws an error if the list of children is empty
    */
   function CompoundTypeExpression(textValue, children, entity, elements) {
-    var _this22;
+    var _this24;
 
     _classCallCheck(this, CompoundTypeExpression);
 
     var dataType = (0, _utils.typeByEntity)(entity);
-    _this22 = _super34.call(this, textValue, children, entity, _enums.ExpressionCategory.CompoundTypes, dataType);
+    _this24 = _super34.call(this, textValue, children, entity, _enums.ExpressionCategory.CompoundTypes, dataType);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this22), _checkUnused15);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this24), _checkUnused15);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this22), _elements, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this24), _elements, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldSet(_assertThisInitialized(_this22), _elements, elements); // iterate and convert to tree
+    _classPrivateFieldSet(_assertThisInitialized(_this24), _elements, elements); // iterate and convert to tree
 
 
-    for (var i = 0; i < _classPrivateFieldGet(_assertThisInitialized(_this22), _elements).length; i++) {
+    for (var i = 0; i < _classPrivateFieldGet(_assertThisInitialized(_this24), _elements).length; i++) {
       if (entity !== _enums.ExpressionEntity.DictDefinition) {
-        if (_classPrivateFieldGet(_assertThisInitialized(_this22), _elements)[i].length > 1) {
-          _classPrivateFieldGet(_assertThisInitialized(_this22), _elements)[i] = _rawtextprocessing.StatementProcessor.createTree(_classPrivateFieldGet(_assertThisInitialized(_this22), _elements)[i]);
+        if (_classPrivateFieldGet(_assertThisInitialized(_this24), _elements)[i].length > 1) {
+          _classPrivateFieldGet(_assertThisInitialized(_this24), _elements)[i] = _rawtextprocessing.StatementProcessor.createTree(_classPrivateFieldGet(_assertThisInitialized(_this24), _elements)[i]);
         }
 
-        var _iterator43 = _createForOfIteratorHelper(_classPrivateFieldGet(_assertThisInitialized(_this22), _elements)[i]),
-            _step43;
+        var _iterator48 = _createForOfIteratorHelper(_classPrivateFieldGet(_assertThisInitialized(_this24), _elements)[i]),
+            _step48;
 
         try {
-          for (_iterator43.s(); !(_step43 = _iterator43.n()).done;) {
-            var e = _step43.value;
-            e.setParent(_assertThisInitialized(_this22));
+          for (_iterator48.s(); !(_step48 = _iterator48.n()).done;) {
+            var e = _step48.value;
+            e.setParent(_assertThisInitialized(_this24));
+
+            _this24.addConnection(e); // e.addConnection(this);
+
           }
         } catch (err) {
-          _iterator43.e(err);
+          _iterator48.e(err);
         } finally {
-          _iterator43.f();
+          _iterator48.f();
         }
       } else {
-        for (var u = 0; u < _classPrivateFieldGet(_assertThisInitialized(_this22), _elements)[i].length; u++) {
-          if (_classPrivateFieldGet(_assertThisInitialized(_this22), _elements)[i][u].length > 1) {
-            _classPrivateFieldGet(_assertThisInitialized(_this22), _elements)[i][u] = _rawtextprocessing.StatementProcessor.createTree(_classPrivateFieldGet(_assertThisInitialized(_this22), _elements)[i][u]);
+        for (var u = 0; u < _classPrivateFieldGet(_assertThisInitialized(_this24), _elements)[i].length; u++) {
+          if (_classPrivateFieldGet(_assertThisInitialized(_this24), _elements)[i][u].length > 1) {
+            _classPrivateFieldGet(_assertThisInitialized(_this24), _elements)[i][u] = _rawtextprocessing.StatementProcessor.createTree(_classPrivateFieldGet(_assertThisInitialized(_this24), _elements)[i][u]);
           }
 
-          var _iterator44 = _createForOfIteratorHelper(_classPrivateFieldGet(_assertThisInitialized(_this22), _elements)[i][u]),
-              _step44;
+          var _iterator49 = _createForOfIteratorHelper(_classPrivateFieldGet(_assertThisInitialized(_this24), _elements)[i][u]),
+              _step49;
 
           try {
-            for (_iterator44.s(); !(_step44 = _iterator44.n()).done;) {
-              var _e = _step44.value;
+            for (_iterator49.s(); !(_step49 = _iterator49.n()).done;) {
+              var _e = _step49.value;
 
-              _e.setParent(_assertThisInitialized(_this22));
+              _e.setParent(_assertThisInitialized(_this24));
+
+              _this24.addConnection(_e); // e.addConnection(this);
+
             }
           } catch (err) {
-            _iterator44.e(err);
+            _iterator49.e(err);
           } finally {
-            _iterator44.f();
+            _iterator49.f();
           }
         }
       }
     }
 
-    _this22.addRule(_classPrivateMethodGet(_assertThisInitialized(_this22), _checkUnused15, _checkUnused16));
+    _this24.addRule(_classPrivateMethodGet(_assertThisInitialized(_this24), _checkUnused15, _checkUnused16));
 
-    return _this22;
+    return _this24;
   } //#region - overrides
 
   /**
@@ -5575,19 +5971,19 @@ var CompoundTypeExpression = /*#__PURE__*/function (_MultiPartExpressionN9) {
     value: function getVariableExpressions() {
       var variables = [];
 
-      var _iterator45 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _elements)),
-          _step45;
+      var _iterator50 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _elements)),
+          _step50;
 
       try {
-        for (_iterator45.s(); !(_step45 = _iterator45.n()).done;) {
-          var child = _step45.value;
+        for (_iterator50.s(); !(_step50 = _iterator50.n()).done;) {
+          var child = _step50.value;
 
-          var _iterator46 = _createForOfIteratorHelper(child),
-              _step46;
+          var _iterator51 = _createForOfIteratorHelper(child),
+              _step51;
 
           try {
-            for (_iterator46.s(); !(_step46 = _iterator46.n()).done;) {
-              var item = _step46.value;
+            for (_iterator51.s(); !(_step51 = _iterator51.n()).done;) {
+              var item = _step51.value;
 
               if (this.getEntity() !== _enums.ExpressionEntity.DictDefinition) {
                 if (item.is(_enums.ExpressionEntity.VariableName)) {
@@ -5596,12 +5992,12 @@ var CompoundTypeExpression = /*#__PURE__*/function (_MultiPartExpressionN9) {
                   variables = variables.concat(item.getVariableExpressions());
                 }
               } else {
-                var _iterator47 = _createForOfIteratorHelper(item),
-                    _step47;
+                var _iterator52 = _createForOfIteratorHelper(item),
+                    _step52;
 
                 try {
-                  for (_iterator47.s(); !(_step47 = _iterator47.n()).done;) {
-                    var element = _step47.value;
+                  for (_iterator52.s(); !(_step52 = _iterator52.n()).done;) {
+                    var element = _step52.value;
 
                     if (element.is(_enums.ExpressionEntity.VariableName)) {
                       variables.push(element);
@@ -5610,22 +6006,22 @@ var CompoundTypeExpression = /*#__PURE__*/function (_MultiPartExpressionN9) {
                     }
                   }
                 } catch (err) {
-                  _iterator47.e(err);
+                  _iterator52.e(err);
                 } finally {
-                  _iterator47.f();
+                  _iterator52.f();
                 }
               }
             }
           } catch (err) {
-            _iterator46.e(err);
+            _iterator51.e(err);
           } finally {
-            _iterator46.f();
+            _iterator51.f();
           }
         }
       } catch (err) {
-        _iterator45.e(err);
+        _iterator50.e(err);
       } finally {
-        _iterator45.f();
+        _iterator50.f();
       }
 
       return variables;
@@ -5641,53 +6037,53 @@ var CompoundTypeExpression = /*#__PURE__*/function (_MultiPartExpressionN9) {
         return true;
       }
 
-      var _iterator48 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _elements)),
-          _step48;
+      var _iterator53 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _elements)),
+          _step53;
 
       try {
-        for (_iterator48.s(); !(_step48 = _iterator48.n()).done;) {
-          var child = _step48.value;
+        for (_iterator53.s(); !(_step53 = _iterator53.n()).done;) {
+          var child = _step53.value;
 
-          var _iterator49 = _createForOfIteratorHelper(child),
-              _step49;
+          var _iterator54 = _createForOfIteratorHelper(child),
+              _step54;
 
           try {
-            for (_iterator49.s(); !(_step49 = _iterator49.n()).done;) {
-              var item = _step49.value;
+            for (_iterator54.s(); !(_step54 = _iterator54.n()).done;) {
+              var item = _step54.value;
 
               if (this.getEntity() !== _enums.ExpressionEntity.DictDefinition) {
                 if (item.contains(expression)) {
                   return true;
                 }
               } else {
-                var _iterator50 = _createForOfIteratorHelper(item),
-                    _step50;
+                var _iterator55 = _createForOfIteratorHelper(item),
+                    _step55;
 
                 try {
-                  for (_iterator50.s(); !(_step50 = _iterator50.n()).done;) {
-                    var element = _step50.value;
+                  for (_iterator55.s(); !(_step55 = _iterator55.n()).done;) {
+                    var element = _step55.value;
 
                     if (element.contains(expression)) {
                       return true;
                     }
                   }
                 } catch (err) {
-                  _iterator50.e(err);
+                  _iterator55.e(err);
                 } finally {
-                  _iterator50.f();
+                  _iterator55.f();
                 }
               }
             }
           } catch (err) {
-            _iterator49.e(err);
+            _iterator54.e(err);
           } finally {
-            _iterator49.f();
+            _iterator54.f();
           }
         }
       } catch (err) {
-        _iterator48.e(err);
+        _iterator53.e(err);
       } finally {
-        _iterator48.f();
+        _iterator53.f();
       }
 
       return false;
@@ -5704,53 +6100,53 @@ var CompoundTypeExpression = /*#__PURE__*/function (_MultiPartExpressionN9) {
     value: function getExpressionsOfKind(entity) {
       var matches = _get(_getPrototypeOf(CompoundTypeExpression.prototype), "getExpressionsOfKind", this).call(this, entity);
 
-      var _iterator51 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _elements)),
-          _step51;
+      var _iterator56 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _elements)),
+          _step56;
 
       try {
-        for (_iterator51.s(); !(_step51 = _iterator51.n()).done;) {
-          var child = _step51.value;
+        for (_iterator56.s(); !(_step56 = _iterator56.n()).done;) {
+          var child = _step56.value;
 
-          var _iterator52 = _createForOfIteratorHelper(child),
-              _step52;
+          var _iterator57 = _createForOfIteratorHelper(child),
+              _step57;
 
           try {
-            for (_iterator52.s(); !(_step52 = _iterator52.n()).done;) {
-              var item = _step52.value;
+            for (_iterator57.s(); !(_step57 = _iterator57.n()).done;) {
+              var item = _step57.value;
 
               if (this.getEntity() !== _enums.ExpressionEntity.DictDefinition) {
                 if (item.is(entity)) {
                   matches.push(item);
                 } else matches = matches.concat(item.getExpressionsOfKind(entity));
               } else {
-                var _iterator53 = _createForOfIteratorHelper(item),
-                    _step53;
+                var _iterator58 = _createForOfIteratorHelper(item),
+                    _step58;
 
                 try {
-                  for (_iterator53.s(); !(_step53 = _iterator53.n()).done;) {
-                    var element = _step53.value;
+                  for (_iterator58.s(); !(_step58 = _iterator58.n()).done;) {
+                    var element = _step58.value;
 
                     if (element.is(entity)) {
                       matches.push(element);
                     } else matches = matches.concat(element.getExpressionsOfKind(entity));
                   }
                 } catch (err) {
-                  _iterator53.e(err);
+                  _iterator58.e(err);
                 } finally {
-                  _iterator53.f();
+                  _iterator58.f();
                 }
               }
             }
           } catch (err) {
-            _iterator52.e(err);
+            _iterator57.e(err);
           } finally {
-            _iterator52.f();
+            _iterator57.f();
           }
         }
       } catch (err) {
-        _iterator51.e(err);
+        _iterator56.e(err);
       } finally {
-        _iterator51.f();
+        _iterator56.f();
       }
 
       return matches;
@@ -5767,19 +6163,19 @@ var CompoundTypeExpression = /*#__PURE__*/function (_MultiPartExpressionN9) {
       var match = _get(_getPrototypeOf(CompoundTypeExpression.prototype), "getFirstExpressionOf", this).call(this, entities);
 
       if (match === undefined) {
-        var _iterator54 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _elements)),
-            _step54;
+        var _iterator59 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _elements)),
+            _step59;
 
         try {
-          for (_iterator54.s(); !(_step54 = _iterator54.n()).done;) {
-            var elem = _step54.value;
+          for (_iterator59.s(); !(_step59 = _iterator59.n()).done;) {
+            var elem = _step59.value;
 
-            var _iterator55 = _createForOfIteratorHelper(elem),
-                _step55;
+            var _iterator60 = _createForOfIteratorHelper(elem),
+                _step60;
 
             try {
-              for (_iterator55.s(); !(_step55 = _iterator55.n()).done;) {
-                var item = _step55.value;
+              for (_iterator60.s(); !(_step60 = _iterator60.n()).done;) {
+                var item = _step60.value;
 
                 if (this.getEntity() !== _enums.ExpressionEntity.DictDefinition) {
                   if (item.isOneOf(entities)) return item;else {
@@ -5787,34 +6183,34 @@ var CompoundTypeExpression = /*#__PURE__*/function (_MultiPartExpressionN9) {
                     if (match !== undefined) return match;
                   }
                 } else {
-                  var _iterator56 = _createForOfIteratorHelper(item),
-                      _step56;
+                  var _iterator61 = _createForOfIteratorHelper(item),
+                      _step61;
 
                   try {
-                    for (_iterator56.s(); !(_step56 = _iterator56.n()).done;) {
-                      var keyValue = _step56.value;
+                    for (_iterator61.s(); !(_step61 = _iterator61.n()).done;) {
+                      var keyValue = _step61.value;
                       if (keyValue.isOneOf(entities)) return keyValue;else {
                         match = keyValue.getFirstExpressionOf(entities);
                         if (match !== undefined) return match;
                       }
                     }
                   } catch (err) {
-                    _iterator56.e(err);
+                    _iterator61.e(err);
                   } finally {
-                    _iterator56.f();
+                    _iterator61.f();
                   }
                 }
               }
             } catch (err) {
-              _iterator55.e(err);
+              _iterator60.e(err);
             } finally {
-              _iterator55.f();
+              _iterator60.f();
             }
           }
         } catch (err) {
-          _iterator54.e(err);
+          _iterator59.e(err);
         } finally {
-          _iterator54.f();
+          _iterator59.f();
         }
       }
 
@@ -5839,76 +6235,71 @@ var CompoundTypeExpression = /*#__PURE__*/function (_MultiPartExpressionN9) {
     value: function checkForSymptoms() {
       this.checkRules(this);
 
-      var _iterator57 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _elements)),
-          _step57;
+      var _iterator62 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _elements)),
+          _step62;
 
       try {
-        for (_iterator57.s(); !(_step57 = _iterator57.n()).done;) {
-          var e = _step57.value;
+        for (_iterator62.s(); !(_step62 = _iterator62.n()).done;) {
+          var e = _step62.value;
 
-          var _iterator58 = _createForOfIteratorHelper(e),
-              _step58;
+          var _iterator63 = _createForOfIteratorHelper(e),
+              _step63;
 
           try {
-            for (_iterator58.s(); !(_step58 = _iterator58.n()).done;) {
-              var item = _step58.value;
+            for (_iterator63.s(); !(_step63 = _iterator63.n()).done;) {
+              var item = _step63.value;
 
               if (this.getEntity() !== _enums.ExpressionEntity.DictDefinition) {
                 item.checkForSymptoms();
               } else {
-                var _iterator59 = _createForOfIteratorHelper(item),
-                    _step59;
+                var _iterator64 = _createForOfIteratorHelper(item),
+                    _step64;
 
                 try {
-                  for (_iterator59.s(); !(_step59 = _iterator59.n()).done;) {
-                    var keyValue = _step59.value;
+                  for (_iterator64.s(); !(_step64 = _iterator64.n()).done;) {
+                    var keyValue = _step64.value;
                     keyValue.checkForSymptoms();
                   }
                 } catch (err) {
-                  _iterator59.e(err);
+                  _iterator64.e(err);
                 } finally {
-                  _iterator59.f();
+                  _iterator64.f();
                 }
               }
             }
           } catch (err) {
-            _iterator58.e(err);
+            _iterator63.e(err);
           } finally {
-            _iterator58.f();
+            _iterator63.f();
           }
         }
       } catch (err) {
-        _iterator57.e(err);
+        _iterator62.e(err);
       } finally {
-        _iterator57.f();
+        _iterator62.f();
       }
     }
     /**
      * @override
      */
+    // setBlockId(id) {
+    //     super.setBlockId(id); // NEED TO OVERRIDE BY TYPE...
+    //     /*for (const exp of this.getChildren()) {
+    //         exp.setBlockId(id);
+    //     }*/
+    //     /*for (const item of this.#elements) {
+    //         for (const e of item) {
+    //             if (this.getEntity() !== ExpressionEntity.DictDefinition) {
+    //                 e.setBlockId(id);
+    //             } else {
+    //                 for (const keyValue of e) {
+    //                     keyValue.setBlockId();
+    //                 }
+    //             }
+    //         }
+    //     }*/
+    // }
 
-  }, {
-    key: "setBlockId",
-    value: function setBlockId(id) {
-      _get(_getPrototypeOf(CompoundTypeExpression.prototype), "setBlockId", this).call(this, id); // NEED TO OVERRIDE BY TYPE...
-
-      /*for (const exp of this.getChildren()) {
-          exp.setBlockId(id);
-      }*/
-
-      /*for (const item of this.#elements) {
-          for (const e of item) {
-              if (this.getEntity() !== ExpressionEntity.DictDefinition) {
-                  e.setBlockId(id);
-              } else {
-                  for (const keyValue of e) {
-                      keyValue.setBlockId();
-                  }
-              }
-          }
-      }*/
-
-    }
     /**
      * Checks if this node contains the same pattern of elements as the passed in node. Depending on 
      * the type of node, this will need to be an exact match (by text value and entity) or a
@@ -5922,6 +6313,29 @@ var CompoundTypeExpression = /*#__PURE__*/function (_MultiPartExpressionN9) {
     key: "matchesPattern",
     value: function matchesPattern(node) {
       return this.getEntity() === node.getEntity();
+    }
+    /**
+     * @inheritdoc
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      if (this.getEntity() !== _enums.ExpressionEntity.DictDefinition) {
+        return [].concat(_toConsumableArray(_get(_getPrototypeOf(CompoundTypeExpression.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(_classPrivateFieldGet(this, _elements).flatMap(function (elemList) {
+          return elemList.flatMap(function (e) {
+            return e.getAllNestedExpressions();
+          });
+        })));
+      } else {
+        return [].concat(_toConsumableArray(_get(_getPrototypeOf(CompoundTypeExpression.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(_classPrivateFieldGet(this, _elements).flatMap(function (keyValue) {
+          return keyValue.flatMap(function (k) {
+            return k.flatMap(function (elemList) {
+              return elemList.getAllNestedExpressions();
+            });
+          });
+        })));
+      }
     }
   }, {
     key: "toJSON",
@@ -6007,74 +6421,76 @@ var BlockDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN10) {
    * @throws Throws an error if the list of children is empty
    */
   function BlockDefinitionStatement(textValue, _children3, entity) {
-    var _this23;
+    var _this25;
 
     _classCallCheck(this, BlockDefinitionStatement);
 
-    _this23 = _super35.call(this, textValue, _children3, entity, _enums.ExpressionCategory.BlockDefinitionStatement, _enums.DataType.NA);
+    _this25 = _super35.call(this, textValue, _children3, entity, _enums.ExpressionCategory.BlockDefinitionStatement, _enums.DataType.NA);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this23), _checkWhileTrue);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this25), _checkWhileTrue);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this23), _getColonIndex);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this25), _getColonIndex);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this23), _condition, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this25), _condition, {
       writable: true,
       value: []
     });
 
     if (_children3.length > 1) {
-      var colonIndex = _classPrivateMethodGet(_assertThisInitialized(_this23), _getColonIndex, _getColonIndex2).call(_assertThisInitialized(_this23));
+      var colonIndex = _classPrivateMethodGet(_assertThisInitialized(_this25), _getColonIndex, _getColonIndex2).call(_assertThisInitialized(_this25));
 
       var tree = _rawtextprocessing.StatementProcessor.createTree(_children3.slice(1, colonIndex));
 
       if (entity === _enums.ExpressionEntity.ForDefinitionStatement && tree.length > 0) {
         if (tree[0].is(_enums.ExpressionEntity.IteratorExpression)) {
-          _classPrivateFieldSet(_assertThisInitialized(_this23), _condition, tree);
+          _classPrivateFieldSet(_assertThisInitialized(_this25), _condition, tree);
         } else if (tree[0].is(_enums.ExpressionEntity.ComparisonExpression)) {
           tree[0] = tree[0].convertToIterator();
 
-          _classPrivateFieldSet(_assertThisInitialized(_this23), _condition, [tree[0]]);
+          _classPrivateFieldSet(_assertThisInitialized(_this25), _condition, [tree[0]]);
 
           var rest = tree.slice(1).filter(function (exp) {
             return !exp.is(_enums.ExpressionEntity.Colon);
           });
 
           if (rest.length > 0) {
-            _classPrivateFieldSet(_assertThisInitialized(_this23), _condition, _classPrivateFieldGet(_assertThisInitialized(_this23), _condition).concat(rest));
+            _classPrivateFieldSet(_assertThisInitialized(_this25), _condition, _classPrivateFieldGet(_assertThisInitialized(_this25), _condition).concat(rest));
           }
         } else {
           tree = [new IteratorExpression(textValue, tree)];
 
-          _classPrivateFieldSet(_assertThisInitialized(_this23), _condition, tree);
+          _classPrivateFieldSet(_assertThisInitialized(_this25), _condition, tree);
         }
       } else if (entity === _enums.ExpressionEntity.WithDefinitionStatement || entity === _enums.ExpressionEntity.ExceptDefinitionStatement) {
         if (tree.length === 3 && tree[1].is(_enums.ExpressionEntity.AsKeyword) && tree[2].is(_enums.ExpressionEntity.VariableName)) {
-          _classPrivateFieldSet(_assertThisInitialized(_this23), _condition, [new AssignmentExpression(textValue, tree)]);
+          _classPrivateFieldSet(_assertThisInitialized(_this25), _condition, [new AssignmentExpression(textValue, tree)]);
         }
       } else {
-        _classPrivateFieldSet(_assertThisInitialized(_this23), _condition, tree);
+        _classPrivateFieldSet(_assertThisInitialized(_this25), _condition, tree);
       }
 
-      var _iterator60 = _createForOfIteratorHelper(tree),
-          _step60;
+      var _iterator65 = _createForOfIteratorHelper(tree),
+          _step65;
 
       try {
-        for (_iterator60.s(); !(_step60 = _iterator60.n()).done;) {
-          var e = _step60.value;
-          e.setParent(_assertThisInitialized(_this23));
+        for (_iterator65.s(); !(_step65 = _iterator65.n()).done;) {
+          var e = _step65.value;
+          e.setParent(_assertThisInitialized(_this25));
+
+          _this25.addConnection(e);
         }
       } catch (err) {
-        _iterator60.e(err);
+        _iterator65.e(err);
       } finally {
-        _iterator60.f();
+        _iterator65.f();
       }
     }
 
     if (entity === _enums.ExpressionEntity.WhileDefinitionStatement) {
-      _this23.addRule(_classPrivateMethodGet(_assertThisInitialized(_this23), _checkWhileTrue, _checkWhileTrue2));
+      _this25.addRule(_classPrivateMethodGet(_assertThisInitialized(_this25), _checkWhileTrue, _checkWhileTrue2));
     }
 
-    return _this23;
+    return _this25;
   } //#region - overrides
 
   /**
@@ -6113,12 +6529,12 @@ var BlockDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN10) {
     value: function getVariableExpressions() {
       var variables = [];
 
-      var _iterator61 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _condition)),
-          _step61;
+      var _iterator66 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _condition)),
+          _step66;
 
       try {
-        for (_iterator61.s(); !(_step61 = _iterator61.n()).done;) {
-          var child = _step61.value;
+        for (_iterator66.s(); !(_step66 = _iterator66.n()).done;) {
+          var child = _step66.value;
 
           if (child.is(_enums.ExpressionEntity.VariableName)) {
             variables.push(child);
@@ -6127,9 +6543,9 @@ var BlockDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN10) {
           }
         }
       } catch (err) {
-        _iterator61.e(err);
+        _iterator66.e(err);
       } finally {
-        _iterator61.f();
+        _iterator66.f();
       }
 
       return variables;
@@ -6146,12 +6562,12 @@ var BlockDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN10) {
     value: function getExpressionsOfKind(entity) {
       var matches = _get(_getPrototypeOf(BlockDefinitionStatement.prototype), "getExpressionsOfKind", this).call(this, entity);
 
-      var _iterator62 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _condition)),
-          _step62;
+      var _iterator67 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _condition)),
+          _step67;
 
       try {
-        for (_iterator62.s(); !(_step62 = _iterator62.n()).done;) {
-          var c = _step62.value;
+        for (_iterator67.s(); !(_step67 = _iterator67.n()).done;) {
+          var c = _step67.value;
 
           if (c.is(entity)) {
             matches.push(c);
@@ -6160,9 +6576,9 @@ var BlockDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN10) {
           }
         }
       } catch (err) {
-        _iterator62.e(err);
+        _iterator67.e(err);
       } finally {
-        _iterator62.f();
+        _iterator67.f();
       }
 
       return matches;
@@ -6170,21 +6586,16 @@ var BlockDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN10) {
     /**
      * @override
      */
+    // setBlockId(id) {
+    //     super.setBlockId(id); // NEED TO OVERRIDE BY TYPE...
+    //     /*for (const exp of this.getChildren()) {
+    //         exp.setBlockId(id);
+    //     }*/
+    //     /*for (const c of this.#condition) {
+    //         c.setBlockId(id);
+    //     }*/
+    // }
 
-  }, {
-    key: "setBlockId",
-    value: function setBlockId(id) {
-      _get(_getPrototypeOf(BlockDefinitionStatement.prototype), "setBlockId", this).call(this, id); // NEED TO OVERRIDE BY TYPE...
-
-      /*for (const exp of this.getChildren()) {
-          exp.setBlockId(id);
-      }*/
-
-      /*for (const c of this.#condition) {
-          c.setBlockId(id);
-      }*/
-
-    }
     /**
      * Gets the first expressions that matches any of the search info.
      * @param {ExpressionEntity | ExpressionCategory | String[]} entities 
@@ -6197,12 +6608,12 @@ var BlockDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN10) {
       var match = _get(_getPrototypeOf(BlockDefinitionStatement.prototype), "getFirstExpressionOf", this).call(this, entities);
 
       if (match === undefined) {
-        var _iterator63 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _condition)),
-            _step63;
+        var _iterator68 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _condition)),
+            _step68;
 
         try {
-          for (_iterator63.s(); !(_step63 = _iterator63.n()).done;) {
-            var c = _step63.value;
+          for (_iterator68.s(); !(_step68 = _iterator68.n()).done;) {
+            var c = _step68.value;
 
             if (c.isOneOf(entities)) {
               return c;
@@ -6212,9 +6623,9 @@ var BlockDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN10) {
             }
           }
         } catch (err) {
-          _iterator63.e(err);
+          _iterator68.e(err);
         } finally {
-          _iterator63.f();
+          _iterator68.f();
         }
       }
 
@@ -6229,19 +6640,31 @@ var BlockDefinitionStatement = /*#__PURE__*/function (_MultiPartExpressionN10) {
     value: function checkForSymptoms() {
       this.checkRules(this);
 
-      var _iterator64 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _condition)),
-          _step64;
+      var _iterator69 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _condition)),
+          _step69;
 
       try {
-        for (_iterator64.s(); !(_step64 = _iterator64.n()).done;) {
-          var item = _step64.value;
+        for (_iterator69.s(); !(_step69 = _iterator69.n()).done;) {
+          var item = _step69.value;
           item.checkForSymptoms();
         }
       } catch (err) {
-        _iterator64.e(err);
+        _iterator69.e(err);
       } finally {
-        _iterator64.f();
+        _iterator69.f();
       }
+    }
+    /**
+     * @inheritdoc
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(BlockDefinitionStatement.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(_classPrivateFieldGet(this, _condition).flatMap(function (e) {
+        return e.getAllNestedExpressions();
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -6345,47 +6768,47 @@ var AssignmentExpression = /*#__PURE__*/function (_MultiPartExpressionN11) {
    * @throws Throws an error if the list of children is empty
    */
   function AssignmentExpression(textValue, _children4) {
-    var _this24;
+    var _this26;
 
     _classCallCheck(this, AssignmentExpression);
 
-    _this24 = _super36.call(this, textValue, _children4, _enums.ExpressionEntity.AssignmentStatement, _enums.ExpressionCategory.Assignment, _enums.DataType.NotParsed);
+    _this26 = _super36.call(this, textValue, _children4, _enums.ExpressionEntity.AssignmentStatement, _enums.ExpressionCategory.Assignment, _enums.DataType.NotParsed);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this24), _checkAssignsNone);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this26), _checkAssignsNone);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this24), _checkForUnexpectedColon);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this26), _checkForUnexpectedColon);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this24), _checkAssignedReservedWord);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this26), _checkAssignedReservedWord);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this24), _setTuple);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this26), _setTuple);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this24), _setUnknown);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this26), _setUnknown);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this24), _setTupleVariables);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this26), _setTupleVariables);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this24), _setValues);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this26), _setValues);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this24), _processStandardAssignment);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this26), _processStandardAssignment);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this24), _processAsAssignment);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this26), _processAsAssignment);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this24), _computeAssignments);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this26), _computeAssignments);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this24), _variables, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this26), _variables, {
       writable: true,
       value: []
     });
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this24), _values2, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this26), _values2, {
       writable: true,
       value: []
     });
 
-    _classPrivateMethodGet(_assertThisInitialized(_this24), _computeAssignments, _computeAssignments2).call(_assertThisInitialized(_this24));
+    _classPrivateMethodGet(_assertThisInitialized(_this26), _computeAssignments, _computeAssignments2).call(_assertThisInitialized(_this26));
 
-    _this24.addRules([_classPrivateMethodGet(_assertThisInitialized(_this24), _checkAssignsNone, _checkAssignsNone2), _classPrivateMethodGet(_assertThisInitialized(_this24), _checkAssignedReservedWord, _checkAssignedReservedWord2), _classPrivateMethodGet(_assertThisInitialized(_this24), _checkForUnexpectedColon, _checkForUnexpectedColon2)]);
+    _this26.addRules([_classPrivateMethodGet(_assertThisInitialized(_this26), _checkAssignsNone, _checkAssignsNone2), _classPrivateMethodGet(_assertThisInitialized(_this26), _checkAssignedReservedWord, _checkAssignedReservedWord2), _classPrivateMethodGet(_assertThisInitialized(_this26), _checkForUnexpectedColon, _checkForUnexpectedColon2)]);
 
-    return _this24;
+    return _this26;
   } //#region - overrides
 
   /**
@@ -6398,32 +6821,32 @@ var AssignmentExpression = /*#__PURE__*/function (_MultiPartExpressionN11) {
     value: function getVariableExpressions() {
       var variables = [];
 
-      var _iterator65 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _values2)),
-          _step65;
+      var _iterator70 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _values2)),
+          _step70;
 
       try {
-        for (_iterator65.s(); !(_step65 = _iterator65.n()).done;) {
-          var value = _step65.value;
+        for (_iterator70.s(); !(_step70 = _iterator70.n()).done;) {
+          var value = _step70.value;
           variables = variables.concat(value.getVariableExpressions());
         }
       } catch (err) {
-        _iterator65.e(err);
+        _iterator70.e(err);
       } finally {
-        _iterator65.f();
+        _iterator70.f();
       }
 
-      var _iterator66 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _variables)),
-          _step66;
+      var _iterator71 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _variables)),
+          _step71;
 
       try {
-        for (_iterator66.s(); !(_step66 = _iterator66.n()).done;) {
-          var variable = _step66.value;
+        for (_iterator71.s(); !(_step71 = _iterator71.n()).done;) {
+          var variable = _step71.value;
           variables = variables.concat(variable.getVariableExpressions());
         }
       } catch (err) {
-        _iterator66.e(err);
+        _iterator71.e(err);
       } finally {
-        _iterator66.f();
+        _iterator71.f();
       }
 
       return variables;
@@ -6440,20 +6863,29 @@ var AssignmentExpression = /*#__PURE__*/function (_MultiPartExpressionN11) {
     /**
      * @override
      */
+    // setBlockId(id) {
+    //     super.setBlockId(id); // NEED TO OVERRIDE BY TYPE...
+    //     /*for (const exp of this.getChildren()) {
+    //         exp.setBlockId(id);
+    //     }*/
+    //     /*for (const v of this.#values) {
+    //         v.setBlockId(id);
+    //     }*/
+    // }
+
+    /**
+     * @inheritdoc
+     */
 
   }, {
-    key: "setBlockId",
-    value: function setBlockId(id) {
-      _get(_getPrototypeOf(AssignmentExpression.prototype), "setBlockId", this).call(this, id); // NEED TO OVERRIDE BY TYPE...
-
-      /*for (const exp of this.getChildren()) {
-          exp.setBlockId(id);
-      }*/
-
-      /*for (const v of this.#values) {
-          v.setBlockId(id);
-      }*/
-
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(AssignmentExpression.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(_classPrivateFieldGet(this, _variables).flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })), _toConsumableArray(_classPrivateFieldGet(this, _values2).flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -6523,12 +6955,12 @@ function _processAsAssignment2(children) {
   }
 
   if (sides.length === 2 && items.length === 2) {
-    var _iterator105 = _createForOfIteratorHelper(items[1]),
-        _step105;
+    var _iterator114 = _createForOfIteratorHelper(items[1]),
+        _step114;
 
     try {
-      for (_iterator105.s(); !(_step105 = _iterator105.n()).done;) {
-        var variable = _step105.value;
+      for (_iterator114.s(); !(_step114 = _iterator114.n()).done;) {
+        var variable = _step114.value;
 
         if (variable[0].is(_enums.ExpressionEntity.VariableName)) {
           variable[0].setAssignedOrChanged();
@@ -6539,24 +6971,24 @@ function _processAsAssignment2(children) {
         _classPrivateFieldGet(this, _variables).push(variable[0]);
       }
     } catch (err) {
-      _iterator105.e(err);
+      _iterator114.e(err);
     } finally {
-      _iterator105.f();
+      _iterator114.f();
     }
 
-    var _iterator106 = _createForOfIteratorHelper(items[0]),
-        _step106;
+    var _iterator115 = _createForOfIteratorHelper(items[0]),
+        _step115;
 
     try {
-      for (_iterator106.s(); !(_step106 = _iterator106.n()).done;) {
-        var value = _step106.value;
+      for (_iterator115.s(); !(_step115 = _iterator115.n()).done;) {
+        var value = _step115.value;
 
         _classPrivateFieldGet(this, _values2).push(value[0]);
       }
     } catch (err) {
-      _iterator106.e(err);
+      _iterator115.e(err);
     } finally {
-      _iterator106.f();
+      _iterator115.f();
     }
   }
 
@@ -6581,12 +7013,12 @@ function _processStandardAssignment2(children) {
   }
 
   if (sides.length === 2 && items.length === 2) {
-    var _iterator107 = _createForOfIteratorHelper(items[0]),
-        _step107;
+    var _iterator116 = _createForOfIteratorHelper(items[0]),
+        _step116;
 
     try {
-      for (_iterator107.s(); !(_step107 = _iterator107.n()).done;) {
-        var variable = _step107.value;
+      for (_iterator116.s(); !(_step116 = _iterator116.n()).done;) {
+        var variable = _step116.value;
 
         if (variable[0].is(_enums.ExpressionEntity.VariableName)) {
           variable[0].setAssignedOrChanged();
@@ -6599,24 +7031,24 @@ function _processStandardAssignment2(children) {
         _classPrivateFieldGet(this, _variables).push(variable[0]);
       }
     } catch (err) {
-      _iterator107.e(err);
+      _iterator116.e(err);
     } finally {
-      _iterator107.f();
+      _iterator116.f();
     }
 
-    var _iterator108 = _createForOfIteratorHelper(items[1]),
-        _step108;
+    var _iterator117 = _createForOfIteratorHelper(items[1]),
+        _step117;
 
     try {
-      for (_iterator108.s(); !(_step108 = _iterator108.n()).done;) {
-        var value = _step108.value;
+      for (_iterator117.s(); !(_step117 = _iterator117.n()).done;) {
+        var value = _step117.value;
 
         _classPrivateFieldGet(this, _values2).push(value[0]);
       }
     } catch (err) {
-      _iterator108.e(err);
+      _iterator117.e(err);
     } finally {
-      _iterator108.f();
+      _iterator117.f();
     }
   }
 
@@ -6628,18 +7060,19 @@ function _processStandardAssignment2(children) {
     _classPrivateMethodGet(this, _setTuple, _setTuple2).call(this);
   }
 
-  var _iterator109 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _variables)),
-      _step109;
+  var _iterator118 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _variables)),
+      _step118;
 
   try {
-    for (_iterator109.s(); !(_step109 = _iterator109.n()).done;) {
-      var v = _step109.value;
+    for (_iterator118.s(); !(_step118 = _iterator118.n()).done;) {
+      var v = _step118.value;
       v.addObserver(this);
+      this.addConnection(v); // v.addConnection(this);
     }
   } catch (err) {
-    _iterator109.e(err);
+    _iterator118.e(err);
   } finally {
-    _iterator109.f();
+    _iterator118.f();
   }
 
   this.setDataType((0, _utils.getAggregateType)(_classPrivateFieldGet(this, _variables).map(function (v) {
@@ -6653,6 +7086,8 @@ function _setValues2() {
       _classPrivateFieldGet(this, _variables)[i].setDataType(_classPrivateFieldGet(this, _values2)[i].getDataType());
 
       _classPrivateFieldGet(this, _values2)[i].addObserver(_classPrivateFieldGet(this, _variables)[i]);
+
+      _classPrivateFieldGet(this, _values2)[i].addConnection(_classPrivateFieldGet(this, _variables)[i]);
     } else {
       if (_classPrivateFieldGet(this, _variables)[i].is(_enums.ExpressionEntity.TupleDefinition)) {
         _classPrivateMethodGet(this, _setTupleVariables, _setTupleVariables2).call(this, _classPrivateFieldGet(this, _variables)[i]);
@@ -6664,28 +7099,28 @@ function _setValues2() {
 }
 
 function _setTupleVariables2(tuple) {
-  var _iterator110 = _createForOfIteratorHelper(tuple.getElements()),
-      _step110;
+  var _iterator119 = _createForOfIteratorHelper(tuple.getElements()),
+      _step119;
 
   try {
-    for (_iterator110.s(); !(_step110 = _iterator110.n()).done;) {
-      var i = _step110.value;
+    for (_iterator119.s(); !(_step119 = _iterator119.n()).done;) {
+      var i = _step119.value;
       if (i[0].isOneOf([_enums.ExpressionEntity.VariableName, _enums.ExpressionEntity.SubscriptedExpression])) i[0].setDataType(_enums.DataType.Unknown);
     }
   } catch (err) {
-    _iterator110.e(err);
+    _iterator119.e(err);
   } finally {
-    _iterator110.f();
+    _iterator119.f();
   }
 }
 
 function _setUnknown2() {
-  var _iterator111 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _variables)),
-      _step111;
+  var _iterator120 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _variables)),
+      _step120;
 
   try {
-    for (_iterator111.s(); !(_step111 = _iterator111.n()).done;) {
-      var variable = _step111.value;
+    for (_iterator120.s(); !(_step120 = _iterator120.n()).done;) {
+      var variable = _step120.value;
 
       if (!variable.isOneOf([_enums.ExpressionEntity.VariableName, _enums.ExpressionEntity.SubscriptedExpression])) {
         console.log("stop");
@@ -6694,19 +7129,19 @@ function _setUnknown2() {
       }
     }
   } catch (err) {
-    _iterator111.e(err);
+    _iterator120.e(err);
   } finally {
-    _iterator111.f();
+    _iterator120.f();
   }
 }
 
 function _setTuple2() {
-  var _iterator112 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _variables)),
-      _step112;
+  var _iterator121 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _variables)),
+      _step121;
 
   try {
-    for (_iterator112.s(); !(_step112 = _iterator112.n()).done;) {
-      var variable = _step112.value;
+    for (_iterator121.s(); !(_step121 = _iterator121.n()).done;) {
+      var variable = _step121.value;
 
       if (!variable.isOneOf([_enums.ExpressionEntity.VariableName, _enums.ExpressionEntity.SubscriptedExpression])) {
         console.log("stop");
@@ -6715,21 +7150,21 @@ function _setTuple2() {
       }
     }
   } catch (err) {
-    _iterator112.e(err);
+    _iterator121.e(err);
   } finally {
-    _iterator112.f();
+    _iterator121.f();
   }
 }
 
 function _checkAssignedReservedWord2(exp) {
   var symptoms = [];
 
-  var _iterator113 = _createForOfIteratorHelper(exp.getTargetVariables()),
-      _step113;
+  var _iterator122 = _createForOfIteratorHelper(exp.getTargetVariables()),
+      _step122;
 
   try {
-    for (_iterator113.s(); !(_step113 = _iterator113.n()).done;) {
-      var v = _step113.value;
+    for (_iterator122.s(); !(_step122 = _iterator122.n()).done;) {
+      var v = _step122.value;
       var knownCategory = (0, _utils.keywordLookup)(v.getTextValue()).category; // BuiltInFunctions
 
       if (v.is(_enums.ExpressionEntity.VariableName) && v.getLastUsages().length === 0 && knownCategory === _enums.ExpressionCategory.BuiltInFunctions) {
@@ -6742,9 +7177,9 @@ function _checkAssignedReservedWord2(exp) {
       }
     }
   } catch (err) {
-    _iterator113.e(err);
+    _iterator122.e(err);
   } finally {
-    _iterator113.f();
+    _iterator122.f();
   }
 
   return symptoms;
@@ -6830,47 +7265,47 @@ var ChangeExpression = /*#__PURE__*/function (_MultiPartExpressionN12) {
    * @throws Throws an error if the list of children is empty
    */
   function ChangeExpression(textValue, _children5) {
-    var _this25;
+    var _this27;
 
     _classCallCheck(this, ChangeExpression);
 
-    _this25 = _super37.call(this, textValue, _children5, _enums.ExpressionEntity.ChangeStatement, _enums.ExpressionCategory.Assignment, _enums.DataType.NA);
+    _this27 = _super37.call(this, textValue, _children5, _enums.ExpressionEntity.ChangeStatement, _enums.ExpressionCategory.Assignment, _enums.DataType.NA);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this25), _checkAssignsNone3);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this27), _checkAssignsNone3);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this25), _findOperator);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this27), _findOperator);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this25), _findNonAugmentedOperator);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this27), _findNonAugmentedOperator);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this25), _createPlaceholderCalculation);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this27), _createPlaceholderCalculation);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this25), _computeAssignments3);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this27), _computeAssignments3);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this25), _variables2, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this27), _variables2, {
       writable: true,
       value: []
     });
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this25), _operatorIndex, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this27), _operatorIndex, {
       writable: true,
       value: -1
     });
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this25), _calculatedValues, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this27), _calculatedValues, {
       writable: true,
       value: []
     });
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this25), _assignedValue, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this27), _assignedValue, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateMethodGet(_assertThisInitialized(_this25), _computeAssignments3, _computeAssignments4).call(_assertThisInitialized(_this25));
+    _classPrivateMethodGet(_assertThisInitialized(_this27), _computeAssignments3, _computeAssignments4).call(_assertThisInitialized(_this27));
 
-    _this25.addRule(_classPrivateMethodGet(_assertThisInitialized(_this25), _checkAssignsNone3, _checkAssignsNone4));
+    _this27.addRule(_classPrivateMethodGet(_assertThisInitialized(_this27), _checkAssignsNone3, _checkAssignsNone4));
 
-    return _this25;
+    return _this27;
   } //#region - overrides
 
   /**
@@ -6883,32 +7318,32 @@ var ChangeExpression = /*#__PURE__*/function (_MultiPartExpressionN12) {
     value: function getVariableExpressions() {
       var variables = [];
 
-      var _iterator67 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _calculatedValues)),
-          _step67;
+      var _iterator72 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _calculatedValues)),
+          _step72;
 
       try {
-        for (_iterator67.s(); !(_step67 = _iterator67.n()).done;) {
-          var value = _step67.value;
+        for (_iterator72.s(); !(_step72 = _iterator72.n()).done;) {
+          var value = _step72.value;
           variables = variables.concat(value.getVariableExpressions());
         }
       } catch (err) {
-        _iterator67.e(err);
+        _iterator72.e(err);
       } finally {
-        _iterator67.f();
+        _iterator72.f();
       }
 
-      var _iterator68 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _variables2)),
-          _step68;
+      var _iterator73 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _variables2)),
+          _step73;
 
       try {
-        for (_iterator68.s(); !(_step68 = _iterator68.n()).done;) {
-          var variable = _step68.value;
+        for (_iterator73.s(); !(_step73 = _iterator73.n()).done;) {
+          var variable = _step73.value;
           variables = variables.concat(variable.getVariableExpressions());
         }
       } catch (err) {
-        _iterator68.e(err);
+        _iterator73.e(err);
       } finally {
-        _iterator68.f();
+        _iterator73.f();
       }
 
       return variables;
@@ -6924,29 +7359,25 @@ var ChangeExpression = /*#__PURE__*/function (_MultiPartExpressionN12) {
       return _classPrivateFieldGet(this, _assignedValue);
     }
   }, {
-    key: "setBlockId",
+    key: "getTargetVariables",
     value:
     /**
      * @override
      */
-    function setBlockId(id) {
-      _get(_getPrototypeOf(ChangeExpression.prototype), "setBlockId", this).call(this, id); // NEED TO OVERRIDE BY TYPE...
-
-      /*for (const exp of this.getChildren()) {
-          exp.setBlockId(id);
-      }*/
-      //this.#assignedValue.setBlockId(id);
-
-    } //#endregion - overrides
+    // setBlockId(id) {
+    //     super.setBlockId(id); // NEED TO OVERRIDE BY TYPE...
+    //     /*for (const exp of this.getChildren()) {
+    //         exp.setBlockId(id);
+    //     }*/
+    //     //this.#assignedValue.setBlockId(id);
+    // }
+    //#endregion - overrides
 
     /**
      * The variables on the left side of the assignment.
      * @returns {ExpressionNode[]}
      */
-
-  }, {
-    key: "getTargetVariables",
-    value: function getTargetVariables() {
+    function getTargetVariables() {
       return _classPrivateFieldGet(this, _variables2);
     }
     /** 
@@ -6956,6 +7387,18 @@ var ChangeExpression = /*#__PURE__*/function (_MultiPartExpressionN12) {
      * @returns {Symptom[]}
      */
 
+  }, {
+    key: "getAllNestedExpressions",
+    value:
+    /**
+     * @inheritdoc
+     */
+    function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(ChangeExpression.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(_classPrivateFieldGet(this, _variables2).flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })), _toConsumableArray(_classPrivateFieldGet(this, _assignedValue).getAllNestedExpressions()));
+      return nestedExpressions;
+    }
   }, {
     key: "toJSON",
     value: function toJSON() {
@@ -6993,6 +7436,10 @@ function _computeAssignments4() {
     _classPrivateFieldGet(this, _variables2).push(children[0]);
 
     _classPrivateFieldSet(this, _assignedValue, children[2]);
+
+    this.addConnection(children[0]); // children[0].addConnection(this);
+
+    children[2].addConnection(children[0]);
 
     if (!children[0].isOneOf([_enums.ExpressionEntity.VariableName, _enums.ExpressionEntity.SubscriptedExpression])) {
       this.setDataType(_enums.DataType.Invalid);
@@ -7090,6 +7537,8 @@ function _checkAssignsNone4(exp) {
 
 var _contents = /*#__PURE__*/new WeakMap();
 
+var _setConnections5 = /*#__PURE__*/new WeakSet();
+
 var _checkForUnexpectedColon3 = /*#__PURE__*/new WeakSet();
 
 var GroupElement = /*#__PURE__*/function (_MultiPartExpressionN13) {
@@ -7107,83 +7556,68 @@ var GroupElement = /*#__PURE__*/function (_MultiPartExpressionN13) {
    * @throws Throws an error if the list of children is empty
    */
   function GroupElement(textValue, children) {
-    var _this26;
+    var _this28;
 
     _classCallCheck(this, GroupElement);
 
-    _this26 = _super38.call(this, textValue, children, _enums.ExpressionEntity.GroupStatement, _enums.ExpressionCategory.Group, _enums.DataType.NotParsed);
+    _this28 = _super38.call(this, textValue, children, _enums.ExpressionEntity.GroupStatement, _enums.ExpressionCategory.Group, _enums.DataType.NotParsed);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this26), _checkForUnexpectedColon3);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this28), _checkForUnexpectedColon3);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this26), _contents, {
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this28), _setConnections5);
+
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this28), _contents, {
       writable: true,
       value: void 0
     });
 
     if (children.length > 2) {
       var slice = children.slice(1, children.length - 1);
-      if (slice.length > 1) _classPrivateFieldSet(_assertThisInitialized(_this26), _contents, _rawtextprocessing.StatementProcessor.createTree(children.slice(1, children.length - 1)));else {
-        _classPrivateFieldSet(_assertThisInitialized(_this26), _contents, [slice[0]]);
+      if (slice.length > 1) _classPrivateFieldSet(_assertThisInitialized(_this28), _contents, _rawtextprocessing.StatementProcessor.createTree(children.slice(1, children.length - 1)));else {
+        _classPrivateFieldSet(_assertThisInitialized(_this28), _contents, [slice[0]]);
       }
     } else {
-      _classPrivateFieldSet(_assertThisInitialized(_this26), _contents, []);
+      _classPrivateFieldSet(_assertThisInitialized(_this28), _contents, []);
     }
 
-    var _iterator69 = _createForOfIteratorHelper(_classPrivateFieldGet(_assertThisInitialized(_this26), _contents)),
-        _step69;
+    _classPrivateMethodGet(_assertThisInitialized(_this28), _setConnections5, _setConnections6).call(_assertThisInitialized(_this28));
 
-    try {
-      for (_iterator69.s(); !(_step69 = _iterator69.n()).done;) {
-        var e = _step69.value;
-        e.setParent(_assertThisInitialized(_this26));
-      }
-    } catch (err) {
-      _iterator69.e(err);
-    } finally {
-      _iterator69.f();
-    }
+    _this28.setDataType(_classPrivateFieldGet(_assertThisInitialized(_this28), _contents).length === 1 ? _classPrivateFieldGet(_assertThisInitialized(_this28), _contents)[0].getDataType() : _enums.DataType.Unknown);
 
-    _this26.setDataType(_classPrivateFieldGet(_assertThisInitialized(_this26), _contents).length === 1 ? _classPrivateFieldGet(_assertThisInitialized(_this26), _contents)[0].getDataType() : _enums.DataType.Unknown);
-
-    if (_classPrivateFieldGet(_assertThisInitialized(_this26), _contents).length === 1) {
-      _classPrivateFieldGet(_assertThisInitialized(_this26), _contents)[0].addObserver(_assertThisInitialized(_this26));
+    if (_classPrivateFieldGet(_assertThisInitialized(_this28), _contents).length === 1) {
+      _classPrivateFieldGet(_assertThisInitialized(_this28), _contents)[0].addObserver(_assertThisInitialized(_this28));
     } else {
-      _this26.setDataType(_enums.DataType.Invalid); // Probably a larger issue
+      _this28.setDataType(_enums.DataType.Invalid); // Probably a larger issue
 
     }
 
-    _this26.addRule(_classPrivateMethodGet(_assertThisInitialized(_this26), _checkForUnexpectedColon3, _checkForUnexpectedColon4));
+    _this28.addRule(_classPrivateMethodGet(_assertThisInitialized(_this28), _checkForUnexpectedColon3, _checkForUnexpectedColon4));
 
-    return _this26;
+    return _this28;
   }
-  /**
-   * @override
-   */
-
 
   _createClass(GroupElement, [{
-    key: "setBlockId",
-    value: function setBlockId(id) {
-      _get(_getPrototypeOf(GroupElement.prototype), "setBlockId", this).call(this, id); // NEED TO OVERRIDE BY TYPE...
-
-      /*for (const exp of this.getChildren()) {
-          exp.setBlockId(id);
-      }*/
-
-      /*for (const c of this.#contents) {
-          c.setBlockId(id);
-      }*/
-
-    } //#region - extension
+    key: "getContents",
+    value:
+    /**
+     * @override
+     */
+    // setBlockId(id) {
+    //     super.setBlockId(id); // NEED TO OVERRIDE BY TYPE...
+    //     /*for (const exp of this.getChildren()) {
+    //         exp.setBlockId(id);
+    //     }*/
+    //     /*for (const c of this.#contents) {
+    //         c.setBlockId(id);
+    //     }*/
+    // }
+    //#region - extension
 
     /**
      * Gets the contents of the group.
      * @returns {ExpressionNode[]}
      */
-
-  }, {
-    key: "getContents",
-    value: function getContents() {
+    function getContents() {
       return _classPrivateFieldGet(this, _contents);
     }
     /**
@@ -7195,18 +7629,18 @@ var GroupElement = /*#__PURE__*/function (_MultiPartExpressionN13) {
     value: function getVariableExpressions() {
       var variables = [];
 
-      var _iterator70 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _contents)),
-          _step70;
+      var _iterator74 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _contents)),
+          _step74;
 
       try {
-        for (_iterator70.s(); !(_step70 = _iterator70.n()).done;) {
-          var value = _step70.value;
+        for (_iterator74.s(); !(_step74 = _iterator74.n()).done;) {
+          var value = _step74.value;
           variables = variables.concat(value.getVariableExpressions());
         }
       } catch (err) {
-        _iterator70.e(err);
+        _iterator74.e(err);
       } finally {
-        _iterator70.f();
+        _iterator74.f();
       }
 
       return variables;
@@ -7223,21 +7657,21 @@ var GroupElement = /*#__PURE__*/function (_MultiPartExpressionN13) {
     value: function getExpressionsOfKind(entity) {
       var matches = _get(_getPrototypeOf(GroupElement.prototype), "getExpressionsOfKind", this).call(this, entity);
 
-      var _iterator71 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _contents)),
-          _step71;
+      var _iterator75 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _contents)),
+          _step75;
 
       try {
-        for (_iterator71.s(); !(_step71 = _iterator71.n()).done;) {
-          var c = _step71.value;
+        for (_iterator75.s(); !(_step75 = _iterator75.n()).done;) {
+          var c = _step75.value;
 
           if (c.is(entity)) {
             matches.push(c);
           } else matches = matches.concat(c.getExpressionsOfKind(entity));
         }
       } catch (err) {
-        _iterator71.e(err);
+        _iterator75.e(err);
       } finally {
-        _iterator71.f();
+        _iterator75.f();
       }
 
       return matches;
@@ -7254,12 +7688,12 @@ var GroupElement = /*#__PURE__*/function (_MultiPartExpressionN13) {
       var match = _get(_getPrototypeOf(GroupElement.prototype), "getFirstExpressionOf", this).call(this, entities);
 
       if (match === undefined) {
-        var _iterator72 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _contents)),
-            _step72;
+        var _iterator76 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _contents)),
+            _step76;
 
         try {
-          for (_iterator72.s(); !(_step72 = _iterator72.n()).done;) {
-            var c = _step72.value;
+          for (_iterator76.s(); !(_step76 = _iterator76.n()).done;) {
+            var c = _step76.value;
 
             if (c.isOneOf(entities)) {
               return c;
@@ -7269,9 +7703,9 @@ var GroupElement = /*#__PURE__*/function (_MultiPartExpressionN13) {
             }
           }
         } catch (err) {
-          _iterator72.e(err);
+          _iterator76.e(err);
         } finally {
-          _iterator72.f();
+          _iterator76.f();
         }
       }
 
@@ -7286,18 +7720,18 @@ var GroupElement = /*#__PURE__*/function (_MultiPartExpressionN13) {
     value: function checkForSymptoms() {
       this.checkRules(this);
 
-      var _iterator73 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _contents)),
-          _step73;
+      var _iterator77 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _contents)),
+          _step77;
 
       try {
-        for (_iterator73.s(); !(_step73 = _iterator73.n()).done;) {
-          var c = _step73.value;
+        for (_iterator77.s(); !(_step77 = _iterator77.n()).done;) {
+          var c = _step77.value;
           c.checkForSymptoms();
         }
       } catch (err) {
-        _iterator73.e(err);
+        _iterator77.e(err);
       } finally {
-        _iterator73.f();
+        _iterator77.f();
       }
     }
     /**
@@ -7314,21 +7748,33 @@ var GroupElement = /*#__PURE__*/function (_MultiPartExpressionN13) {
     value: function matchesPattern(node) {
       var contents = this.getContents();
 
-      var _iterator74 = _createForOfIteratorHelper(contents),
-          _step74;
+      var _iterator78 = _createForOfIteratorHelper(contents),
+          _step78;
 
       try {
-        for (_iterator74.s(); !(_step74 = _iterator74.n()).done;) {
-          var c = _step74.value;
+        for (_iterator78.s(); !(_step78 = _iterator78.n()).done;) {
+          var c = _step78.value;
           if (!c.matchesPattern(node)) return false;
         }
       } catch (err) {
-        _iterator74.e(err);
+        _iterator78.e(err);
       } finally {
-        _iterator74.f();
+        _iterator78.f();
       }
 
       return true;
+    }
+    /**
+     * @inheritdoc
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(GroupElement.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(_classPrivateFieldGet(this, _contents).flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -7353,6 +7799,22 @@ var GroupElement = /*#__PURE__*/function (_MultiPartExpressionN13) {
 }(MultiPartExpressionNode);
 
 exports.GroupElement = GroupElement;
+
+function _setConnections6() {
+  for (var i = 0; i < _classPrivateFieldGet(this, _contents).length; i++) {
+    if (i < _classPrivateFieldGet(this, _contents).length - 1) {
+      _classPrivateFieldGet(this, _contents)[i].addConnection(_classPrivateFieldGet(this, _contents)[i + 1]);
+    }
+
+    _classPrivateFieldGet(this, _contents)[i].setParent(this);
+
+    this.addConnection(_classPrivateFieldGet(this, _contents)[i]);
+  } // for (const e of this.#contents) {
+  //     e.setParent(this);
+  //     this.addConnection(e);
+  // }
+
+}
 
 function _checkForUnexpectedColon4(exp) {
   var symptoms = [];
@@ -7388,43 +7850,46 @@ var SliceElement = /*#__PURE__*/function (_MultiPartExpressionN14) {
    * @throws Throws an error if the list of children is empty
    */
   function SliceElement(textValue, children) {
-    var _this27;
+    var _this29;
 
     var indices = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
 
     _classCallCheck(this, SliceElement);
 
-    _this27 = _super39.call(this, textValue, children, _enums.ExpressionEntity.Slice, _enums.ExpressionCategory.Other, _enums.DataType.NA);
+    _this29 = _super39.call(this, textValue, children, _enums.ExpressionEntity.Slice, _enums.ExpressionCategory.Other, _enums.DataType.NA);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this27), _indices, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this29), _indices, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldSet(_assertThisInitialized(_this27), _indices, indices); // convert each index to a tree
+    _classPrivateFieldSet(_assertThisInitialized(_this29), _indices, indices); // convert each index to a tree
 
 
-    for (var i = 0; i < _classPrivateFieldGet(_assertThisInitialized(_this27), _indices).length; i++) {
-      if (_classPrivateFieldGet(_assertThisInitialized(_this27), _indices)[i].length > 1) {
-        _classPrivateFieldGet(_assertThisInitialized(_this27), _indices)[i] = _rawtextprocessing.StatementProcessor.createTree(_classPrivateFieldGet(_assertThisInitialized(_this27), _indices)[i]);
+    for (var i = 0; i < _classPrivateFieldGet(_assertThisInitialized(_this29), _indices).length; i++) {
+      if (_classPrivateFieldGet(_assertThisInitialized(_this29), _indices)[i].length > 1) {
+        _classPrivateFieldGet(_assertThisInitialized(_this29), _indices)[i] = _rawtextprocessing.StatementProcessor.createTree(_classPrivateFieldGet(_assertThisInitialized(_this29), _indices)[i]);
+      }
 
-        var _iterator75 = _createForOfIteratorHelper(_classPrivateFieldGet(_assertThisInitialized(_this27), _indices)[i]),
-            _step75;
+      var _iterator79 = _createForOfIteratorHelper(_classPrivateFieldGet(_assertThisInitialized(_this29), _indices)[i]),
+          _step79;
 
-        try {
-          for (_iterator75.s(); !(_step75 = _iterator75.n()).done;) {
-            var e = _step75.value;
-            e.setParent(_assertThisInitialized(_this27));
-          }
-        } catch (err) {
-          _iterator75.e(err);
-        } finally {
-          _iterator75.f();
+      try {
+        for (_iterator79.s(); !(_step79 = _iterator79.n()).done;) {
+          var e = _step79.value;
+          e.setParent(_assertThisInitialized(_this29));
+
+          _this29.addConnection(e); // e.addConnection(this);
+
         }
+      } catch (err) {
+        _iterator79.e(err);
+      } finally {
+        _iterator79.f();
       }
     }
 
-    return _this27;
+    return _this29;
   } //#region - overrides
 
   /**
@@ -7447,31 +7912,31 @@ var SliceElement = /*#__PURE__*/function (_MultiPartExpressionN14) {
     value: function getVariableExpressions() {
       var variables = [];
 
-      var _iterator76 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _indices)),
-          _step76;
+      var _iterator80 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _indices)),
+          _step80;
 
       try {
-        for (_iterator76.s(); !(_step76 = _iterator76.n()).done;) {
-          var value = _step76.value;
+        for (_iterator80.s(); !(_step80 = _iterator80.n()).done;) {
+          var value = _step80.value;
 
-          var _iterator77 = _createForOfIteratorHelper(value),
-              _step77;
+          var _iterator81 = _createForOfIteratorHelper(value),
+              _step81;
 
           try {
-            for (_iterator77.s(); !(_step77 = _iterator77.n()).done;) {
-              var item = _step77.value;
+            for (_iterator81.s(); !(_step81 = _iterator81.n()).done;) {
+              var item = _step81.value;
               variables = variables.concat(item.getVariableExpressions());
             }
           } catch (err) {
-            _iterator77.e(err);
+            _iterator81.e(err);
           } finally {
-            _iterator77.f();
+            _iterator81.f();
           }
         }
       } catch (err) {
-        _iterator76.e(err);
+        _iterator80.e(err);
       } finally {
-        _iterator76.f();
+        _iterator80.f();
       }
 
       return variables;
@@ -7485,31 +7950,31 @@ var SliceElement = /*#__PURE__*/function (_MultiPartExpressionN14) {
     value: function checkForSymptoms() {
       this.checkRules(this);
 
-      var _iterator78 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _indices)),
-          _step78;
+      var _iterator82 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _indices)),
+          _step82;
 
       try {
-        for (_iterator78.s(); !(_step78 = _iterator78.n()).done;) {
-          var i = _step78.value;
+        for (_iterator82.s(); !(_step82 = _iterator82.n()).done;) {
+          var i = _step82.value;
 
-          var _iterator79 = _createForOfIteratorHelper(i),
-              _step79;
+          var _iterator83 = _createForOfIteratorHelper(i),
+              _step83;
 
           try {
-            for (_iterator79.s(); !(_step79 = _iterator79.n()).done;) {
-              var item = _step79.value;
+            for (_iterator83.s(); !(_step83 = _iterator83.n()).done;) {
+              var item = _step83.value;
               item.checkForSymptoms();
             }
           } catch (err) {
-            _iterator79.e(err);
+            _iterator83.e(err);
           } finally {
-            _iterator79.f();
+            _iterator83.f();
           }
         }
       } catch (err) {
-        _iterator78.e(err);
+        _iterator82.e(err);
       } finally {
-        _iterator78.f();
+        _iterator82.f();
       }
     }
     /**
@@ -7529,22 +7994,31 @@ var SliceElement = /*#__PURE__*/function (_MultiPartExpressionN14) {
     /**
      * @override
      */
+    // setBlockId(id) {
+    //     super.setBlockId(id); // NEED TO OVERRIDE BY TYPE...
+    //     /*for (const exp of this.getChildren()) {
+    //         exp.setBlockId(id);
+    //     }*/
+    //     /*for (const item of this.#indices) {
+    //         for (const i of item) {
+    //             i.setBlockId(id);
+    //         }
+    //     }*/
+    // }
+
+    /**
+     * @inheritdoc
+     */
 
   }, {
-    key: "setBlockId",
-    value: function setBlockId(id) {
-      _get(_getPrototypeOf(SliceElement.prototype), "setBlockId", this).call(this, id); // NEED TO OVERRIDE BY TYPE...
-
-      /*for (const exp of this.getChildren()) {
-          exp.setBlockId(id);
-      }*/
-
-      /*for (const item of this.#indices) {
-          for (const i of item) {
-              i.setBlockId(id);
-          }
-      }*/
-
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(SliceElement.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(_classPrivateFieldGet(this, _indices).flatMap(function (vArr) {
+        return vArr.flatMap(function (v) {
+          return v.getAllNestedExpressions();
+        });
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -7594,36 +8068,39 @@ var IndexKeyElement = /*#__PURE__*/function (_MultiPartExpressionN15) {
    * @throws Throws an error if the list of children is empty
    */
   function IndexKeyElement(textValue, children) {
-    var _this28;
+    var _this30;
 
     _classCallCheck(this, IndexKeyElement);
 
-    _this28 = _super40.call(this, textValue, children, _enums.ExpressionEntity.IndexKey, _enums.ExpressionCategory.Other, _enums.DataType.NA); // convert children contents to tree
+    _this30 = _super40.call(this, textValue, children, _enums.ExpressionEntity.IndexKey, _enums.ExpressionCategory.Other, _enums.DataType.NA); // convert children contents to tree
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this28), _contents2, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this30), _contents2, {
       writable: true,
       value: []
     });
 
     if (children.length > 2) {
-      _classPrivateFieldSet(_assertThisInitialized(_this28), _contents2, _rawtextprocessing.StatementProcessor.createTree(children.slice(1, children.length - 1)));
+      _classPrivateFieldSet(_assertThisInitialized(_this30), _contents2, _rawtextprocessing.StatementProcessor.createTree(children.slice(1, children.length - 1)));
     }
 
-    var _iterator80 = _createForOfIteratorHelper(_classPrivateFieldGet(_assertThisInitialized(_this28), _contents2)),
-        _step80;
+    var _iterator84 = _createForOfIteratorHelper(_classPrivateFieldGet(_assertThisInitialized(_this30), _contents2)),
+        _step84;
 
     try {
-      for (_iterator80.s(); !(_step80 = _iterator80.n()).done;) {
-        var e = _step80.value;
-        e.setParent(_assertThisInitialized(_this28));
+      for (_iterator84.s(); !(_step84 = _iterator84.n()).done;) {
+        var e = _step84.value;
+        e.setParent(_assertThisInitialized(_this30));
+
+        _this30.addConnection(e); // e.addConnection(this);
+
       }
     } catch (err) {
-      _iterator80.e(err);
+      _iterator84.e(err);
     } finally {
-      _iterator80.f();
+      _iterator84.f();
     }
 
-    return _this28;
+    return _this30;
   } //#region - overrides
 
   /**
@@ -7646,18 +8123,18 @@ var IndexKeyElement = /*#__PURE__*/function (_MultiPartExpressionN15) {
     value: function getVariableExpressions() {
       var variables = [];
 
-      var _iterator81 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _contents2)),
-          _step81;
+      var _iterator85 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _contents2)),
+          _step85;
 
       try {
-        for (_iterator81.s(); !(_step81 = _iterator81.n()).done;) {
-          var value = _step81.value;
+        for (_iterator85.s(); !(_step85 = _iterator85.n()).done;) {
+          var value = _step85.value;
           variables = variables.concat(value.getVariableExpressions());
         }
       } catch (err) {
-        _iterator81.e(err);
+        _iterator85.e(err);
       } finally {
-        _iterator81.f();
+        _iterator85.f();
       }
 
       return variables;
@@ -7671,18 +8148,18 @@ var IndexKeyElement = /*#__PURE__*/function (_MultiPartExpressionN15) {
     value: function checkForSymptoms() {
       this.checkRules(this);
 
-      var _iterator82 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _contents2)),
-          _step82;
+      var _iterator86 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _contents2)),
+          _step86;
 
       try {
-        for (_iterator82.s(); !(_step82 = _iterator82.n()).done;) {
-          var c = _step82.value;
+        for (_iterator86.s(); !(_step86 = _iterator86.n()).done;) {
+          var c = _step86.value;
           c.checkForSymptoms();
         }
       } catch (err) {
-        _iterator82.e(err);
+        _iterator86.e(err);
       } finally {
-        _iterator82.f();
+        _iterator86.f();
       }
     }
     /**
@@ -7702,20 +8179,27 @@ var IndexKeyElement = /*#__PURE__*/function (_MultiPartExpressionN15) {
     /**
      * @override
      */
+    // setBlockId(id) {
+    //     super.setBlockId(id); // NEED TO OVERRIDE BY TYPE...
+    //     /*for (const exp of this.getChildren()) {
+    //         exp.setBlockId(id);
+    //     }*/
+    //     /*for (const i of this.#contents) {
+    //         i.setBlockId(id)
+    //     }*/
+    // }
+
+    /**
+     * @inheritdoc
+     */
 
   }, {
-    key: "setBlockId",
-    value: function setBlockId(id) {
-      _get(_getPrototypeOf(IndexKeyElement.prototype), "setBlockId", this).call(this, id); // NEED TO OVERRIDE BY TYPE...
-
-      /*for (const exp of this.getChildren()) {
-          exp.setBlockId(id);
-      }*/
-
-      /*for (const i of this.#contents) {
-          i.setBlockId(id)
-      }*/
-
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(IndexKeyElement.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(_classPrivateFieldGet(this, _contents2).flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -7751,24 +8235,40 @@ var SubscriptedElement = /*#__PURE__*/function (_MultiPartExpressionN16) {
    * @throws Throws an error if the list of children does not contain two nodex
    */
   function SubscriptedElement(textValue, children) {
-    var _this29;
+    var _this31;
 
     _classCallCheck(this, SubscriptedElement);
 
     //if (children.length !== 2) throw new Error("A subscripted element must contain exactly two children")
     var dataType = _classStaticPrivateMethodGet(SubscriptedElement, SubscriptedElement, _findDataType).call(SubscriptedElement, children);
 
-    _this29 = _super41.call(this, textValue, children, _enums.ExpressionEntity.SubscriptedExpression, _enums.ExpressionCategory.MultipartValue, dataType);
+    _this31 = _super41.call(this, textValue, children, _enums.ExpressionEntity.SubscriptedExpression, _enums.ExpressionCategory.MultipartValue, dataType);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this29), _checkSubscriptable);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this31), _checkSubscriptable);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this29), _checkUnused17);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this31), _checkUnused17);
 
-    children[0].addObserver(_assertThisInitialized(_this29));
+    children[0].addObserver(_assertThisInitialized(_this31));
 
-    _this29.addRules([_classPrivateMethodGet(_assertThisInitialized(_this29), _checkSubscriptable, _checkSubscriptable2), _classPrivateMethodGet(_assertThisInitialized(_this29), _checkUnused17, _checkUnused18)]);
+    var _iterator87 = _createForOfIteratorHelper(children),
+        _step87;
 
-    return _this29;
+    try {
+      for (_iterator87.s(); !(_step87 = _iterator87.n()).done;) {
+        var child = _step87.value;
+
+        _this31.addConnection(child); // child.addConnection(this);
+
+      }
+    } catch (err) {
+      _iterator87.e(err);
+    } finally {
+      _iterator87.f();
+    }
+
+    _this31.addRules([_classPrivateMethodGet(_assertThisInitialized(_this31), _checkSubscriptable, _checkSubscriptable2), _classPrivateMethodGet(_assertThisInitialized(_this31), _checkUnused17, _checkUnused18)]);
+
+    return _this31;
   }
   /**
    * Checks if this node contains the same pattern of elements as the passed in node. Depending on 
@@ -7819,6 +8319,18 @@ var SubscriptedElement = /*#__PURE__*/function (_MultiPartExpressionN16) {
      * @returns {Symptom[]}
      */
 
+  }, {
+    key: "getAllNestedExpressions",
+    value:
+    /**
+     * @inheritdoc
+     */
+    function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(SubscriptedElement.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(this.getChildren().flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })));
+      return nestedExpressions;
+    }
   }, {
     key: "toJSON",
     value: function toJSON() {
@@ -7888,6 +8400,8 @@ function _findDataType(children) {
   return _enums.DataType.Unknown;
 }
 
+var _setConnections7 = /*#__PURE__*/new WeakSet();
+
 var _checkUnused19 = /*#__PURE__*/new WeakSet();
 
 var _checkForUnexpectedColon5 = /*#__PURE__*/new WeakSet();
@@ -7910,42 +8424,46 @@ var CalculatedExpression = /*#__PURE__*/function (_MultiPartExpressionN17) {
   function CalculatedExpression(textValue, _children6) {
     var _classStaticPrivateMe;
 
-    var _this30;
+    var _this32;
 
     _classCallCheck(this, CalculatedExpression);
 
     var dataType = _children6.length === 3 ? (_classStaticPrivateMe = _classStaticPrivateMethodGet(CalculatedExpression, CalculatedExpression, _findDataType3)).call.apply(_classStaticPrivateMe, [CalculatedExpression].concat(_toConsumableArray(_children6))) : _children6.length === 2 ? _classStaticPrivateMethodGet(CalculatedExpression, CalculatedExpression, _findPossibleNegativeNumber).call(CalculatedExpression, _children6[1]) : _enums.DataType.Unknown;
-    _this30 = _super42.call(this, textValue, _children6, _enums.ExpressionEntity.CalculatedExpression, _enums.ExpressionCategory.MultipartValue, dataType);
+    _this32 = _super42.call(this, textValue, _children6, _enums.ExpressionEntity.CalculatedExpression, _enums.ExpressionCategory.MultipartValue, dataType);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this30), _checkCalculatesNone);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this32), _checkCalculatesNone);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this30), _checkInvalid);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this32), _checkInvalid);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this30), _checkForUnexpectedColon5);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this32), _checkForUnexpectedColon5);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this30), _checkUnused19);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this32), _checkUnused19);
+
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this32), _setConnections7);
 
     if (_children6.length === 3) {
-      _children6[0].addObserver(_assertThisInitialized(_this30));
+      _children6[0].addObserver(_assertThisInitialized(_this32));
 
-      _children6[2].addObserver(_assertThisInitialized(_this30));
+      _children6[2].addObserver(_assertThisInitialized(_this32));
     } else {
-      _children6[1].addObserver(_assertThisInitialized(_this30));
+      _children6[1].addObserver(_assertThisInitialized(_this32));
     }
 
-    _this30.addRules([_classPrivateMethodGet(_assertThisInitialized(_this30), _checkCalculatesNone, _checkCalculatesNone2), _classPrivateMethodGet(_assertThisInitialized(_this30), _checkInvalid, _checkInvalid2), _classPrivateMethodGet(_assertThisInitialized(_this30), _checkForUnexpectedColon5, _checkForUnexpectedColon6), _classPrivateMethodGet(_assertThisInitialized(_this30), _checkUnused19, _checkUnused20)]);
+    _classPrivateMethodGet(_assertThisInitialized(_this32), _setConnections7, _setConnections8).call(_assertThisInitialized(_this32));
 
-    return _this30;
-  } //#region - overrides
+    _this32.addRules([_classPrivateMethodGet(_assertThisInitialized(_this32), _checkCalculatesNone, _checkCalculatesNone2), _classPrivateMethodGet(_assertThisInitialized(_this32), _checkInvalid, _checkInvalid2), _classPrivateMethodGet(_assertThisInitialized(_this32), _checkForUnexpectedColon5, _checkForUnexpectedColon6), _classPrivateMethodGet(_assertThisInitialized(_this32), _checkUnused19, _checkUnused20)]);
 
-  /**
-   * @override
-   */
-
+    return _this32;
+  }
 
   _createClass(CalculatedExpression, [{
     key: "setDataType",
-    value: function setDataType(dataType) {
+    value: //#region - overrides
+
+    /**
+     * @override
+     */
+    function setDataType(dataType) {
       var _classStaticPrivateMe2;
 
       var children = this.getChildren();
@@ -7971,20 +8489,20 @@ var CalculatedExpression = /*#__PURE__*/function (_MultiPartExpressionN17) {
       if (children.length !== nodeChildren.length) return false;
       var variables = new Map();
 
-      var _iterator83 = _createForOfIteratorHelper(children),
-          _step83;
+      var _iterator88 = _createForOfIteratorHelper(children),
+          _step88;
 
       try {
-        for (_iterator83.s(); !(_step83 = _iterator83.n()).done;) {
-          var c = _step83.value;
+        for (_iterator88.s(); !(_step88 = _iterator88.n()).done;) {
+          var c = _step88.value;
           var found = false;
 
-          var _iterator84 = _createForOfIteratorHelper(nodeChildren),
-              _step84;
+          var _iterator89 = _createForOfIteratorHelper(nodeChildren),
+              _step89;
 
           try {
-            for (_iterator84.s(); !(_step84 = _iterator84.n()).done;) {
-              var n = _step84.value;
+            for (_iterator89.s(); !(_step89 = _iterator89.n()).done;) {
+              var n = _step89.value;
 
               if (c.matchesPattern(n)) {
                 found = true;
@@ -7992,9 +8510,9 @@ var CalculatedExpression = /*#__PURE__*/function (_MultiPartExpressionN17) {
               }
             }
           } catch (err) {
-            _iterator84.e(err);
+            _iterator89.e(err);
           } finally {
-            _iterator84.f();
+            _iterator89.f();
           }
 
           if (!found && !c.is(_enums.ExpressionEntity.VariableName)) {
@@ -8004,15 +8522,27 @@ var CalculatedExpression = /*#__PURE__*/function (_MultiPartExpressionN17) {
           }
         }
       } catch (err) {
-        _iterator83.e(err);
+        _iterator88.e(err);
       } finally {
-        _iterator83.f();
+        _iterator88.f();
       }
 
       if (variables.size === 0) return true;
       return Array.from(variables.values()).filter(function (v) {
         return v === true;
       }).length > 0;
+    }
+    /**
+     * @inheritdoc
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(CalculatedExpression.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(this.getChildren().flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -8040,6 +8570,18 @@ var CalculatedExpression = /*#__PURE__*/function (_MultiPartExpressionN17) {
 }(MultiPartExpressionNode);
 
 exports.CalculatedExpression = CalculatedExpression;
+
+function _setConnections8() {
+  var children = this.getChildren();
+
+  for (var i = 0; i < children.length; i++) {
+    this.addConnection(children[i]);
+
+    if (i < children.length - 1) {
+      children[i].addConnection(children[i + 1]);
+    }
+  }
+}
 
 function _findDataType3(left, op, right) {
   var leftType = left.getDataType();
@@ -8185,6 +8727,8 @@ function _checkCalculatesNone2(exp) {
   return symptoms;
 }
 
+var _setConnections9 = /*#__PURE__*/new WeakSet();
+
 var _checkUnused21 = /*#__PURE__*/new WeakSet();
 
 var _checkForUnexpectedColon7 = /*#__PURE__*/new WeakSet();
@@ -8207,42 +8751,46 @@ var ComparisonExpression = /*#__PURE__*/function (_MultiPartExpressionN18) {
   function ComparisonExpression(textValue, _children7) {
     var _classStaticPrivateMe3;
 
-    var _this31;
+    var _this33;
 
     _classCallCheck(this, ComparisonExpression);
 
     //if (children.length !== 3 || !children[1].is(ExpressionCategory.ComparisonOperators)) 
     //    throw new Error("A comparison expression must contain exactly three children and the middle child must be a comparison operator");
     var dataType = _children7.length === 3 ? (_classStaticPrivateMe3 = _classStaticPrivateMethodGet(ComparisonExpression, ComparisonExpression, _findDataType5)).call.apply(_classStaticPrivateMe3, [ComparisonExpression].concat(_toConsumableArray(_children7))) : _enums.DataType.Unknown;
-    _this31 = _super43.call(this, textValue, _children7, _enums.ExpressionEntity.ComparisonExpression, _enums.ExpressionCategory.MultipartValue, dataType);
+    _this33 = _super43.call(this, textValue, _children7, _enums.ExpressionEntity.ComparisonExpression, _enums.ExpressionCategory.MultipartValue, dataType);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this31), _checkComparesNone);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this33), _checkComparesNone);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this31), _checkComparesLiteral);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this33), _checkComparesLiteral);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this31), _checkForUnexpectedColon7);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this33), _checkForUnexpectedColon7);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this31), _checkUnused21);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this33), _checkUnused21);
+
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this33), _setConnections9);
 
     if (_children7.length === 3) {
-      _children7[0].addObserver(_assertThisInitialized(_this31));
+      _children7[0].addObserver(_assertThisInitialized(_this33));
 
-      _children7[2].addObserver(_assertThisInitialized(_this31));
+      _children7[2].addObserver(_assertThisInitialized(_this33));
     }
 
-    _this31.addRules([_classPrivateMethodGet(_assertThisInitialized(_this31), _checkComparesNone, _checkComparesNone2), _classPrivateMethodGet(_assertThisInitialized(_this31), _checkComparesLiteral, _checkComparesLiteral2), _classPrivateMethodGet(_assertThisInitialized(_this31), _checkForUnexpectedColon7, _checkForUnexpectedColon8), _classPrivateMethodGet(_assertThisInitialized(_this31), _checkUnused21, _checkUnused22)]);
+    _classPrivateMethodGet(_assertThisInitialized(_this33), _setConnections9, _setConnections10).call(_assertThisInitialized(_this33));
 
-    return _this31;
-  } //#region - overrides
+    _this33.addRules([_classPrivateMethodGet(_assertThisInitialized(_this33), _checkComparesNone, _checkComparesNone2), _classPrivateMethodGet(_assertThisInitialized(_this33), _checkComparesLiteral, _checkComparesLiteral2), _classPrivateMethodGet(_assertThisInitialized(_this33), _checkForUnexpectedColon7, _checkForUnexpectedColon8), _classPrivateMethodGet(_assertThisInitialized(_this33), _checkUnused21, _checkUnused22)]);
 
-  /**
-   * @override 
-   */
-
+    return _this33;
+  }
 
   _createClass(ComparisonExpression, [{
     key: "setDataType",
-    value: function setDataType(dataType) {
+    value: //#region - overrides
+
+    /**
+     * @override 
+     */
+    function setDataType(dataType) {
       var _classStaticPrivateMe4;
 
       var localType = (_classStaticPrivateMe4 = _classStaticPrivateMethodGet(ComparisonExpression, ComparisonExpression, _findDataType5)).call.apply(_classStaticPrivateMe4, [ComparisonExpression].concat(_toConsumableArray(this.getChildren())));
@@ -8291,12 +8839,12 @@ var ComparisonExpression = /*#__PURE__*/function (_MultiPartExpressionN18) {
 
         var found = false;
 
-        var _iterator85 = _createForOfIteratorHelper(nodeChildren),
-            _step85;
+        var _iterator90 = _createForOfIteratorHelper(nodeChildren),
+            _step90;
 
         try {
-          for (_iterator85.s(); !(_step85 = _iterator85.n()).done;) {
-            var n = _step85.value;
+          for (_iterator90.s(); !(_step90 = _iterator90.n()).done;) {
+            var n = _step90.value;
 
             if (children[u].matchesPattern(n)) {
               found = true;
@@ -8304,9 +8852,9 @@ var ComparisonExpression = /*#__PURE__*/function (_MultiPartExpressionN18) {
             }
           }
         } catch (err) {
-          _iterator85.e(err);
+          _iterator90.e(err);
         } finally {
-          _iterator85.f();
+          _iterator90.f();
         }
 
         if (!found && !children[u].isOneOf([_enums.ExpressionEntity.VariableName, _enums.ExpressionEntity.BuiltInFunctionCall, _enums.ExpressionEntity.UserDefinedFunctionCall, _enums.ExpressionEntity.SubscriptedExpression])) {
@@ -8320,6 +8868,18 @@ var ComparisonExpression = /*#__PURE__*/function (_MultiPartExpressionN18) {
       return Array.from(variables.values()).filter(function (v) {
         return v === true;
       }).length > 0;
+    }
+    /**
+     * @inheritdoc
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(ComparisonExpression.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(this.getChildren().flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -8360,6 +8920,18 @@ var ComparisonExpression = /*#__PURE__*/function (_MultiPartExpressionN18) {
 }(MultiPartExpressionNode);
 
 exports.ComparisonExpression = ComparisonExpression;
+
+function _setConnections10() {
+  var children = this.getChildren();
+
+  for (var i = 0; i < children.length; i++) {
+    this.addConnection(children[i]);
+
+    if (i < children.length - 1) {
+      children[i].addConnection(children[i + 1]);
+    }
+  }
+}
 
 function _findDataType5(left, op, right) {
   var leftType = left.getDataType();
@@ -8424,7 +8996,8 @@ function _checkComparesLiteral2(comparison) {
     symptoms.push(_symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.CompareBoolLiteral, children, 0, children.length - 1, {
       boolValue: children[0].getTextValue(),
       operator: children[1].getTextValue(),
-      boolLiteral: children[2].getTextValue()
+      boolLiteral: children[2].getTextValue(),
+      usedIn: comparison.getContextOfUse()
     }));
   }
 
@@ -8453,6 +9026,8 @@ function _checkComparesNone2(exp) {
   return symptoms;
 }
 
+var _setConnections11 = /*#__PURE__*/new WeakSet();
+
 var _checkUnused23 = /*#__PURE__*/new WeakSet();
 
 var _checkForUnexpectedColon9 = /*#__PURE__*/new WeakSet();
@@ -8471,35 +9046,39 @@ var BooleanExpression = /*#__PURE__*/function (_MultiPartExpressionN19) {
    * @throws Throws an error if the list of children does not contain multiple elements
    */
   function BooleanExpression(textValue, _children8) {
-    var _this32;
+    var _this34;
 
     _classCallCheck(this, BooleanExpression);
 
     var dataType = _classStaticPrivateMethodGet(BooleanExpression, BooleanExpression, _findDataType7).call(BooleanExpression, _children8);
 
-    _this32 = _super44.call(this, textValue, _children8, _enums.ExpressionEntity.BooleanExpression, _enums.ExpressionCategory.MultipartValue, dataType);
+    _this34 = _super44.call(this, textValue, _children8, _enums.ExpressionEntity.BooleanExpression, _enums.ExpressionCategory.MultipartValue, dataType);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this32), _checkNaturalLanguage);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this34), _checkNaturalLanguage);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this32), _checkForUnexpectedColon9);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this34), _checkForUnexpectedColon9);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this32), _checkUnused23);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this34), _checkUnused23);
+
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this34), _setConnections11);
 
     if (_children8.length === 3 && _children8[1].is(_enums.ExpressionCategory.LogicalOperators)) {
-      _children8[0].addObserver(_assertThisInitialized(_this32));
+      _children8[0].addObserver(_assertThisInitialized(_this34));
 
-      _children8[2].addObserver(_assertThisInitialized(_this32));
+      _children8[2].addObserver(_assertThisInitialized(_this34));
     }
 
-    _this32.addRules([_classPrivateMethodGet(_assertThisInitialized(_this32), _checkNaturalLanguage, _checkNaturalLanguage2), _classPrivateMethodGet(_assertThisInitialized(_this32), _checkForUnexpectedColon9, _checkForUnexpectedColon10), _classPrivateMethodGet(_assertThisInitialized(_this32), _checkUnused23, _checkUnused24)]);
+    _classPrivateMethodGet(_assertThisInitialized(_this34), _setConnections11, _setConnections12).call(_assertThisInitialized(_this34));
 
-    return _this32;
-  } //#region - overrides
+    _this34.addRules([_classPrivateMethodGet(_assertThisInitialized(_this34), _checkNaturalLanguage, _checkNaturalLanguage2), _classPrivateMethodGet(_assertThisInitialized(_this34), _checkForUnexpectedColon9, _checkForUnexpectedColon10), _classPrivateMethodGet(_assertThisInitialized(_this34), _checkUnused23, _checkUnused24)]);
 
+    return _this34;
+  }
 
   _createClass(BooleanExpression, [{
     key: "setDataType",
-    value: function setDataType(dataType) {
+    value: //#region - overrides
+    function setDataType(dataType) {
       var localType = _classStaticPrivateMethodGet(BooleanExpression, BooleanExpression, _findDataType7).call(BooleanExpression, this.getChildren());
 
       if (localType !== this.getDataType()) {
@@ -8531,12 +9110,12 @@ var BooleanExpression = /*#__PURE__*/function (_MultiPartExpressionN19) {
       var nodeChildren = node.getChildren();
       var variables = new Map();
 
-      var _iterator86 = _createForOfIteratorHelper(children),
-          _step86;
+      var _iterator91 = _createForOfIteratorHelper(children),
+          _step91;
 
       try {
-        for (_iterator86.s(); !(_step86 = _iterator86.n()).done;) {
-          var c = _step86.value;
+        for (_iterator91.s(); !(_step91 = _iterator91.n()).done;) {
+          var c = _step91.value;
 
           if (c.is(_enums.ExpressionEntity.NotOperator)) {
             continue; //return false;
@@ -8544,12 +9123,12 @@ var BooleanExpression = /*#__PURE__*/function (_MultiPartExpressionN19) {
 
           var found = false;
 
-          var _iterator87 = _createForOfIteratorHelper(nodeChildren),
-              _step87;
+          var _iterator92 = _createForOfIteratorHelper(nodeChildren),
+              _step92;
 
           try {
-            for (_iterator87.s(); !(_step87 = _iterator87.n()).done;) {
-              var n = _step87.value;
+            for (_iterator92.s(); !(_step92 = _iterator92.n()).done;) {
+              var n = _step92.value;
 
               if (n.is(_enums.ExpressionEntity.NotOperator)) {
                 continue;
@@ -8561,9 +9140,9 @@ var BooleanExpression = /*#__PURE__*/function (_MultiPartExpressionN19) {
               }
             }
           } catch (err) {
-            _iterator87.e(err);
+            _iterator92.e(err);
           } finally {
-            _iterator87.f();
+            _iterator92.f();
           }
 
           if (!found && !c.is(_enums.ExpressionEntity.VariableName)) {
@@ -8573,15 +9152,27 @@ var BooleanExpression = /*#__PURE__*/function (_MultiPartExpressionN19) {
           }
         }
       } catch (err) {
-        _iterator86.e(err);
+        _iterator91.e(err);
       } finally {
-        _iterator86.f();
+        _iterator91.f();
       }
 
       if (variables.size === 0) return true;
       return Array.from(variables.values()).filter(function (v) {
         return v === true;
       }).length > 0;
+    }
+    /**
+     * @inheritdoc
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(BooleanExpression.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(this.getChildren().flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -8623,6 +9214,18 @@ var BooleanExpression = /*#__PURE__*/function (_MultiPartExpressionN19) {
 }(MultiPartExpressionNode);
 
 exports.BooleanExpression = BooleanExpression;
+
+function _setConnections12() {
+  var children = this.getChildren();
+
+  for (var i = 0; i < children.length; i++) {
+    this.addConnection(children[i]);
+
+    if (i < children.length - 1) {
+      children[i].addConnection(children[i + 1]);
+    }
+  }
+}
 
 function _findDataType7(children) {
   if (children.length === 2 && children[0].is(_enums.ExpressionEntity.NotOperator)) {
@@ -8699,6 +9302,8 @@ var _iterable = /*#__PURE__*/new WeakMap();
 
 var _loopVariables = /*#__PURE__*/new WeakMap();
 
+var _setConnections13 = /*#__PURE__*/new WeakSet();
+
 var _setRoles = /*#__PURE__*/new WeakSet();
 
 var _setObservers = /*#__PURE__*/new WeakSet();
@@ -8727,67 +9332,71 @@ var IteratorExpression = /*#__PURE__*/function (_MultiPartExpressionN20) {
    * @throws Throws an error if the list of children does not contain multiple elements
    */
   function IteratorExpression(textValue, _children9) {
-    var _this33;
+    var _this35;
 
     _classCallCheck(this, IteratorExpression);
 
-    _this33 = _super45.call(this, textValue, _children9, _enums.ExpressionEntity.IteratorExpression, _enums.ExpressionCategory.MultipartValue, _enums.DataType.NA);
+    _this35 = _super45.call(this, textValue, _children9, _enums.ExpressionEntity.IteratorExpression, _enums.ExpressionCategory.MultipartValue, _enums.DataType.NA);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this33), _checkForUnexpectedColon11);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this35), _checkForUnexpectedColon11);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this33), _checkForOverwrite);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this35), _checkForOverwrite);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this33), _setLoopVariableDataTypes);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this35), _setLoopVariableDataTypes);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this33), _setObservers);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this35), _setObservers);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this33), _setRoles);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this35), _setRoles);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this33), _inIndex, {
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this35), _setConnections13);
+
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this35), _inIndex, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this33), _iterable, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this35), _iterable, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this33), _loopVariables, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this35), _loopVariables, {
       writable: true,
       value: []
     });
 
-    _classPrivateMethodGet(_assertThisInitialized(_this33), _setRoles, _setRoles2).call(_assertThisInitialized(_this33));
+    _classPrivateMethodGet(_assertThisInitialized(_this35), _setRoles, _setRoles2).call(_assertThisInitialized(_this35));
 
-    _this33.addRules([_classPrivateMethodGet(_assertThisInitialized(_this33), _checkForUnexpectedColon11, _checkForUnexpectedColon12), _classPrivateMethodGet(_assertThisInitialized(_this33), _checkForOverwrite, _checkForOverwrite2)]);
+    _classPrivateMethodGet(_assertThisInitialized(_this35), _setConnections13, _setConnections14).call(_assertThisInitialized(_this35));
 
-    return _this33;
+    _this35.addRules([_classPrivateMethodGet(_assertThisInitialized(_this35), _checkForUnexpectedColon11, _checkForUnexpectedColon12), _classPrivateMethodGet(_assertThisInitialized(_this35), _checkForOverwrite, _checkForOverwrite2)]);
+
+    return _this35;
   }
-  /**
-   * @override
-   */
-
 
   _createClass(IteratorExpression, [{
     key: "checkForSymptoms",
-    value: function checkForSymptoms() {
+    value:
+    /**
+     * @override
+     */
+    function checkForSymptoms() {
       this.checkRules(this);
 
       _classPrivateFieldGet(this, _iterable).checkForSymptoms();
 
-      var _iterator88 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _loopVariables)),
-          _step88;
+      var _iterator93 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _loopVariables)),
+          _step93;
 
       try {
-        for (_iterator88.s(); !(_step88 = _iterator88.n()).done;) {
-          var v = _step88.value;
+        for (_iterator93.s(); !(_step93 = _iterator93.n()).done;) {
+          var v = _step93.value;
           v.checkForSymptoms();
         }
       } catch (err) {
-        _iterator88.e(err);
+        _iterator93.e(err);
       } finally {
-        _iterator88.f();
+        _iterator93.f();
       }
     } //#region - overrides
 
@@ -8800,18 +9409,18 @@ var IteratorExpression = /*#__PURE__*/function (_MultiPartExpressionN20) {
     value: function getVariableExpressions() {
       var variables = _classPrivateFieldGet(this, _iterable).getVariableExpressions();
 
-      var _iterator89 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _loopVariables)),
-          _step89;
+      var _iterator94 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _loopVariables)),
+          _step94;
 
       try {
-        for (_iterator89.s(); !(_step89 = _iterator89.n()).done;) {
-          var i = _step89.value;
+        for (_iterator94.s(); !(_step94 = _iterator94.n()).done;) {
+          var i = _step94.value;
           variables = variables.concat(i.getVariableExpressions());
         }
       } catch (err) {
-        _iterator89.e(err);
+        _iterator94.e(err);
       } finally {
-        _iterator89.f();
+        _iterator94.f();
       }
 
       return variables;
@@ -8826,17 +9435,25 @@ var IteratorExpression = /*#__PURE__*/function (_MultiPartExpressionN20) {
     /**
      * @override
      */
+    // setBlockId(id) {
+    //     super.setBlockId(id); // NEED TO OVERRIDE BY TYPE...
+    //     /*for (const exp of this.getChildren()) {
+    //         exp.setBlockId(id);
+    //     }*/
+    //     //this.#iterable.setBlockId(id);
+    // }
+
+    /**
+     * @inheritdoc
+     */
 
   }, {
-    key: "setBlockId",
-    value: function setBlockId(id) {
-      _get(_getPrototypeOf(IteratorExpression.prototype), "setBlockId", this).call(this, id); // NEED TO OVERRIDE BY TYPE...
-
-      /*for (const exp of this.getChildren()) {
-          exp.setBlockId(id);
-      }*/
-      //this.#iterable.setBlockId(id);
-
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(IteratorExpression.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(_classPrivateFieldGet(this, _loopVariables).flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })), _toConsumableArray(_classPrivateFieldGet(this, _iterable).getAllNestedExpressions()));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -8875,6 +9492,18 @@ var IteratorExpression = /*#__PURE__*/function (_MultiPartExpressionN20) {
 
 exports.IteratorExpression = IteratorExpression;
 
+function _setConnections14() {
+  var children = this.getChildren();
+
+  for (var i = 0; i < children.length; i++) {
+    this.addConnection(children[i]);
+
+    if (i < children.length - 1) {
+      children[i].addConnection(children[i + 1]);
+    }
+  }
+}
+
 function _setRoles2() {
   var children = this.getChildren();
 
@@ -8890,18 +9519,18 @@ function _setRoles2() {
     return node.is(_enums.ExpressionEntity.VariableName);
   }));
 
-  var _iterator114 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _loopVariables)),
-      _step114;
+  var _iterator123 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _loopVariables)),
+      _step123;
 
   try {
-    for (_iterator114.s(); !(_step114 = _iterator114.n()).done;) {
-      var v = _step114.value;
+    for (_iterator123.s(); !(_step123 = _iterator123.n()).done;) {
+      var v = _step123.value;
       v.setAssignedOrChanged();
     }
   } catch (err) {
-    _iterator114.e(err);
+    _iterator123.e(err);
   } finally {
-    _iterator114.f();
+    _iterator123.f();
   }
 
   _classPrivateMethodGet(this, _setObservers, _setObservers2).call(this);
@@ -8924,18 +9553,18 @@ function _setObservers2() {
 
         _classPrivateFieldGet(this, _loopVariables)[1].setDataType(valueType);
       } else {
-        var _iterator115 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _loopVariables)),
-            _step115;
+        var _iterator124 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _loopVariables)),
+            _step124;
 
         try {
-          for (_iterator115.s(); !(_step115 = _iterator115.n()).done;) {
-            var l = _step115.value;
+          for (_iterator124.s(); !(_step124 = _iterator124.n()).done;) {
+            var l = _step124.value;
             l.setDataType(_enums.DataType.Unknown);
           }
         } catch (err) {
-          _iterator115.e(err);
+          _iterator124.e(err);
         } finally {
-          _iterator115.f();
+          _iterator124.f();
         }
       }
     } else if (funcEntity === _enums.ExpressionEntity.RangeFunction && _classPrivateFieldGet(this, _loopVariables).length === 1) {
@@ -8943,19 +9572,19 @@ function _setObservers2() {
     } else if (_utils.builtInReturnLookup.get(funcEntity) === _enums.DataType.String && _classPrivateFieldGet(this, _loopVariables).length === 1) {
       _classPrivateFieldGet(this, _loopVariables)[0].setDataType(_enums.DataType.String);
     } else {
-      var _iterator116 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _loopVariables)),
-          _step116;
+      var _iterator125 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _loopVariables)),
+          _step125;
 
       try {
-        for (_iterator116.s(); !(_step116 = _iterator116.n()).done;) {
-          var _l = _step116.value;
+        for (_iterator125.s(); !(_step125 = _iterator125.n()).done;) {
+          var _l = _step125.value;
 
           _l.setDataType(_enums.DataType.Unknown);
         }
       } catch (err) {
-        _iterator116.e(err);
+        _iterator125.e(err);
       } finally {
-        _iterator116.f();
+        _iterator125.f();
       }
     }
   } else {
@@ -8968,18 +9597,18 @@ function _setObservers2() {
 function _setLoopVariableDataTypes2() {
   var iterType = _classPrivateFieldGet(this, _iterable).getDataType() === _enums.DataType.String || _classPrivateFieldGet(this, _iterable).getDataType() === _enums.DataType.File ? _enums.DataType.String : _enums.DataType.Unknown;
 
-  var _iterator117 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _loopVariables)),
-      _step117;
+  var _iterator126 = _createForOfIteratorHelper(_classPrivateFieldGet(this, _loopVariables)),
+      _step126;
 
   try {
-    for (_iterator117.s(); !(_step117 = _iterator117.n()).done;) {
-      var v = _step117.value;
+    for (_iterator126.s(); !(_step126 = _iterator126.n()).done;) {
+      var v = _step126.value;
       v.setDataType(iterType);
     }
   } catch (err) {
-    _iterator117.e(err);
+    _iterator126.e(err);
   } finally {
-    _iterator117.f();
+    _iterator126.f();
   }
 }
 
@@ -8988,19 +9617,19 @@ function _checkForOverwrite2(exp) {
 
   var iterableVars = _classPrivateFieldGet(exp, _iterable).getVariableExpressions();
 
-  var _iterator118 = _createForOfIteratorHelper(_classPrivateFieldGet(exp, _loopVariables)),
-      _step118;
+  var _iterator127 = _createForOfIteratorHelper(_classPrivateFieldGet(exp, _loopVariables)),
+      _step127;
 
   try {
-    for (_iterator118.s(); !(_step118 = _iterator118.n()).done;) {
-      var target = _step118.value;
+    for (_iterator127.s(); !(_step127 = _iterator127.n()).done;) {
+      var target = _step127.value;
 
-      var _iterator119 = _createForOfIteratorHelper(iterableVars),
-          _step119;
+      var _iterator128 = _createForOfIteratorHelper(iterableVars),
+          _step128;
 
       try {
-        for (_iterator119.s(); !(_step119 = _iterator119.n()).done;) {
-          var i = _step119.value;
+        for (_iterator128.s(); !(_step128 = _iterator128.n()).done;) {
+          var i = _step128.value;
 
           if (target.getTextValue() === i.getTextValue()) {
             var lastUsages = target.getLastUsages();
@@ -9017,9 +9646,9 @@ function _checkForOverwrite2(exp) {
           }
         }
       } catch (err) {
-        _iterator119.e(err);
+        _iterator128.e(err);
       } finally {
-        _iterator119.f();
+        _iterator128.f();
       }
     }
     /*
@@ -9036,9 +9665,9 @@ function _checkForOverwrite2(exp) {
     */
 
   } catch (err) {
-    _iterator118.e(err);
+    _iterator127.e(err);
   } finally {
-    _iterator118.f();
+    _iterator127.f();
   }
 
   return symptoms;
@@ -9080,7 +9709,7 @@ var LambdaExpression = /*#__PURE__*/function (_MultiPartExpressionN21) {
    * @throws Throws an error if the list of children does not contain multiple elements
    */
   function LambdaExpression(textValue, children) {
-    var _this34;
+    var _this36;
 
     _classCallCheck(this, LambdaExpression);
 
@@ -9097,19 +9726,19 @@ var LambdaExpression = /*#__PURE__*/function (_MultiPartExpressionN21) {
 
     var args = _rawtextprocessing.StatementProcessor.split(parts[0], _enums.ExpressionEntity.Comma);
 
-    var _iterator90 = _createForOfIteratorHelper(args),
-        _step90;
+    var _iterator95 = _createForOfIteratorHelper(args),
+        _step95;
 
     try {
-      for (_iterator90.s(); !(_step90 = _iterator90.n()).done;) {
-        var a = _step90.value;
+      for (_iterator95.s(); !(_step95 = _iterator95.n()).done;) {
+        var a = _step95.value;
 
-        var _iterator91 = _createForOfIteratorHelper(a),
-            _step91;
+        var _iterator96 = _createForOfIteratorHelper(a),
+            _step96;
 
         try {
-          for (_iterator91.s(); !(_step91 = _iterator91.n()).done;) {
-            var item = _step91.value;
+          for (_iterator96.s(); !(_step96 = _iterator96.n()).done;) {
+            var item = _step96.value;
 
             if (item.is(_enums.ExpressionEntity.VariableName)) {
               item.setAssignedOrChanged();
@@ -9117,15 +9746,15 @@ var LambdaExpression = /*#__PURE__*/function (_MultiPartExpressionN21) {
             }
           }
         } catch (err) {
-          _iterator91.e(err);
+          _iterator96.e(err);
         } finally {
-          _iterator91.f();
+          _iterator96.f();
         }
       }
     } catch (err) {
-      _iterator90.e(err);
+      _iterator95.e(err);
     } finally {
-      _iterator90.f();
+      _iterator95.f();
     }
 
     var ret = _rawtextprocessing.StatementProcessor.createTree(parts[1]);
@@ -9134,24 +9763,24 @@ var LambdaExpression = /*#__PURE__*/function (_MultiPartExpressionN21) {
       throw new Error("Lambda can only have one return value");
     }
 
-    _this34 = _super46.call(this, textValue, children, _enums.ExpressionEntity.LambdaDefinitionStatement, _enums.ExpressionCategory.BlockDefinitions, ret[0].getDataType());
+    _this36 = _super46.call(this, textValue, children, _enums.ExpressionEntity.LambdaDefinitionStatement, _enums.ExpressionCategory.BlockDefinitions, ret[0].getDataType());
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this34), _arguments3, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this36), _arguments3, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this34), _return, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this36), _return, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldSet(_assertThisInitialized(_this34), _arguments3, args);
+    _classPrivateFieldSet(_assertThisInitialized(_this36), _arguments3, args);
 
-    _classPrivateFieldSet(_assertThisInitialized(_this34), _return, ret[0]);
+    _classPrivateFieldSet(_assertThisInitialized(_this36), _return, ret[0]);
 
-    ret[0].addObserver(_assertThisInitialized(_this34));
-    return _this34;
+    ret[0].addObserver(_assertThisInitialized(_this36));
+    return _this36;
   }
   /**
    * @override
@@ -9163,12 +9792,12 @@ var LambdaExpression = /*#__PURE__*/function (_MultiPartExpressionN21) {
     value: function getVariableExpressions() {
       var variables = [];
 
-      var _iterator92 = _createForOfIteratorHelper(this.getChildren()),
-          _step92;
+      var _iterator97 = _createForOfIteratorHelper(this.getChildren()),
+          _step97;
 
       try {
-        for (_iterator92.s(); !(_step92 = _iterator92.n()).done;) {
-          var item = _step92.value;
+        for (_iterator97.s(); !(_step97 = _iterator97.n()).done;) {
+          var item = _step97.value;
 
           if (item.is(_enums.ExpressionEntity.VariableName)) {
             variables.push(item);
@@ -9177,12 +9806,24 @@ var LambdaExpression = /*#__PURE__*/function (_MultiPartExpressionN21) {
           }
         }
       } catch (err) {
-        _iterator92.e(err);
+        _iterator97.e(err);
       } finally {
-        _iterator92.f();
+        _iterator97.f();
       }
 
       return variables;
+    }
+    /**
+     * @inheritdoc
+     */
+
+  }, {
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(LambdaExpression.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(this.getChildren().flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -9218,7 +9859,7 @@ var TernaryExpression = /*#__PURE__*/function (_MultiPartExpressionN22) {
    * @throws Throws an error if the list of children does not contain multiple elements
    */
   function TernaryExpression(textValue, _children10) {
-    var _this35;
+    var _this37;
 
     _classCallCheck(this, TernaryExpression);
 
@@ -9228,17 +9869,17 @@ var TernaryExpression = /*#__PURE__*/function (_MultiPartExpressionN22) {
 
     var dataType = _classStaticPrivateMethodGet(TernaryExpression, TernaryExpression, _findDataType9).call(TernaryExpression, _children10);
 
-    _this35 = _super47.call(this, textValue, _children10, _enums.ExpressionEntity.TernaryStatement, _enums.ExpressionCategory.BlockDefinitionStatement, dataType);
+    _this37 = _super47.call(this, textValue, _children10, _enums.ExpressionEntity.TernaryStatement, _enums.ExpressionCategory.BlockDefinitionStatement, dataType);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this35), _checkReturnsBool);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this37), _checkReturnsBool);
 
-    _children10[0].addObserver(_assertThisInitialized(_this35));
+    _children10[0].addObserver(_assertThisInitialized(_this37));
 
-    _children10[4].addObserver(_assertThisInitialized(_this35));
+    _children10[4].addObserver(_assertThisInitialized(_this37));
 
-    _this35.addRule(_classPrivateMethodGet(_assertThisInitialized(_this35), _checkReturnsBool, _checkReturnsBool2));
+    _this37.addRule(_classPrivateMethodGet(_assertThisInitialized(_this37), _checkReturnsBool, _checkReturnsBool2));
 
-    return _this35;
+    return _this37;
   }
   /**
    * @override 
@@ -9253,6 +9894,18 @@ var TernaryExpression = /*#__PURE__*/function (_MultiPartExpressionN22) {
       if (localType !== this.getDataType()) {
         _get(_getPrototypeOf(TernaryExpression.prototype), "setDataType", this).call(this, localType);
       }
+    }
+  }, {
+    key: "getAllNestedExpressions",
+    value:
+    /**
+     * @inheritdoc
+     */
+    function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(TernaryExpression.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(this.getChildren().flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })));
+      return nestedExpressions;
     }
   }, {
     key: "toJSON",
@@ -9309,7 +9962,7 @@ var ListComprehensionExpression = /*#__PURE__*/function (_MultiPartExpressionN23
    * @throws Throws an error if the list of children does not contain multiple elements
    */
   function ListComprehensionExpression(textValue, _children11) {
-    var _this36;
+    var _this38;
 
     _classCallCheck(this, ListComprehensionExpression);
 
@@ -9317,26 +9970,26 @@ var ListComprehensionExpression = /*#__PURE__*/function (_MultiPartExpressionN23
       throw new Error("List comprehension should contain 3-5 children");
     }
 
-    _this36 = _super48.call(this, textValue, _children11, _enums.ExpressionEntity.ListComprehension, _enums.ExpressionCategory.BlockDefinitionStatement, _enums.DataType.List);
+    _this38 = _super48.call(this, textValue, _children11, _enums.ExpressionEntity.ListComprehension, _enums.ExpressionCategory.BlockDefinitionStatement, _enums.DataType.List);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this36), _processNestedListComp);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this38), _processNestedListComp);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this36), _indexOfIterator);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this38), _indexOfIterator);
 
     var blockId = "".concat(_children11[0].getStartLineNumber(), "-listComprehension-").concat(_children11[0].getDocumentStartIndex());
 
-    _this36.setBlockId(blockId);
+    _this38.setBlockId(blockId);
 
-    _this36.setScopeId(blockId);
+    _this38.setScopeId(blockId);
     /*for (const c of children) {
         c.setBlockId(blockId);
         c.setScopeId(blockId);
     }*/
 
 
-    _classPrivateMethodGet(_assertThisInitialized(_this36), _processNestedListComp, _processNestedListComp2).call(_assertThisInitialized(_this36));
+    _classPrivateMethodGet(_assertThisInitialized(_this38), _processNestedListComp, _processNestedListComp2).call(_assertThisInitialized(_this38));
 
-    return _this36;
+    return _this38;
   }
   /**
    * @override
@@ -9380,6 +10033,18 @@ var ListComprehensionExpression = /*#__PURE__*/function (_MultiPartExpressionN23
       return copy;
     }
   }, {
+    key: "getAllNestedExpressions",
+    value:
+    /**
+     * @inheritdoc
+     */
+    function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(ListComprehensionExpression.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(this.getChildren().flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })));
+      return nestedExpressions;
+    }
+  }, {
     key: "toJSON",
     value: function toJSON() {
       var ret = _get(_getPrototypeOf(ListComprehensionExpression.prototype), "toJSON", this).call(this);
@@ -9419,12 +10084,12 @@ function _processNestedListComp2() {
       var nestedIterator = children[2].getIterable();
       var listCompLoopVars = listCompChildren[2].getLoopVariables();
 
-      var _iterator120 = _createForOfIteratorHelper(listCompLoopVars),
-          _step120;
+      var _iterator129 = _createForOfIteratorHelper(listCompLoopVars),
+          _step129;
 
       try {
-        for (_iterator120.s(); !(_step120 = _iterator120.n()).done;) {
-          var loopVar = _step120.value;
+        for (_iterator129.s(); !(_step129 = _iterator129.n()).done;) {
+          var loopVar = _step129.value;
 
           if (loopVar.getTextValue() === nestedIterator.getTextValue()) {
             loopVar.addObserver(nestedIterator);
@@ -9433,9 +10098,9 @@ function _processNestedListComp2() {
           }
         }
       } catch (err) {
-        _iterator120.e(err);
+        _iterator129.e(err);
       } finally {
-        _iterator120.f();
+        _iterator129.f();
       }
     }
   }
@@ -9463,7 +10128,7 @@ var ReturnStatement = /*#__PURE__*/function (_MultiPartExpressionN24) {
    * @throws Throws an error if the list of children does not contain multiple elements
    */
   function ReturnStatement(textValue, children) {
-    var _this37;
+    var _this39;
 
     _classCallCheck(this, ReturnStatement);
 
@@ -9489,25 +10154,28 @@ var ReturnStatement = /*#__PURE__*/function (_MultiPartExpressionN24) {
       }
     }
 
-    _this37 = _super49.call(this, textValue, children, _enums.ExpressionEntity.ReturnStatement, _enums.ExpressionCategory.MultipartValue, dataType);
+    _this39 = _super49.call(this, textValue, children, _enums.ExpressionEntity.ReturnStatement, _enums.ExpressionCategory.MultipartValue, dataType);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this37), _checkAssignmentInReturn);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this39), _checkAssignmentInReturn);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this37), _checkReturnNone);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this39), _checkReturnNone);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this37), _checkForUnexpectedColon13);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this39), _checkForUnexpectedColon13);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this37), _getSummaryOfContentInParentheses);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this39), _getSummaryOfContentInParentheses);
 
-    _classPrivateMethodInitSpec(_assertThisInitialized(_this37), _checkReturnGroup);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this39), _checkReturnGroup);
 
     if (children.length === 2) {
-      children[1].addObserver(_assertThisInitialized(_this37));
+      children[1].addObserver(_assertThisInitialized(_this39));
+
+      _this39.addConnection(children[1]); // children[1].addConnection(this);
+
     }
 
-    _this37.addRules([_classPrivateMethodGet(_assertThisInitialized(_this37), _checkAssignmentInReturn, _checkAssignmentInReturn2), _classPrivateMethodGet(_assertThisInitialized(_this37), _checkReturnNone, _checkReturnNone2), _classPrivateMethodGet(_assertThisInitialized(_this37), _checkReturnGroup, _checkReturnGroup2), _classPrivateMethodGet(_assertThisInitialized(_this37), _checkForUnexpectedColon13, _checkForUnexpectedColon14)]);
+    _this39.addRules([_classPrivateMethodGet(_assertThisInitialized(_this39), _checkAssignmentInReturn, _checkAssignmentInReturn2), _classPrivateMethodGet(_assertThisInitialized(_this39), _checkReturnNone, _checkReturnNone2), _classPrivateMethodGet(_assertThisInitialized(_this39), _checkReturnGroup, _checkReturnGroup2), _classPrivateMethodGet(_assertThisInitialized(_this39), _checkForUnexpectedColon13, _checkForUnexpectedColon14)]);
 
-    return _this37;
+    return _this39;
   }
 
   _createClass(ReturnStatement, [{
@@ -9522,6 +10190,18 @@ var ReturnStatement = /*#__PURE__*/function (_MultiPartExpressionN24) {
      * @returns {Symptom[]}
      */
 
+  }, {
+    key: "getAllNestedExpressions",
+    value:
+    /**
+     * @inheritdoc
+     */
+    function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(ReturnStatement.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(this.getChildren().flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      }).slice(1)));
+      return nestedExpressions;
+    }
   }, {
     key: "toJSON",
     value: function toJSON() {
@@ -9637,38 +10317,50 @@ var ImportStatement = /*#__PURE__*/function (_MultiPartExpressionN25) {
    * @param {ExpressionNode[]} children The child ExpressionNodes
    */
   function ImportStatement(textValue, children) {
-    var _this38;
+    var _this40;
 
     _classCallCheck(this, ImportStatement);
 
-    _this38 = _super50.call(this, textValue, children, _enums.ExpressionEntity.ImportStatement, _enums.ExpressionCategory.KeywordStatement, _enums.DataType.NA);
+    _this40 = _super50.call(this, textValue, children, _enums.ExpressionEntity.ImportStatement, _enums.ExpressionCategory.KeywordStatement, _enums.DataType.NA);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this38), _sourceModule, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this40), _sourceModule, {
       writable: true,
       value: void 0
     });
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this38), _importedEntities, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this40), _importedEntities, {
       writable: true,
       value: []
     });
 
     if (children.length > 1) {
-      _classPrivateFieldSet(_assertThisInitialized(_this38), _sourceModule, children[1]);
+      _classPrivateFieldSet(_assertThisInitialized(_this40), _sourceModule, children[1]);
 
       if (children[0].is(_enums.ExpressionEntity.FromKeyword)) {
         for (var i = 3; i < children.length; i++) {
           if (!children[i].is(_enums.ExpressionEntity.Comma)) {
-            _classPrivateFieldGet(_assertThisInitialized(_this38), _importedEntities).push(children[i]);
+            _classPrivateFieldGet(_assertThisInitialized(_this40), _importedEntities).push(children[i]);
           }
         }
       }
     }
 
-    return _this38;
+    return _this40;
   }
+  /**
+   * @inheritdoc
+   */
+
 
   _createClass(ImportStatement, [{
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(ImportStatement.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(_classPrivateFieldGet(this, _importedEntities).flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })));
+      return nestedExpressions;
+    }
+  }, {
     key: "toJSON",
     value: function toJSON() {
       var ret = _get(_getPrototypeOf(ImportStatement.prototype), "toJSON", this).call(this);
@@ -9698,26 +10390,38 @@ var KeywordStatement = /*#__PURE__*/function (_MultiPartExpressionN26) {
    * @param {ExpressionNode[]} children The child ExpressionNodes
    */
   function KeywordStatement(textValue, children) {
-    var _this39;
+    var _this41;
 
     _classCallCheck(this, KeywordStatement);
 
     if (children.length === 0) throw new Error("Not enough elements to make a statement");
     var entity = _enums.ExpressionEntity.Unknown;
     if (children[0].is(_enums.ExpressionEntity.AssertKeyword)) entity = _enums.ExpressionEntity.AssertStatement;else if (children[0].is(_enums.ExpressionEntity.GlobalKeyword)) entity = _enums.ExpressionEntity.GlobalStatement;else if (children[0].is(_enums.ExpressionEntity.RaiseKeyword)) entity = _enums.ExpressionEntity.ThrowStatement;else throw new Error("Unknown keyword");
-    _this39 = _super51.call(this, textValue, children, entity, _enums.ExpressionCategory.KeywordStatement, _enums.DataType.NA);
+    _this41 = _super51.call(this, textValue, children, entity, _enums.ExpressionCategory.KeywordStatement, _enums.DataType.NA);
 
-    _classPrivateFieldInitSpec(_assertThisInitialized(_this39), _values3, {
+    _classPrivateFieldInitSpec(_assertThisInitialized(_this41), _values3, {
       writable: true,
       value: []
     });
 
-    _classPrivateFieldSet(_assertThisInitialized(_this39), _values3, children.slice(1));
+    _classPrivateFieldSet(_assertThisInitialized(_this41), _values3, children.slice(1));
 
-    return _this39;
+    return _this41;
   }
+  /**
+   * @inheritdoc
+   */
+
 
   _createClass(KeywordStatement, [{
+    key: "getAllNestedExpressions",
+    value: function getAllNestedExpressions() {
+      var nestedExpressions = [].concat(_toConsumableArray(_get(_getPrototypeOf(KeywordStatement.prototype), "getAllNestedExpressions", this).call(this)), _toConsumableArray(_classPrivateFieldGet(this, _values3).flatMap(function (v) {
+        return v.getAllNestedExpressions();
+      })));
+      return nestedExpressions;
+    }
+  }, {
     key: "toJSON",
     value: function toJSON() {
       var ret = _get(_getPrototypeOf(KeywordStatement.prototype), "toJSON", this).call(this);

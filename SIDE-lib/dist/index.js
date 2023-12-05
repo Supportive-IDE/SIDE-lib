@@ -17,7 +17,8 @@ var sortSymptoms = function sortSymptoms(a, b) {
 
 var parse = function parse(pyString) {
   var showTree = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-  var showErrorDetail = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+  var showGraph = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+  var showErrorDetail = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
 
   try {
     var doc = new _docinfo.DocInfo(pyString);
@@ -87,6 +88,11 @@ var parse = function parse(pyString) {
     if (showTree) {
       var tree = blocks.toTree();
       retObj.tree = tree;
+    }
+
+    if (showGraph) {
+      var graph = doc.getGraph().toJSON();
+      retObj.graph = graph;
     }
 
     return retObj;

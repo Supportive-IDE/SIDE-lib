@@ -313,6 +313,10 @@ var Statement = /*#__PURE__*/function (_SymptomMonitor) {
   }, {
     key: "getExpressions",
     value: function getExpressions() {
+      if (_classPrivateFieldGet(this, _expressionTree) === undefined) {
+        return _classPrivateFieldGet(this, _expressions);
+      }
+
       return _classPrivateFieldGet(this, _expressionTree);
     }
     /**
@@ -942,6 +946,35 @@ var BlockStatement = /*#__PURE__*/function (_Statement) {
       _rawtextprocessing.StatementProcessor.connectUserDefinedFunctions(statement, scope);
 
       _rawtextprocessing.StatementProcessor.connectUserDefinedMethods(statement, scope);
+
+      var nonEmptyStatements = _classPrivateFieldGet(this, _statements).filter(function (s) {
+        return !s.isBlank();
+      });
+
+      if (nonEmptyStatements.length > 1 && !statement.isBlank()) {
+        var lastStatement = nonEmptyStatements[nonEmptyStatements.length - 2];
+        var lastStatementExpressions;
+
+        if (lastStatement.isBlockStatement()) {
+          lastStatementExpressions = lastStatement.getDefinitionStatement().getExpressions();
+
+          if (!(lastStatement.getFirstExpression().isOneOf([_enums.ExpressionEntity.IfDefinitionStatement, _enums.ExpressionEntity.ElifDefinition]) && statement.getFirstExpression().isOneOf([_enums.ExpressionEntity.ElseDefinitionStatement, _enums.ExpressionEntity.ElifDefinitionStatement]))) {
+            var blockExpressions = lastStatement.getExpressions(); // connect last expression to statement first
+
+            blockExpressions[blockExpressions.length - 1].addConnection(statement.getFirstExpression()); // if the last statement in lastStatement is a block, connect its definition to statement first
+
+            var blockStatements = lastStatement.getStatements();
+
+            if (blockStatements.length > 1 && blockStatements[blockStatements.length - 1].isBlockStatement()) {
+              blockStatements[blockStatements.length - 1].getDefinitionStatement().getFirstExpression().addConnection(statement.getFirstExpression());
+            }
+          }
+        } else {
+          lastStatementExpressions = lastStatement.getExpressions();
+        }
+
+        lastStatementExpressions[lastStatementExpressions.length - 1].addConnection(statement.getFirstExpression());
+      }
     }
     /**
      * Gets the BlockStatement that a new statement should be added to, if any
