@@ -19,6 +19,8 @@ var _identifiers = require("./identifiers.js");
 
 var _indent2 = require("./indent.js");
 
+var _statement = require("./statement.js");
+
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -1240,6 +1242,74 @@ var StatementProcessor = /*#__PURE__*/function () {
       }
     }
     /**
+     * Connects statements for graph generation
+     * @param {Statement[]} statements 
+     */
+
+  }, {
+    key: "makeGraphConnections",
+    value: function makeGraphConnections(statements) {
+      var nonEmptyStatements = statements.filter(function (s) {
+        return !s.isBlank();
+      });
+
+      if (nonEmptyStatements.length <= 1) {
+        return;
+      }
+
+      var statement = nonEmptyStatements[nonEmptyStatements.length - 1];
+
+      if (!statement.isBlank()) {
+        var lastStatement = nonEmptyStatements[nonEmptyStatements.length - 2];
+        var lastStatementExpressions;
+
+        if (lastStatement.isBlockStatement()) {
+          lastStatementExpressions = lastStatement.getDefinitionStatement().getExpressions();
+          var firstExpOfLastStatement = lastStatement.getFirstExpression();
+          var firstExpOfNewStatement = statement.getFirstExpression();
+
+          if (!(firstExpOfLastStatement.isOneOf([_enums.ExpressionEntity.IfDefinitionStatement, _enums.ExpressionEntity.ElifDefinitionStatement]) && firstExpOfNewStatement.isOneOf([_enums.ExpressionEntity.ElseDefinitionStatement, _enums.ExpressionEntity.ElifDefinitionStatement]))) {
+            var blockExpressions = lastStatement.getExpressions(); // connect last expression to statement first
+
+            blockExpressions[blockExpressions.length - 1].addConnection(statement.getFirstExpression()); // if the last statement in lastStatement is a block, connect its definition to statement first
+
+            var blockStatements = lastStatement.getStatements();
+
+            if (blockStatements.length > 1 && blockStatements[blockStatements.length - 1].isBlockStatement()) {
+              blockStatements[blockStatements.length - 1].getDefinitionStatement().getFirstExpression().addConnection(statement.getFirstExpression());
+            }
+          }
+
+          if (!firstExpOfNewStatement.isOneOf([_enums.ExpressionEntity.ElifDefinitionStatement, _enums.ExpressionEntity.ElseDefinitionStatement, _enums.ExpressionEntity.ReturnStatement]) && firstExpOfLastStatement.isOneOf([_enums.ExpressionEntity.IfDefinitionStatement, _enums.ExpressionEntity.ElifDefinitionStatement, _enums.ExpressionEntity.ElseDefinitionStatement])) {
+            var allConditionalStatements = [];
+
+            for (var i = nonEmptyStatements.length - 2; i >= 0; i--) {
+              var firstOfNonEmpty = nonEmptyStatements[i].getFirstExpression();
+
+              if (firstOfNonEmpty.isOneOf([_enums.ExpressionEntity.IfDefinitionStatement, _enums.ExpressionEntity.ElifDefinitionStatement, _enums.ExpressionEntity.ElseDefinitionStatement])) {
+                allConditionalStatements.push(nonEmptyStatements[i]);
+
+                if (firstOfNonEmpty.is(_enums.ExpressionEntity.IfDefinitionStatement)) {
+                  break;
+                }
+              }
+            }
+
+            for (var _i2 = 0, _allConditionalStatem = allConditionalStatements; _i2 < _allConditionalStatem.length; _i2++) {
+              var condStatement = _allConditionalStatem[_i2];
+              var allNestedStatements = condStatement.getStatements();
+              var firstExpOfLast = allNestedStatements[allNestedStatements.length - 1].getFirstExpression();
+              firstExpOfLast.addConnection(statement.getFirstExpression());
+            }
+          }
+        } else {
+          lastStatementExpressions = lastStatement.getExpressions();
+        }
+
+        lastStatementExpressions[0].addConnection(statement.getFirstExpression());
+      }
+    }
+    /**
      * Tracks usage of a custom attribute 
      * @param {PropertyExpression} attributeNode The instance of a class attribute
      * @param {DataType} classType The custom datatype the attribute appears to belong to
@@ -1593,8 +1663,8 @@ function _trackImports(statement, scopeBlock) {
     _iterator9.f();
   }
 
-  for (var _i2 = 0, _modules = modules; _i2 < _modules.length; _i2++) {
-    var m = _modules[_i2];
+  for (var _i3 = 0, _modules = modules; _i3 < _modules.length; _i3++) {
+    var m = _modules[_i3];
     moduleMap.set(m.getAlias(), m);
   }
 }

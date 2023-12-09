@@ -11,7 +11,7 @@
         <pre id="code">
             <script></script>
         </pre>
-        <p><code>parse()</code> returns a JSON object containing information about detected symptoms and misconceptions, the "blocks" in the Python code, and any variables or functions defined in the Python code. E.g.:</p>
+        <p><code>parse()</code> returns a JSON object containing information about detected symptoms and misconceptions, the "blocks" in the Python code, and any variables or functions defined in the Python code. The second (showTree) and third (showGraph) arguments are optional and will include the AST and ASG respectively if set to true. E.g.:</p>
         <pre id="output"></pre>
         <h2><code>symptomInfo()</code></h2>
         <p>Returns a JSON object detailing the symptoms currently detected by the library:</p>
@@ -23,7 +23,7 @@
     <script>
         const code = 'def get_direction(start, end):\n    if start < end:\n        print("Southbound")\n    elif start > end:\n        print("Northbound")\n    else:\n        start == end\n        print("Invalid")\n\ndirection = get_direction(8, 7)';
         document.getElementById("code").innerHTML = code;
-        const output = parse(code);
+        const output = parse(code, true, true);
         document.getElementById("output").innerHTML = JSON.stringify(output, null, 4);
         document.getElementById("symptoms").innerHTML = JSON.stringify(symptomInfo(), null, 4);
         document.getElementById("misconceptions").innerHTML = JSON.stringify(misconceptionInfo(), null, 4);

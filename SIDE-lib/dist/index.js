@@ -91,8 +91,8 @@ var parse = function parse(pyString) {
     }
 
     if (showGraph) {
-      var graph = doc.getGraph().toJSON();
-      retObj.graph = graph;
+      var graph = doc.getGraph();
+      retObj.graph = graph.toJSON();
     }
 
     return retObj;

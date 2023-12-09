@@ -947,34 +947,52 @@ var BlockStatement = /*#__PURE__*/function (_Statement) {
 
       _rawtextprocessing.StatementProcessor.connectUserDefinedMethods(statement, scope);
 
-      var nonEmptyStatements = _classPrivateFieldGet(this, _statements).filter(function (s) {
-        return !s.isBlank();
-      });
-
-      if (nonEmptyStatements.length > 1 && !statement.isBlank()) {
-        var lastStatement = nonEmptyStatements[nonEmptyStatements.length - 2];
-        var lastStatementExpressions;
-
-        if (lastStatement.isBlockStatement()) {
-          lastStatementExpressions = lastStatement.getDefinitionStatement().getExpressions();
-
-          if (!(lastStatement.getFirstExpression().isOneOf([_enums.ExpressionEntity.IfDefinitionStatement, _enums.ExpressionEntity.ElifDefinition]) && statement.getFirstExpression().isOneOf([_enums.ExpressionEntity.ElseDefinitionStatement, _enums.ExpressionEntity.ElifDefinitionStatement]))) {
-            var blockExpressions = lastStatement.getExpressions(); // connect last expression to statement first
-
-            blockExpressions[blockExpressions.length - 1].addConnection(statement.getFirstExpression()); // if the last statement in lastStatement is a block, connect its definition to statement first
-
-            var blockStatements = lastStatement.getStatements();
-
-            if (blockStatements.length > 1 && blockStatements[blockStatements.length - 1].isBlockStatement()) {
-              blockStatements[blockStatements.length - 1].getDefinitionStatement().getFirstExpression().addConnection(statement.getFirstExpression());
-            }
+      _rawtextprocessing.StatementProcessor.makeGraphConnections(_classPrivateFieldGet(this, _statements));
+      /*let nonEmptyStatements = this.#statements.filter(s => !s.isBlank());
+       if (nonEmptyStatements.length > 1 && !statement.isBlank()) {
+          
+          let lastStatement = nonEmptyStatements[nonEmptyStatements.length - 2];
+          let lastStatementExpressions;
+          if (lastStatement.isBlockStatement()) {
+              lastStatementExpressions = lastStatement.getDefinitionStatement().getExpressions();
+              let firstExpOfLastStatement = lastStatement.getFirstExpression();
+              let firstExpOfNewStatement = statement.getFirstExpression();
+              if (!(firstExpOfLastStatement.isOneOf([ExpressionEntity.IfDefinitionStatement, ExpressionEntity.ElifDefinitionStatement]) && firstExpOfNewStatement.isOneOf([ExpressionEntity.ElseDefinitionStatement, ExpressionEntity.ElifDefinitionStatement]))) {
+                  const blockExpressions = lastStatement.getExpressions();
+                  // connect last expression to statement first
+                  blockExpressions[blockExpressions.length - 1].addConnection(statement.getFirstExpression());
+                  // if the last statement in lastStatement is a block, connect its definition to statement first
+                  const blockStatements = lastStatement.getStatements();
+                  if (blockStatements.length > 1 && blockStatements[blockStatements.length - 1].isBlockStatement()) {
+                      blockStatements[blockStatements.length - 1].getDefinitionStatement().getFirstExpression().addConnection(statement.getFirstExpression());
+                  }
+              }
+              if (!firstExpOfNewStatement.isOneOf([ExpressionEntity.ElifDefinitionStatement, ExpressionEntity.ElseDefinitionStatement])
+                  && firstExpOfLastStatement.isOneOf([ExpressionEntity.IfDefinitionStatement, ExpressionEntity.ElifDefinitionStatement, ExpressionEntity.ElseDefinitionStatement])) {
+                  const allConditionalStatements = [];
+                  for (let i = nonEmptyStatements.length - 2; i >= 0; i--) {
+                      const firstOfNonEmpty = nonEmptyStatements[i].getFirstExpression();
+                      if (firstOfNonEmpty.isOneOf([ExpressionEntity.IfDefinitionStatement, ExpressionEntity.ElifDefinitionStatement, ExpressionEntity.ElseDefinitionStatement])) {
+                          allConditionalStatements.push(nonEmptyStatements[i]);
+                          if (firstOfNonEmpty.is(ExpressionEntity.IfDefinitionStatement)) {
+                              break;
+                          }
+                      }
+                  }
+                  for (const condStatement of allConditionalStatements) {
+                      const allNestedStatements = condStatement.getStatements();
+                      const firstExpOfLast = allNestedStatements[allNestedStatements.length - 1].getFirstExpression();
+                      firstExpOfLast.addConnection(statement.getFirstExpression());
+                  }
+                  // MOVE STATEMENT CONNECTION TO STATEMENT PROCESSING and call from statement as well...check if identical first?
+              }
           }
-        } else {
-          lastStatementExpressions = lastStatement.getExpressions();
-        }
+          else {
+              lastStatementExpressions = lastStatement.getExpressions();
+          }
+          lastStatementExpressions[0].addConnection(statement.getFirstExpression());
+      }*/
 
-        lastStatementExpressions[lastStatementExpressions.length - 1].addConnection(statement.getFirstExpression());
-      }
     }
     /**
      * Gets the BlockStatement that a new statement should be added to, if any

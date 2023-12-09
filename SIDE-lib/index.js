@@ -11387,34 +11387,54 @@ var StatementBlock = /*#__PURE__*/function (_SymptomMonitor) {
         _iterator2.f();
       }
 
-      var nonEmptyStatements = _classPrivateFieldGet(this, _statements).filter(function (s) {
-        return !s.isBlank();
-      });
-
+      _rawtextprocessing.StatementProcessor.makeGraphConnections(_classPrivateFieldGet(this, _statements));
+      /*let nonEmptyStatements = this.#statements.filter(s => !s.isBlank());
+      
+      
       if (nonEmptyStatements.length > 1 && !statement.isBlank()) {
-        var lastStatement = nonEmptyStatements[nonEmptyStatements.length - 2];
-        var lastStatementExpressions;
-
-        if (lastStatement.isBlockStatement()) {
-          lastStatementExpressions = lastStatement.getDefinitionStatement().getExpressions();
-
-          if (!(lastStatement.getFirstExpression().isOneOf([_enums.ExpressionEntity.IfDefinitionStatement, _enums.ExpressionEntity.ElifDefinition]) && statement.getFirstExpression().isOneOf([_enums.ExpressionEntity.ElseDefinitionStatement, _enums.ExpressionEntity.ElifDefinition]))) {
-            var blockExpressions = lastStatement.getExpressions(); // connect last expression to statement first
-
-            blockExpressions[blockExpressions.length - 1].addConnection(statement.getFirstExpression()); // if the last statement in lastStatement is a block, connect its definition to statement first
-
-            var blockStatements = lastStatement.getStatements();
-
-            if (blockStatements.length > 1 && blockStatements[blockStatements.length - 1].isBlockStatement()) {
-              blockStatements[blockStatements.length - 1].getDefinitionStatement().getFirstExpression().addConnection(statement.getFirstExpression());
-            }
+          let lastStatement = nonEmptyStatements[nonEmptyStatements.length - 2];
+          let lastStatementExpressions;
+          if (lastStatement.isBlockStatement()) {
+              lastStatementExpressions = lastStatement.getDefinitionStatement().getExpressions();
+              let firstExpOfLastStatement = lastStatement.getFirstExpression();
+              let firstExpOfNewStatement = statement.getFirstExpression();
+              if (!(firstExpOfLastStatement.isOneOf([ExpressionEntity.IfDefinitionStatement, ExpressionEntity.ElifDefinitionStatement]) && firstExpOfNewStatement.isOneOf([ExpressionEntity.ElseDefinitionStatement, ExpressionEntity.ElifDefinitionStatement]))) {
+                  const blockExpressions = lastStatement.getExpressions();
+                  // connect last expression to statement first
+                  blockExpressions[blockExpressions.length - 1].addConnection(statement.getFirstExpression());
+                  // if the last statement in lastStatement is a block, connect its definition to statement first
+                  const blockStatements = lastStatement.getStatements();
+                  if (blockStatements.length > 1 && blockStatements[blockStatements.length - 1].isBlockStatement()) {
+                      blockStatements[blockStatements.length - 1].getDefinitionStatement().getFirstExpression().addConnection(statement.getFirstExpression());
+                  }
+              }
+              
+              if (!firstExpOfNewStatement.isOneOf([ExpressionEntity.ElifDefinitionStatement, ExpressionEntity.ElseDefinitionStatement])
+                  && firstExpOfLastStatement.isOneOf([ExpressionEntity.IfDefinitionStatement, ExpressionEntity.ElifDefinitionStatement, ExpressionEntity.ElseDefinitionStatement])) {
+                  const allConditionalStatements = [];
+                  for (let i = nonEmptyStatements.length - 2; i >= 0; i--) {
+                      const firstOfNonEmpty = nonEmptyStatements[i].getFirstExpression();
+                      if (firstOfNonEmpty.isOneOf([ExpressionEntity.IfDefinitionStatement, ExpressionEntity.ElifDefinitionStatement, ExpressionEntity.ElseDefinitionStatement])) {
+                          allConditionalStatements.push(nonEmptyStatements[i]);
+                          if (firstOfNonEmpty.is(ExpressionEntity.IfDefinitionStatement)) {
+                              break;
+                          }
+                      }
+                  }
+                  for (const condStatement of allConditionalStatements) {
+                      const allNestedStatements = condStatement.getStatements();
+                      const firstExpOfLast = allNestedStatements[allNestedStatements.length - 1].getFirstExpression();
+                      firstExpOfLast.addConnection(statement.getFirstExpression());
+                  }
+                  // MOVE STATEMENT CONNECTION TO STATEMENT PROCESSING and call from statement as well...check if identical first?
+              }
           }
-        } else {
-          lastStatementExpressions = lastStatement.getExpressions();
-        }
+          else {
+              lastStatementExpressions = lastStatement.getExpressions();
+          }
+          lastStatementExpressions[0].addConnection(statement.getFirstExpression());
+      }*/
 
-        lastStatementExpressions[lastStatementExpressions.length - 1].addConnection(statement.getFirstExpression());
-      }
     }
     /**
      * Gets the last statement in the block
@@ -18087,6 +18107,8 @@ var _identifiers = require("./identifiers.js");
 
 var _indent2 = require("./indent.js");
 
+var _statement = require("./statement.js");
+
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -19308,6 +19330,74 @@ var StatementProcessor = /*#__PURE__*/function () {
       }
     }
     /**
+     * Connects statements for graph generation
+     * @param {Statement[]} statements 
+     */
+
+  }, {
+    key: "makeGraphConnections",
+    value: function makeGraphConnections(statements) {
+      var nonEmptyStatements = statements.filter(function (s) {
+        return !s.isBlank();
+      });
+
+      if (nonEmptyStatements.length <= 1) {
+        return;
+      }
+
+      var statement = nonEmptyStatements[nonEmptyStatements.length - 1];
+
+      if (!statement.isBlank()) {
+        var lastStatement = nonEmptyStatements[nonEmptyStatements.length - 2];
+        var lastStatementExpressions;
+
+        if (lastStatement.isBlockStatement()) {
+          lastStatementExpressions = lastStatement.getDefinitionStatement().getExpressions();
+          var firstExpOfLastStatement = lastStatement.getFirstExpression();
+          var firstExpOfNewStatement = statement.getFirstExpression();
+
+          if (!(firstExpOfLastStatement.isOneOf([_enums.ExpressionEntity.IfDefinitionStatement, _enums.ExpressionEntity.ElifDefinitionStatement]) && firstExpOfNewStatement.isOneOf([_enums.ExpressionEntity.ElseDefinitionStatement, _enums.ExpressionEntity.ElifDefinitionStatement]))) {
+            var blockExpressions = lastStatement.getExpressions(); // connect last expression to statement first
+
+            blockExpressions[blockExpressions.length - 1].addConnection(statement.getFirstExpression()); // if the last statement in lastStatement is a block, connect its definition to statement first
+
+            var blockStatements = lastStatement.getStatements();
+
+            if (blockStatements.length > 1 && blockStatements[blockStatements.length - 1].isBlockStatement()) {
+              blockStatements[blockStatements.length - 1].getDefinitionStatement().getFirstExpression().addConnection(statement.getFirstExpression());
+            }
+          }
+
+          if (!firstExpOfNewStatement.isOneOf([_enums.ExpressionEntity.ElifDefinitionStatement, _enums.ExpressionEntity.ElseDefinitionStatement, _enums.ExpressionEntity.ReturnStatement]) && firstExpOfLastStatement.isOneOf([_enums.ExpressionEntity.IfDefinitionStatement, _enums.ExpressionEntity.ElifDefinitionStatement, _enums.ExpressionEntity.ElseDefinitionStatement])) {
+            var allConditionalStatements = [];
+
+            for (var i = nonEmptyStatements.length - 2; i >= 0; i--) {
+              var firstOfNonEmpty = nonEmptyStatements[i].getFirstExpression();
+
+              if (firstOfNonEmpty.isOneOf([_enums.ExpressionEntity.IfDefinitionStatement, _enums.ExpressionEntity.ElifDefinitionStatement, _enums.ExpressionEntity.ElseDefinitionStatement])) {
+                allConditionalStatements.push(nonEmptyStatements[i]);
+
+                if (firstOfNonEmpty.is(_enums.ExpressionEntity.IfDefinitionStatement)) {
+                  break;
+                }
+              }
+            }
+
+            for (var _i2 = 0, _allConditionalStatem = allConditionalStatements; _i2 < _allConditionalStatem.length; _i2++) {
+              var condStatement = _allConditionalStatem[_i2];
+              var allNestedStatements = condStatement.getStatements();
+              var firstExpOfLast = allNestedStatements[allNestedStatements.length - 1].getFirstExpression();
+              firstExpOfLast.addConnection(statement.getFirstExpression());
+            }
+          }
+        } else {
+          lastStatementExpressions = lastStatement.getExpressions();
+        }
+
+        lastStatementExpressions[0].addConnection(statement.getFirstExpression());
+      }
+    }
+    /**
      * Tracks usage of a custom attribute 
      * @param {PropertyExpression} attributeNode The instance of a class attribute
      * @param {DataType} classType The custom datatype the attribute appears to belong to
@@ -19661,8 +19751,8 @@ function _trackImports(statement, scopeBlock) {
     _iterator9.f();
   }
 
-  for (var _i2 = 0, _modules = modules; _i2 < _modules.length; _i2++) {
-    var m = _modules[_i2];
+  for (var _i3 = 0, _modules = modules; _i3 < _modules.length; _i3++) {
+    var m = _modules[_i3];
     moduleMap.set(m.getAlias(), m);
   }
 }
@@ -20217,7 +20307,7 @@ function _processKeywordStatements(expressions) {
 
   return expressions;
 }
-},{"../problem-finder/symptom.js":13,"../utils/utils.js":15,"./ast.js":2,"./block.js":3,"./enums.js":5,"./identifiers.js":6,"./indent.js":7}],10:[function(require,module,exports){
+},{"../problem-finder/symptom.js":13,"../utils/utils.js":15,"./ast.js":2,"./block.js":3,"./enums.js":5,"./identifiers.js":6,"./indent.js":7,"./statement.js":10}],10:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -21167,34 +21257,52 @@ var BlockStatement = /*#__PURE__*/function (_Statement) {
 
       _rawtextprocessing.StatementProcessor.connectUserDefinedMethods(statement, scope);
 
-      var nonEmptyStatements = _classPrivateFieldGet(this, _statements).filter(function (s) {
-        return !s.isBlank();
-      });
-
-      if (nonEmptyStatements.length > 1 && !statement.isBlank()) {
-        var lastStatement = nonEmptyStatements[nonEmptyStatements.length - 2];
-        var lastStatementExpressions;
-
-        if (lastStatement.isBlockStatement()) {
-          lastStatementExpressions = lastStatement.getDefinitionStatement().getExpressions();
-
-          if (!(lastStatement.getFirstExpression().isOneOf([_enums.ExpressionEntity.IfDefinitionStatement, _enums.ExpressionEntity.ElifDefinition]) && statement.getFirstExpression().isOneOf([_enums.ExpressionEntity.ElseDefinitionStatement, _enums.ExpressionEntity.ElifDefinitionStatement]))) {
-            var blockExpressions = lastStatement.getExpressions(); // connect last expression to statement first
-
-            blockExpressions[blockExpressions.length - 1].addConnection(statement.getFirstExpression()); // if the last statement in lastStatement is a block, connect its definition to statement first
-
-            var blockStatements = lastStatement.getStatements();
-
-            if (blockStatements.length > 1 && blockStatements[blockStatements.length - 1].isBlockStatement()) {
-              blockStatements[blockStatements.length - 1].getDefinitionStatement().getFirstExpression().addConnection(statement.getFirstExpression());
-            }
+      _rawtextprocessing.StatementProcessor.makeGraphConnections(_classPrivateFieldGet(this, _statements));
+      /*let nonEmptyStatements = this.#statements.filter(s => !s.isBlank());
+       if (nonEmptyStatements.length > 1 && !statement.isBlank()) {
+          
+          let lastStatement = nonEmptyStatements[nonEmptyStatements.length - 2];
+          let lastStatementExpressions;
+          if (lastStatement.isBlockStatement()) {
+              lastStatementExpressions = lastStatement.getDefinitionStatement().getExpressions();
+              let firstExpOfLastStatement = lastStatement.getFirstExpression();
+              let firstExpOfNewStatement = statement.getFirstExpression();
+              if (!(firstExpOfLastStatement.isOneOf([ExpressionEntity.IfDefinitionStatement, ExpressionEntity.ElifDefinitionStatement]) && firstExpOfNewStatement.isOneOf([ExpressionEntity.ElseDefinitionStatement, ExpressionEntity.ElifDefinitionStatement]))) {
+                  const blockExpressions = lastStatement.getExpressions();
+                  // connect last expression to statement first
+                  blockExpressions[blockExpressions.length - 1].addConnection(statement.getFirstExpression());
+                  // if the last statement in lastStatement is a block, connect its definition to statement first
+                  const blockStatements = lastStatement.getStatements();
+                  if (blockStatements.length > 1 && blockStatements[blockStatements.length - 1].isBlockStatement()) {
+                      blockStatements[blockStatements.length - 1].getDefinitionStatement().getFirstExpression().addConnection(statement.getFirstExpression());
+                  }
+              }
+              if (!firstExpOfNewStatement.isOneOf([ExpressionEntity.ElifDefinitionStatement, ExpressionEntity.ElseDefinitionStatement])
+                  && firstExpOfLastStatement.isOneOf([ExpressionEntity.IfDefinitionStatement, ExpressionEntity.ElifDefinitionStatement, ExpressionEntity.ElseDefinitionStatement])) {
+                  const allConditionalStatements = [];
+                  for (let i = nonEmptyStatements.length - 2; i >= 0; i--) {
+                      const firstOfNonEmpty = nonEmptyStatements[i].getFirstExpression();
+                      if (firstOfNonEmpty.isOneOf([ExpressionEntity.IfDefinitionStatement, ExpressionEntity.ElifDefinitionStatement, ExpressionEntity.ElseDefinitionStatement])) {
+                          allConditionalStatements.push(nonEmptyStatements[i]);
+                          if (firstOfNonEmpty.is(ExpressionEntity.IfDefinitionStatement)) {
+                              break;
+                          }
+                      }
+                  }
+                  for (const condStatement of allConditionalStatements) {
+                      const allNestedStatements = condStatement.getStatements();
+                      const firstExpOfLast = allNestedStatements[allNestedStatements.length - 1].getFirstExpression();
+                      firstExpOfLast.addConnection(statement.getFirstExpression());
+                  }
+                  // MOVE STATEMENT CONNECTION TO STATEMENT PROCESSING and call from statement as well...check if identical first?
+              }
           }
-        } else {
-          lastStatementExpressions = lastStatement.getExpressions();
-        }
+          else {
+              lastStatementExpressions = lastStatement.getExpressions();
+          }
+          lastStatementExpressions[0].addConnection(statement.getFirstExpression());
+      }*/
 
-        lastStatementExpressions[lastStatementExpressions.length - 1].addConnection(statement.getFirstExpression());
-      }
     }
     /**
      * Gets the BlockStatement that a new statement should be added to, if any
@@ -21537,8 +21645,8 @@ var parse = function parse(pyString) {
     }
 
     if (showGraph) {
-      var graph = doc.getGraph().toJSON();
-      retObj.graph = graph;
+      var graph = doc.getGraph();
+      retObj.graph = graph.toJSON();
     }
 
     return retObj;
