@@ -2034,11 +2034,11 @@ function _checkBranchExit2(branch) {
       for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
         var statement = _step24.value;
         if (!statement.isBlockStatement() && !statement.isBlank() && (0, _utils.containsExit)(statement.getFirstExpression())) {
-          symptoms.push(_symptom2.SymptomFinder.createStatementSymptom(_enums.SymptomType.LoopReturn, [statement.getFirstExpression()], 0, 0, {}, branch.getId(), {
+          symptoms.push(_symptom2.SymptomFinder.createStatementSymptom(_enums.SymptomType.LoopReturn, [statement.getFirstExpression()], 0, 0, {
             loopType: branch.getBlockEntity().name,
             exitLevel: _constants.TOP_LEVEL,
             exitType: statement.getFirstExpression().isOneOf([_enums.ExpressionEntity.ReturnKeyword, _enums.ExpressionEntity.ReturnStatement]) ? "return" : statement.getFirstExpression().getTextValue()
-          }));
+          }, branch.getId()));
         }
       }
     } catch (err) {
@@ -2069,11 +2069,11 @@ function _checkBranchExit2(branch) {
       }).map(function (e) {
         return e.getTextValue();
       });
-      symptoms.push(_symptom2.SymptomFinder.createStatementSymptom(_enums.SymptomType.LoopReturn, allExpressions, 0, allExpressions.length, {}, branch.getParentBlock().getId(), {
+      symptoms.push(_symptom2.SymptomFinder.createStatementSymptom(_enums.SymptomType.LoopReturn, allExpressions, 0, allExpressions.length, {
         loopType: branch.getBlockEntity().name,
         exitLevel: _constants.ALL_BRANCHES_EXHAUSTIVE,
         exitTypes: exits
-      }));
+      }, branch.getParentBlock().getId()));
     }
   }
   return symptoms;

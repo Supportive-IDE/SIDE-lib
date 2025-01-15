@@ -8472,6 +8472,9 @@ function _checkNaturalLanguage2(exp) {
     if (compType === _enums.DataType.NA && children[2].is(_enums.ExpressionEntity.IfDefinition)) {
       symptoms.push(_symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.NaturalLanguageBoolean, children, 1, 2, {
         form: _constants.OR_IF,
+        leftSideType: children[0].getDataType(),
+        leftSideText: children[0].getTextValue(),
+        leftSideEntity: children[0].getEntity(),
         operator: children[1].getTextValue(),
         valueText: children[2].getTextValue(),
         valueEntity: children[2].getEntity(),
@@ -8481,6 +8484,9 @@ function _checkNaturalLanguage2(exp) {
       if (children[0].isOneOf([_enums.ExpressionEntity.BooleanExpression, _enums.ExpressionEntity.ComparisonExpression])) {
         symptoms.push(_symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.NaturalLanguageBoolean, children, 1, 2, {
           form: _constants.OR_NON_BOOL,
+          leftSideType: children[0].getDataType(),
+          leftSideText: children[0].getTextValue(),
+          leftSideEntity: children[0].getEntity(),
           operator: children[1].getTextValue(),
           valueType: children[2].getDataType(),
           valueText: children[2].getTextValue(),
@@ -11494,11 +11500,11 @@ function _checkBranchExit2(branch) {
       for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
         var statement = _step24.value;
         if (!statement.isBlockStatement() && !statement.isBlank() && (0, _utils.containsExit)(statement.getFirstExpression())) {
-          symptoms.push(_symptom2.SymptomFinder.createStatementSymptom(_enums.SymptomType.LoopReturn, [statement.getFirstExpression()], 0, 0, {}, branch.getId(), {
+          symptoms.push(_symptom2.SymptomFinder.createStatementSymptom(_enums.SymptomType.LoopReturn, [statement.getFirstExpression()], 0, 0, {
             loopType: branch.getBlockEntity().name,
             exitLevel: _constants.TOP_LEVEL,
             exitType: statement.getFirstExpression().isOneOf([_enums.ExpressionEntity.ReturnKeyword, _enums.ExpressionEntity.ReturnStatement]) ? "return" : statement.getFirstExpression().getTextValue()
-          }));
+          }, branch.getId()));
         }
       }
     } catch (err) {
@@ -11529,11 +11535,11 @@ function _checkBranchExit2(branch) {
       }).map(function (e) {
         return e.getTextValue();
       });
-      symptoms.push(_symptom2.SymptomFinder.createStatementSymptom(_enums.SymptomType.LoopReturn, allExpressions, 0, allExpressions.length, {}, branch.getParentBlock().getId(), {
+      symptoms.push(_symptom2.SymptomFinder.createStatementSymptom(_enums.SymptomType.LoopReturn, allExpressions, 0, allExpressions.length, {
         loopType: branch.getBlockEntity().name,
         exitLevel: _constants.ALL_BRANCHES_EXHAUSTIVE,
         exitTypes: exits
-      }));
+      }, branch.getParentBlock().getId()));
     }
   }
   return symptoms;
@@ -18920,16 +18926,28 @@ var deferredReturn = function deferredReturn(symptoms) {
   var deferredReturns = symptoms.filter(function (s) {
     return s.getID() === _enums.SymptomType.UnreachableExit.name && s.getAdditionalInfo().exitKeyword === _constants.RETURN_KEYWORD;
   });
+  var loopEarlyExits = symptoms.filter(function (s) {
+    return s.getID() === _enums.SymptomType.LoopReturn.name && s.getAdditionalInfo().loopType === "for" && s.getAdditionalInfo().exitType === "return";
+  });
   var occurrences = [];
   var _iterator6 = _createForOfIteratorHelper(deferredReturns),
     _step6;
   try {
     for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
       var symptom = _step6.value;
-      var sJSON = symptom.toJSON();
+      // const sJSON = symptom.toJSON();
       var reason = new Reason([symptom], "Code follows a return statement in the same branch.");
       occurrences.push(new MisconceptionOccurrence(symptom.getLineNumber(), symptom.getDocIndex(), reason));
     }
+    // TODO: Investigate this further... don't think these count as deferred return
+    // for (let symptom of loopEarlyExits) {
+    //     // const sJSON = symptom.toJSON();
+    //     const reason = new Reason(
+    //         [symptom],
+    //         `A loop in the function returns early, preventing further iteration.`
+    //     );
+    //     occurrences.push(new MisconceptionOccurrence(symptom.getLineNumber(), symptom.getDocIndex(), reason));
+    // }
   } catch (err) {
     _iterator6.e(err);
   } finally {
@@ -21138,6 +21156,8 @@ var SymptomFinder = /*#__PURE__*/function () {
           return new SymptomDefinitionFollowedByReservedWord(type.name, lineNum, blockId, docIndex, lineIndex, affectedText, additionalInfo);
         case _enums.SymptomType.FunctionPrints:
           return new SymptomFunctionPrints(type.name, lineNum, blockId, docIndex, lineIndex, affectedText, additionalInfo);
+        case _enums.SymptomType.LoopReturn:
+          return new SymptomLoopEarlyExit(type.name, lineNum, blockId, docIndex, lineIndex, affectedText, additionalInfo);
         case _enums.SymptomType.LoopVarModifiedInChildLoop:
           return new SymptomLoopVarModifiedInChildLoop(type.name, lineNum, blockId, docIndex, lineIndex, affectedText, additionalInfo);
         case _enums.SymptomType.LoopVarNotModified:

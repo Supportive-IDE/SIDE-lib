@@ -8115,6 +8115,9 @@ function _checkNaturalLanguage2(exp) {
     if (compType === _enums.DataType.NA && children[2].is(_enums.ExpressionEntity.IfDefinition)) {
       symptoms.push(_symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.NaturalLanguageBoolean, children, 1, 2, {
         form: _constants.OR_IF,
+        leftSideType: children[0].getDataType(),
+        leftSideText: children[0].getTextValue(),
+        leftSideEntity: children[0].getEntity(),
         operator: children[1].getTextValue(),
         valueText: children[2].getTextValue(),
         valueEntity: children[2].getEntity(),
@@ -8124,6 +8127,9 @@ function _checkNaturalLanguage2(exp) {
       if (children[0].isOneOf([_enums.ExpressionEntity.BooleanExpression, _enums.ExpressionEntity.ComparisonExpression])) {
         symptoms.push(_symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.NaturalLanguageBoolean, children, 1, 2, {
           form: _constants.OR_NON_BOOL,
+          leftSideType: children[0].getDataType(),
+          leftSideText: children[0].getTextValue(),
+          leftSideEntity: children[0].getEntity(),
           operator: children[1].getTextValue(),
           valueType: children[2].getDataType(),
           valueText: children[2].getTextValue(),

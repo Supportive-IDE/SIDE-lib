@@ -1069,6 +1069,8 @@ var SymptomFinder = /*#__PURE__*/function () {
           return new SymptomDefinitionFollowedByReservedWord(type.name, lineNum, blockId, docIndex, lineIndex, affectedText, additionalInfo);
         case _enums.SymptomType.FunctionPrints:
           return new SymptomFunctionPrints(type.name, lineNum, blockId, docIndex, lineIndex, affectedText, additionalInfo);
+        case _enums.SymptomType.LoopReturn:
+          return new SymptomLoopEarlyExit(type.name, lineNum, blockId, docIndex, lineIndex, affectedText, additionalInfo);
         case _enums.SymptomType.LoopVarModifiedInChildLoop:
           return new SymptomLoopVarModifiedInChildLoop(type.name, lineNum, blockId, docIndex, lineIndex, affectedText, additionalInfo);
         case _enums.SymptomType.LoopVarNotModified:

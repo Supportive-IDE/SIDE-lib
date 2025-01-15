@@ -217,16 +217,28 @@ var deferredReturn = function deferredReturn(symptoms) {
   var deferredReturns = symptoms.filter(function (s) {
     return s.getID() === _enums.SymptomType.UnreachableExit.name && s.getAdditionalInfo().exitKeyword === _constants.RETURN_KEYWORD;
   });
+  var loopEarlyExits = symptoms.filter(function (s) {
+    return s.getID() === _enums.SymptomType.LoopReturn.name && s.getAdditionalInfo().loopType === "for" && s.getAdditionalInfo().exitType === "return";
+  });
   var occurrences = [];
   var _iterator6 = _createForOfIteratorHelper(deferredReturns),
     _step6;
   try {
     for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
       var symptom = _step6.value;
-      var sJSON = symptom.toJSON();
+      // const sJSON = symptom.toJSON();
       var reason = new Reason([symptom], "Code follows a return statement in the same branch.");
       occurrences.push(new MisconceptionOccurrence(symptom.getLineNumber(), symptom.getDocIndex(), reason));
     }
+    // TODO: Investigate this further... don't think these count as deferred return
+    // for (let symptom of loopEarlyExits) {
+    //     // const sJSON = symptom.toJSON();
+    //     const reason = new Reason(
+    //         [symptom],
+    //         `A loop in the function returns early, preventing further iteration.`
+    //     );
+    //     occurrences.push(new MisconceptionOccurrence(symptom.getLineNumber(), symptom.getDocIndex(), reason));
+    // }
   } catch (err) {
     _iterator6.e(err);
   } finally {
