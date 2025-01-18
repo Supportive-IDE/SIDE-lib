@@ -492,14 +492,14 @@ var SymptomNaturalLanguageBoolean = /*#__PURE__*/function (_Symptom9) {
       if (additionalInfo.hasOwnProperty("operator")) {
         obj.operator = additionalInfo.operator;
       }
-      if (additionalInfo.hasOwnProperty("valueType")) {
-        obj.valueType = additionalInfo.valueType.name;
+      if (additionalInfo.hasOwnProperty("rightSideType")) {
+        obj.rightSideType = additionalInfo.rightSideType.name;
       }
-      if (additionalInfo.hasOwnProperty("valueText")) {
-        obj.valueText = additionalInfo.valueText;
+      if (additionalInfo.hasOwnProperty("rightSideText")) {
+        obj.rightSideText = additionalInfo.rightSideText;
       }
-      if (additionalInfo.hasOwnProperty("valueEntity")) {
-        obj.valueEntity = additionalInfo.valueEntity.name;
+      if (additionalInfo.hasOwnProperty("rightSideEntity")) {
+        obj.rightSideEntity = additionalInfo.rightSideEntity.name;
       }
       if (additionalInfo.hasOwnProperty("parentText")) {
         obj.parentText = additionalInfo.parentText;

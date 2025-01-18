@@ -114,6 +114,7 @@ var compareMultipleValuesWithOr = function compareMultipleValuesWithOr(symptoms)
   });
   var combined = new Map();
   var unmatched = [];
+  // Only count as the misconception if one of the terms is a ComparisonExpression
   var _iterator3 = _createForOfIteratorHelper(naturalLanguageOr),
     _step3;
   try {
@@ -131,14 +132,24 @@ var compareMultipleValuesWithOr = function compareMultipleValuesWithOr(symptoms)
         parent = undefined;
       }
       if (parent) {
-        if (!combined.has(parent)) {
-          combined.set(parent, []);
-        }
-        combined.get(parent).push(symptom);
-        symptom.getAdditionalInfo().parentText = parent.getTextValue();
-        symptom.getAdditionalInfo().parentEntity = parent.getEntity();
-        if (highestBooleanExp) {
-          symptom.getAdditionalInfo().completeBooleanExpression = highestBooleanExp.getTextValue();
+        // Check for comparisons
+        try {
+          var comparison = parent.getFirstExpressionOf(_enums.ExpressionEntity.ComparisonExpression);
+          if (comparison && symptom.getAdditionalInfo().operator === "or") {
+            if (!combined.has(parent)) {
+              combined.set(parent, []);
+            }
+            combined.get(parent).push(symptom);
+            symptom.getAdditionalInfo().parentText = parent.getTextValue();
+            symptom.getAdditionalInfo().parentEntity = parent.getEntity();
+            if (highestBooleanExp) {
+              symptom.getAdditionalInfo().completeBooleanExpression = highestBooleanExp.getTextValue();
+            }
+          } else {
+            unmatched.push(symptom);
+          }
+        } catch (e) {
+          unmatched.push(symptom);
         }
       } else {
         unmatched.push(symptom);

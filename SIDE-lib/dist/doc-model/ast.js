@@ -515,17 +515,26 @@ var ExpressionNode = /*#__PURE__*/function (_TypeChangeObserverNo) {
   }, {
     key: "isOneOf",
     value: function isOneOf(characteristics) {
-      var _iterator = _createForOfIteratorHelper(characteristics),
-        _step;
       try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var c = _step.value;
-          if (this.is(c)) return true;
+        // In case something other than an array is passed
+        var _iterator = _createForOfIteratorHelper(characteristics),
+          _step;
+        try {
+          for (_iterator.s(); !(_step = _iterator.n()).done;) {
+            var c = _step.value;
+            if (this.is(c)) return true;
+          }
+        } catch (err) {
+          _iterator.e(err);
+        } finally {
+          _iterator.f();
         }
       } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
+        try {
+          return this.is(characteristics);
+        } catch (err2) {
+          return false;
+        }
       }
       return false;
     }
@@ -7891,6 +7900,7 @@ function _checkComparesNone2(exp) {
 var _setConnections11 = /*#__PURE__*/new WeakSet();
 var _checkUnused23 = /*#__PURE__*/new WeakSet();
 var _checkForUnexpectedColon9 = /*#__PURE__*/new WeakSet();
+var _checkNaturalLanguageHelper = /*#__PURE__*/new WeakSet();
 var _checkNaturalLanguage = /*#__PURE__*/new WeakSet();
 var BooleanExpression = /*#__PURE__*/function (_MultiPartExpressionN19) {
   _inherits(BooleanExpression, _MultiPartExpressionN19);
@@ -7907,6 +7917,7 @@ var BooleanExpression = /*#__PURE__*/function (_MultiPartExpressionN19) {
     var dataType = _classStaticPrivateMethodGet(BooleanExpression, BooleanExpression, _findDataType7).call(BooleanExpression, _children8);
     _this34 = _super44.call(this, textValue, _children8, _enums.ExpressionEntity.BooleanExpression, _enums.ExpressionCategory.MultipartValue, dataType);
     _classPrivateMethodInitSpec(_assertThisInitialized(_this34), _checkNaturalLanguage);
+    _classPrivateMethodInitSpec(_assertThisInitialized(_this34), _checkNaturalLanguageHelper);
     _classPrivateMethodInitSpec(_assertThisInitialized(_this34), _checkForUnexpectedColon9);
     _classPrivateMethodInitSpec(_assertThisInitialized(_this34), _checkUnused23);
     _classPrivateMethodInitSpec(_assertThisInitialized(_this34), _setConnections11);
@@ -8050,6 +8061,13 @@ var BooleanExpression = /*#__PURE__*/function (_MultiPartExpressionN19) {
      * @returns {Symptom[]}
      */
 
+    /**
+     * Helper function for #checkNaturalLanguage
+     * @param {ExpressionNode} a The expression on the left of the logical operator
+     * @param {ExpressionNode} b The expression on the right of the logical operator
+     * @returns {boolean} True if either a or b is truthy rather than boolean
+     */
+
     /** 
      * Rule function. Checks if the expression compares something with no value and if so,
      * adds a new Symptom object.
@@ -8107,50 +8125,79 @@ function _checkForUnexpectedColon10(exp) {
   }
   return symptoms;
 }
+function _checkNaturalLanguageHelper2(a, b) {
+  // At least one expression on either side of logical operator must be something other than bool or unknown
+  var aType = a.getDataType();
+  var bType = b.getDataType();
+  return aType !== _enums.DataType.Bool && aType !== _enums.DataType.Unknown || bType !== _enums.DataType.Bool && bType !== _enums.DataType.Unknown;
+}
 function _checkNaturalLanguage2(exp) {
   var symptoms = [];
   var children = exp.getChildren();
   if (children.length === 3) {
-    var compType = children[2].getDataType();
-    if (compType === _enums.DataType.NA && children[2].is(_enums.ExpressionEntity.IfDefinition)) {
-      symptoms.push(_symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.NaturalLanguageBoolean, children, 1, 2, {
-        form: _constants.OR_IF,
+    // 0 or 2 must have a DataType other than Bool or Unknown
+    var aType = children[0].getDataType();
+    var bType = children[2].getDataType();
+    if (aType !== _enums.DataType.Bool && aType !== _enums.DataType.Unknown || bType !== _enums.DataType.Bool && bType !== _enums.DataType.Unknown) {
+      symptoms.push(_symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.NaturalLanguageBoolean, children, 0, 2, {
+        form: _constants.OR_NON_BOOL,
         leftSideType: children[0].getDataType(),
         leftSideText: children[0].getTextValue(),
         leftSideEntity: children[0].getEntity(),
         operator: children[1].getTextValue(),
-        valueText: children[2].getTextValue(),
-        valueEntity: children[2].getEntity(),
+        rightSideType: children[2].getDataType(),
+        rightSideText: children[2].getTextValue(),
+        rightSideEntity: children[2].getEntity(),
         tempExpression: exp
       }));
-    } else if (compType !== _enums.DataType.Bool && compType !== _enums.DataType.Unknown) {
-      if (children[0].isOneOf([_enums.ExpressionEntity.BooleanExpression, _enums.ExpressionEntity.ComparisonExpression])) {
-        symptoms.push(_symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.NaturalLanguageBoolean, children, 1, 2, {
-          form: _constants.OR_NON_BOOL,
-          leftSideType: children[0].getDataType(),
-          leftSideText: children[0].getTextValue(),
-          leftSideEntity: children[0].getEntity(),
-          operator: children[1].getTextValue(),
-          valueType: children[2].getDataType(),
-          valueText: children[2].getTextValue(),
-          valueEntity: children[2].getEntity(),
-          tempExpression: exp
-        }));
-      } else {
-        symptoms.push(_symptom.SymptomFinder.createStatementSymptom(_enums.SymptomType.NaturalLanguageBoolean, children, 0, 2, {
-          form: _constants.OR_NON_BOOL,
-          leftSideType: children[0].getDataType(),
-          leftSideText: children[0].getTextValue(),
-          leftSideEntity: children[0].getEntity(),
-          operator: children[1].getTextValue(),
-          valueType: children[2].getDataType(),
-          valueText: children[2].getTextValue(),
-          valueEntity: children[2].getEntity(),
-          tempExpression: exp
-        }));
-      }
     }
   }
+  // This assumes comparison is on the left
+  // if (children.length === 3) {
+  //     const compType = children[2].getDataType();
+  //     if (compType === DataType.NA && children[2].is(ExpressionEntity.IfDefinition)) { // Never occurs?
+  //         symptoms.push(SymptomFinder.createStatementSymptom(SymptomType.NaturalLanguageBoolean, children, 1, 2,
+  //             {
+  //                 form: OR_IF,
+  //                 leftSideType: children[0].getDataType(),
+  //                 leftSideText: children[0].getTextValue(),
+  //                 leftSideEntity: children[0].getEntity(),
+  //                 operator: children[1].getTextValue(),
+  //                 valueText: children[2].getTextValue(),
+  //                 valueEntity: children[2].getEntity(),
+  //                 tempExpression: exp
+  //             }));
+  //     }
+  //     else if (compType !== DataType.Bool && compType !== DataType.Unknown) {
+  //         if (children[0].isOneOf([ExpressionEntity.BooleanExpression, ExpressionEntity.ComparisonExpression])) {
+  //             symptoms.push(SymptomFinder.createStatementSymptom(SymptomType.NaturalLanguageBoolean, children, 1, 2,
+  //                                                             {
+  //                                                                     form: OR_NON_BOOL,
+  //                                                                     leftSideType: children[0].getDataType(),
+  //                                                                     leftSideText: children[0].getTextValue(),
+  //                                                                     leftSideEntity: children[0].getEntity(),
+  //                                                                     operator: children[1].getTextValue(),
+  //                                                                     valueType: children[2].getDataType(),
+  //                                                                     valueText: children[2].getTextValue(),
+  //                                                                     valueEntity: children[2].getEntity(),
+  //                                                                     tempExpression: exp
+  //                                                             }));
+  //         } else {
+  //             symptoms.push(SymptomFinder.createStatementSymptom(SymptomType.NaturalLanguageBoolean, children, 0, 2,
+  //                 {
+  //                         form: OR_NON_BOOL,
+  //                         leftSideType: children[0].getDataType(),
+  //                         leftSideText: children[0].getTextValue(),
+  //                         leftSideEntity: children[0].getEntity(),
+  //                         operator: children[1].getTextValue(),
+  //                         valueType: children[2].getDataType(),
+  //                         valueText: children[2].getTextValue(),
+  //                         valueEntity: children[2].getEntity(),
+  //                         tempExpression: exp
+  //                 }));
+  //         }
+  //     }
+  // }
   return symptoms;
 }
 var _inIndex = /*#__PURE__*/new WeakMap();
