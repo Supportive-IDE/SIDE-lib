@@ -9,28 +9,52 @@
         </style>
     </head>
     <body>
-        <h1>SIDE-lib Basic Usage</h1>
+        <h1>SIDE-lib Basic Usage V3</h1>
         <p>The library's two main functions (<code>parse()</code> and <code>feedback()</code>) take a string of source code as input e.g.:</p>
         <pre id="code"></pre>
-        <h2><code>feedback(python_str, includeParseOutput = false)</code></h2>
+        <h2><code>feedback(python_str, includeParseOutput = false, parseOptions = {showSymptoms=true, showMisconceptions=true, showCounterSymptoms=false, showConcepts=false})</code></h2>
         <p>...where <code>python_str</code> is a string of Python code. For best results, this should be a complete program rather than a snippet.</p>
         <p><code>feedback()</code> returns a JSON object containing basic information to provide feedback on a detected misconception indicator. E.g.:</p>
         <pre id="feedback-output"></pre>
         <p>The <code>extendedFeedbackParams</code> property on each feedback object contains more details about the indicator in URL parameter format. The intention is 
         that this information can be used to populate extended online guidance for an indicator. Our feedback implementation is hosted at <code>https://supportive-ide.github.io/symptom-feedback</code>. 
         To use this existing guidance, append the URL parameters to our host name e.g.:</p>
-        <p>If <code>includeParseOutput</code> is true, the object will also include the results of the <code>parse()</code> function below.</p>
         <div id="feedback-url"></div>
-        <h2><code>parse(python_str)</code></h2>
+        <p>If <code>includeParseOutput</code> is true, the object will also include the results of the <code>parse()</code> function below.</p>
+        <p>The optional <code>parseOptions</code> parameter can be used to configure parse output, if it is included.</p>
+        <h2><code>parse(python_str, {showSymptoms=true, showMisconceptions=true, showCounterSymptoms=false, showConcepts=false} = {})</code></h2>
         <p>...where <code>python_str</code> is a string of Python code. For best results, this should be a complete program rather than a snippet.</p>
-        <p><code>parse()</code> returns a JSON object containing information about detected symptoms and misconceptions, the "blocks" in the Python code, and any variables or functions defined in the Python code. E.g.:</p>
+        <p><code>parse()</code> returns a JSON object containing information about detected symptoms and misconceptions. The third, optional parameter can be used to configure the output to include counter symptoms and concept indicators. In this example, the default settings are used:</p>
         <pre id="output"></pre>
         <h2><code>symptomInfo()</code></h2>
         <p>Returns a JSON object detailing the symptoms currently detected by the library:</p>
         <pre id="symptoms"></pre>
+        <h2><code>counterSymptomInfo()</code></h2>
+        <p>Returns a JSON object detailing the counter symptoms currently detected by the library:</p>
+        <pre id="counterSymptoms"></pre>
         <h2><code>misconceptionInfo()</code></h2>
         <p>Returns a JSON object detailing the misconceptions currently detected by the library:</p>
         <pre id="misconceptions"></pre>
+        <h2><code>conceptInfo()</code></h2>
+        <p>Returns a JSON object detailing the concepts currently detected by the library:</p>
+        <pre id="concepts"></pre>
+        <h1>Deprecated: SIDE-lib Basic Usage V2</h1>
+        <p>The library's two main functions (<code>parse()</code> and <code>feedback()</code>) take a string of source code as input e.g.:</p>
+        <pre id="code"></pre>
+        <h2><code>feedback(python_str, includeParseOutput = false)</code></h2>
+        <p>...where <code>python_str</code> is a string of Python code. For best results, this should be a complete program rather than a snippet.</p>
+        <p><code>feedback()</code> returns a JSON object containing basic information to provide feedback on a detected misconception indicator. E.g.:</p>
+        <p>The <code>extendedFeedbackParams</code> property on each feedback object contains more details about the indicator in URL parameter format. The intention is 
+        that this information can be used to populate extended online guidance for an indicator. Our feedback implementation is hosted at <code>https://supportive-ide.github.io/symptom-feedback</code>. 
+        To use this existing guidance, append the URL parameters to our host name e.g.:</p>
+        <p>If <code>includeParseOutput</code> is true, the object will also include the results of the <code>parse()</code> function below.</p>
+        <h2><code>parse(python_str)</code></h2>
+        <p>...where <code>python_str</code> is a string of Python code. For best results, this should be a complete program rather than a snippet.</p>
+        <p><code>parse()</code> returns a JSON object containing information about detected symptoms and misconceptions, the "blocks" in the Python code, and any variables or functions defined in the Python code. E.g.:</p>
+        <h2><code>symptomInfo()</code></h2>
+        <p>Returns a JSON object detailing the symptoms currently detected by the library:</p>
+        <h2><code>misconceptionInfo()</code></h2>
+        <p>Returns a JSON object detailing the misconceptions currently detected by the library:</p>
     </body>
     <script src="./main.js" type="module"></script>
 </html>
